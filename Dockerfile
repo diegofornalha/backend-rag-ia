@@ -28,7 +28,12 @@ COPY . .
 # Configuração do servidor
 ENV HOST=0.0.0.0
 ENV PORT=8000
-ENV CORS_ORIGINS=["http://localhost:3000"]
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Cria diretório para logs e cache
+RUN mkdir -p /app/logs /app/cache && \
+    chmod -R 755 /app/logs /app/cache
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
@@ -37,5 +42,9 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
 # Expõe a porta
 EXPOSE 8000
 
+# Script de inicialização
+COPY scripts/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Comando para iniciar a aplicação
-CMD ["uvicorn", "oracle:app", "--host", "0.0.0.0", "--port", "8000"] 
+CMD ["/app/start.sh"] 
