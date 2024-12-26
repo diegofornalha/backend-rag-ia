@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: oraculo-api
+    env: docker
+    region: oregon
+    plan: starter
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: PORT
+        value: 8000
+      - key: HOST
+        value: 0.0.0.0
+      - key: CORS_ORIGINS
+        value: '["*"]'
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+    buildCommand: docker build -t oraculo-api .
+    startCommand: docker run -p 8000:8000 oraculo-api
