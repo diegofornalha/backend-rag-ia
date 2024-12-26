@@ -12,9 +12,6 @@ from models.database import Document, DocumentCreate
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Inicialização do VectorStore
-vector_store = VectorStore()
-
 class DocumentInput(BaseModel):
     """Modelo para input de documento."""
     content: str
@@ -37,6 +34,7 @@ async def add_document(document: DocumentInput) -> Dict[str, Any]:
         Dict com mensagem de sucesso ou erro.
     """
     try:
+        vector_store = VectorStore()
         result = await vector_store.add_document(
             content=document.content,
             metadata=document.metadata
@@ -69,6 +67,7 @@ async def search(query_input: QueryInput) -> List[Dict[str, Any]]:
         Lista de documentos similares.
     """
     try:
+        vector_store = VectorStore()
         results = await vector_store.search(
             query=query_input.query,
             k=query_input.k
@@ -92,6 +91,7 @@ async def delete_document(doc_id: int) -> Dict[str, str]:
         Dict com mensagem de sucesso ou erro.
     """
     try:
+        vector_store = VectorStore()
         success = await vector_store.delete_document(doc_id)
         if success:
             return {"message": "Documento removido com sucesso"}

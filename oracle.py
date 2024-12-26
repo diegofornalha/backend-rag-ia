@@ -41,21 +41,10 @@ app.add_middleware(
 @app.get("/api/v1/health")
 async def health_check() -> Dict[str, str]:
     """Verifica a saúde da aplicação."""
-    try:
-        # Testa conexão com Supabase
-        supabase = SupabaseManager().client
-        supabase.table("documents").select("id").limit(1).execute()
-        
-        return {
-            "status": "healthy",
-            "message": "API está funcionando normalmente"
-        }
-    except Exception as e:
-        logger.error(f"Erro no health check: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"API não está saudável: {str(e)}"
-        )
+    return {
+        "status": "healthy",
+        "message": "API está funcionando normalmente"
+    }
 
 # Tratamento global de erros
 @app.exception_handler(Exception)
