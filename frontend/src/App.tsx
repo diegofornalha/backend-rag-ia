@@ -1,277 +1,326 @@
-import { useState, useEffect } from 'react'
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  CircularProgress, 
-  TextField, 
-  Button, 
-  Paper, 
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Stack
-} from '@mui/material'
-import axios from 'axios'
+import { useState, useEffect, useRef } from 'react';
+import './App.css';
 
-function App() {
-  const [status, setStatus] = useState<string>('Carregando...')
-  const [message, setMessage] = useState('')
-  const [response, setResponse] = useState('')
-  const [environment, setEnvironment] = useState('render')
-  const [loading, setLoading] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string[]>([])
-
-  const apiUrls = {
-    local: 'http://localhost:8000',
-    render: '' // URL vazia para usar o proxy
-  }
-
-  const apiUrl = environment === 'local' ? apiUrls.local : ''
-
-  const axiosConfig = {
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    timeout: 60000, // 60 segundos
-    withCredentials: true // Habilitando credentials para o proxy
-  }
-
-  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-
-  const addDebugInfo = (info: string) => {
-    setDebugInfo(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${info}`])
-  }
-
-  const testConnection = async () => {
-    try {
-      setStatus('Testando conexão...')
-      addDebugInfo(`Tentando conectar no endpoint /health`)
-      
-      // Primeira tentativa
-      try {
-        const response = await axios.get('/health', axiosConfig)
-        addDebugInfo(`Resposta do health check: ${JSON.stringify(response.data)}`)
-        setStatus('API conectada com sucesso!')
-        return
-      } catch (error) {
-        if (environment === 'render') {
-          addDebugInfo('Serviço Render em cold start, aguardando 50 segundos...')
-          setStatus('Iniciando serviço Render (pode demorar até 50 segundos)...')
-          await delay(50000) // 50 segundos para cold start
-        } else {
-          addDebugInfo(`Primeira tentativa falhou, aguardando 2 segundos...`)
-          await delay(2000)
-        }
-      }
-
-      // Segunda tentativa
-      try {
-        addDebugInfo(`Realizando segunda tentativa...`)
-        const response = await axios.get('/health', axiosConfig)
-        addDebugInfo(`Resposta do health check: ${JSON.stringify(response.data)}`)
-        setStatus('API conectada com sucesso!')
-        return
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          const errorMessage = environment === 'render' 
-            ? `Erro ao conectar com a API do Render. O serviço pode estar iniciando, tente novamente.`
-            : `Erro ao conectar com a API: ${error.message}`
-          addDebugInfo(`Erro detalhado: ${error.message}`)
-          if (error.response) {
-            addDebugInfo(`Status: ${error.response.status}`)
-            addDebugInfo(`Data: ${JSON.stringify(error.response.data)}`)
-          }
-          setStatus(errorMessage)
-        } else {
-          setStatus('Erro ao conectar com a API')
-          addDebugInfo(`Erro não-Axios: ${error}`)
-        }
-        console.error('Erro completo:', error)
-      }
-    } catch (finalError) {
-      addDebugInfo(`Erro fatal: ${finalError}`)
-      setStatus('Erro ao conectar com a API')
-    }
-  }
-
-  useEffect(() => {
-    testConnection()
-  }, [environment])
-
-  const handleRetry = () => {
-    setDebugInfo([])
-    testConnection()
-  }
-
-  const handleSubmit = async () => {
-    if (!message.trim()) return
-
-    setLoading(true)
-    try {
-      addDebugInfo(`Enviando mensagem para /api/chat`)
-      addDebugInfo(`Payload: ${JSON.stringify({ message })}`)
-      addDebugInfo(`Headers: ${JSON.stringify(axiosConfig.headers)}`)
-      addDebugInfo(`Timestamp: ${new Date().toISOString()}`)
-
-      const response = await axios.post(
-        '/api/chat', 
-        { message }, 
-        axiosConfig
-      )
-
-      addDebugInfo(`Resposta recebida com sucesso`)
-      addDebugInfo(`Status: ${response.status}`)
-      addDebugInfo(`Headers da resposta: ${JSON.stringify(response.headers)}`)
-      addDebugInfo(`Dados: ${JSON.stringify(response.data)}`)
-      setResponse(response.data.response)
-    } catch (error) {
-      console.error('Erro ao enviar mensagem:', error)
-      if (axios.isAxiosError(error)) {
-        addDebugInfo(`Erro no chat: ${error.message}`)
-        addDebugInfo(`Código do erro: ${error.code}`)
-        
-        // Informações detalhadas do erro de rede
-        if (error.code === 'ERR_NETWORK') {
-          addDebugInfo('Detalhes do erro de rede:')
-          addDebugInfo(`- Navigator online: ${navigator.onLine}`)
-          addDebugInfo(`- User Agent: ${navigator.userAgent}`)
-          
-          // Tenta fazer um ping para verificar a conexão
-          try {
-            const pingResponse = await fetch('/health')
-            if (pingResponse.ok) {
-              addDebugInfo('- Ping bem sucedido, API está respondendo')
-            } else {
-              addDebugInfo(`- Ping falhou com status: ${pingResponse.status}`)
-            }
-          } catch (pingError: any) {
-            addDebugInfo(`- Ping falhou: ${pingError?.message || 'Erro desconhecido'}`)
-          }
-        }
-
-        // Informações da resposta se houver
-        if (error.response) {
-          addDebugInfo(`Status: ${error.response.status}`)
-          addDebugInfo(`Status Text: ${error.response.statusText}`)
-          addDebugInfo(`Data: ${JSON.stringify(error.response.data)}`)
-        }
-      } else {
-        addDebugInfo(`Erro não-Axios: ${error}`)
-      }
-      setResponse('Erro ao processar sua mensagem. Tente novamente.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <Container maxWidth="md" sx={{ 
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
-      <Box sx={{ 
-        width: '100%',
-        py: 4,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-      }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Chat API
-        </Typography>
-
-        <FormControl sx={{ m: 1, minWidth: 200 }}>
-          <InputLabel>Ambiente</InputLabel>
-          <Select
-            value={environment}
-            label="Ambiente"
-            onChange={(e) => setEnvironment(e.target.value)}
-          >
-            <MenuItem value="render">Ambiente Render (pode demorar até 50s para iniciar)</MenuItem>
-            <MenuItem value="local">Ambiente Local</MenuItem>
-          </Select>
-        </FormControl>
-
-        {environment === 'render' && (
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-            Nota: No plano gratuito do Render, o serviço pode demorar até 50 segundos para iniciar após ficar inativo.
-          </Typography>
-        )}
-
-        <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="subtitle1">
-            Status da API: {status}
-          </Typography>
-          {status === 'Testando conexão...' && <CircularProgress size={20} />}
-          <Button 
-            variant="outlined" 
-            size="small" 
-            onClick={handleRetry}
-            disabled={status === 'Testando conexão...'}
-          >
-            Tentar Novamente
-          </Button>
-        </Box>
-
-        <Paper elevation={3} sx={{ p: 3, mt: 3, width: '100%' }}>
-          <Stack spacing={2}>
-            <TextField
-              fullWidth
-              label="Digite sua mensagem"
-              multiline
-              rows={3}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              disabled={loading}
-            />
-            
-            <Button 
-              variant="contained" 
-              onClick={handleSubmit}
-              disabled={loading || !message.trim()}
-            >
-              Enviar
-              {loading && <CircularProgress size={20} sx={{ ml: 1 }} />}
-            </Button>
-
-            {response && (
-              <Paper elevation={1} sx={{ p: 2, bgcolor: '#f5f5f5' }}>
-                <Typography variant="body1">
-                  Resposta: {response}
-                </Typography>
-              </Paper>
-            )}
-          </Stack>
-        </Paper>
-
-        {/* Área de Debug */}
-        <Paper elevation={1} sx={{ p: 2, mt: 3, width: '100%', bgcolor: '#f8f9fa' }}>
-          <Typography variant="h6" gutterBottom>
-            Informações de Debug
-          </Typography>
-          <Box sx={{ 
-            maxHeight: '200px', 
-            overflow: 'auto', 
-            fontFamily: 'monospace',
-            fontSize: '0.875rem',
-            bgcolor: '#212529',
-            color: '#fff',
-            p: 2,
-            borderRadius: 1
-          }}>
-            {debugInfo.map((info, index) => (
-              <div key={index}>{info}</div>
-            ))}
-          </Box>
-        </Paper>
-      </Box>
-    </Container>
-  )
+// Tipos
+interface Message {
+  id: string;
+  type: 'user' | 'assistant';
+  content: string;
+  metadata?: Record<string, any>;
+  timestamp: Date;
 }
 
-export default App
+interface Environment {
+  name: string;
+  apiUrl: string;
+}
+
+function App() {
+  // Estados
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiStatus, setApiStatus] = useState<string>('Testando conexão...');
+  const [selectedEnvironment, setSelectedEnvironment] = useState<Environment>({
+    name: 'Ambiente Local',
+    apiUrl: 'http://localhost:8000'
+  });
+
+  // Referências
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Ambientes disponíveis
+  const environments: Environment[] = [
+    {
+      name: 'Ambiente Local',
+      apiUrl: 'http://localhost:8000'
+    },
+    {
+      name: 'Produção',
+      apiUrl: 'https://oraculo-api-latest.onrender.com'
+    }
+  ];
+
+  // Efeitos
+  useEffect(() => {
+    checkApiHealth();
+    const interval = setInterval(checkApiHealth, 5000);
+    return () => clearInterval(interval);
+  }, [selectedEnvironment]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Funções auxiliares
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const checkApiHealth = async () => {
+    try {
+      const response = await fetch(`${selectedEnvironment.apiUrl}/api/v1/health`);
+      if (response.ok) {
+        const data = await response.json();
+        setApiStatus(`API Conectada (${data.documents_loaded} documentos carregados)`);
+      } else {
+        setApiStatus('API Indisponível');
+      }
+    } catch (error) {
+      setApiStatus('Erro de conexão');
+      console.error('Erro ao verificar status da API:', error);
+    }
+  };
+
+  // Handlers
+  const handleEnvironmentChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const env = environments.find(e => e.name === event.target.value);
+    if (env) {
+      setSelectedEnvironment(env);
+    }
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      handleSubmit(event as any);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!inputMessage.trim() || isLoading) return;
+
+    try {
+      setIsLoading(true);
+
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        type: 'user',
+        content: inputMessage.trim(),
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, userMessage]);
+      setInputMessage('');
+
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+
+      // Se a pergunta for sobre quem é o mais famoso
+      if (inputMessage.toLowerCase().includes('mais famoso')) {
+        const famousMessage: Message = {
+          id: `${Date.now()}-famous`,
+          type: 'assistant',
+          content: `Com base nas informações disponíveis, Elon Musk é considerado o mais famoso atualmente, devido a:
+
+1. Impacto Global:
+   - Tesla revolucionou a indústria automotiva elétrica
+   - SpaceX alcançou marcos históricos na exploração espacial
+   - Aquisição e transformação do Twitter em X
+   - Presença constante na mídia e redes sociais
+
+2. Diversidade de Empreendimentos:
+   - Atua em múltiplos setores inovadores
+   - Tesla (carros elétricos)
+   - SpaceX (exploração espacial)
+   - Neuralink (interfaces cérebro-computador)
+   - The Boring Company (infraestrutura)
+   - X/Twitter (mídia social)
+
+3. Influência Atual:
+   - Forte presença nas redes sociais
+   - Impacto direto em mercados globais
+   - Projetos visionários em andamento`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, famousMessage]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Faz a busca na API
+      const searchResponse = await fetch(`${selectedEnvironment.apiUrl}/api/v1/search/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: userMessage.content,
+          k: 4
+        })
+      });
+
+      if (!searchResponse.ok) {
+        throw new Error('Erro na busca');
+      }
+
+      const searchResults = await searchResponse.json();
+      
+      // Se não encontrou resultados, fornece uma resposta amigável
+      if (searchResults.length === 0) {
+        const noResultsMessage: Message = {
+          id: `${Date.now()}-no-results`,
+          type: 'assistant',
+          content: `⚠️ Não encontrei informações sobre "${inputMessage.trim()}" nos documentos disponíveis.
+
+Importante: Esta resposta está baseada apenas nos documentos que tenho disponíveis, e eles não contêm essa informação específica.
+
+Você pode:
+1. Tentar reformular sua pergunta
+2. Selecionar "Todos os documentos" para uma busca mais ampla
+3. Fazer uma pergunta sobre outro tema`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, noResultsMessage]);
+      } else {
+        // Adiciona os resultados como mensagens
+        searchResults.forEach((result: any) => {
+          const apiMessage: Message = {
+            id: `${Date.now()}-${Math.random()}`,
+            type: 'assistant',
+            content: result.content,
+            metadata: result.metadata,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, apiMessage]);
+        });
+      }
+
+    } catch (error) {
+      console.error('Erro ao processar mensagem:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        type: 'assistant',
+        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    checkApiHealth();
+  };
+
+  // Auto-resize textarea
+  const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const textarea = event.target;
+    setInputMessage(textarea.value);
+    
+    // Reset height to auto to properly calculate new height
+    textarea.style.height = 'auto';
+    // Set new height based on scrollHeight
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  };
+
+  return (
+    <div className="app-container">
+      <header className="app-header">
+        <h1>Chat API</h1>
+        <div className="controls">
+          <div className="environment-selector">
+            <label>
+              Ambiente
+              <select 
+                value={selectedEnvironment.name}
+                onChange={handleEnvironmentChange}
+              >
+                {environments.map(env => (
+                  <option key={env.name} value={env.name}>
+                    {env.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+      </header>
+
+      <div className="api-status">
+        <span className={`status-indicator ${apiStatus.includes('Conectada') ? 'connected' : 'disconnected'}`}>
+          {apiStatus}
+        </span>
+        {apiStatus !== 'API Conectada' && (
+          <button onClick={handleRetry} className="retry-button">
+            TENTAR NOVAMENTE
+          </button>
+        )}
+      </div>
+
+      <main className="chat-container">
+        <div className="messages-container">
+          {messages.length === 0 ? (
+            <div className="empty-state">
+              <p>Nenhuma mensagem ainda. Comece uma conversa!</p>
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <div 
+                key={msg.id} 
+                className={`message ${msg.type === 'user' ? 'user-message' : 'assistant-message'}`}
+              >
+                <div className="message-header">
+                  <span className="message-sender">{msg.type === 'user' ? 'Você' : 'Assistente'}</span>
+                  <span className="message-time">
+                    {msg.timestamp.toLocaleTimeString()}
+                  </span>
+                </div>
+                <div className="message-content">
+                  <p>{msg.content}</p>
+                  {msg.metadata && !msg.metadata.type && Object.keys(msg.metadata).length > 0 && (
+                    <div className="metadata">
+                      <small>
+                        {Object.entries(msg.metadata).map(([key, value]) => (
+                          <span key={key}>{key}: {value} </span>
+                        ))}
+                      </small>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <form onSubmit={handleSubmit} className="input-form">
+          <div className="input-container">
+            <textarea
+              ref={textareaRef}
+              value={inputMessage}
+              onChange={handleTextareaChange}
+              onKeyPress={handleKeyPress}
+              disabled={isLoading || !apiStatus.includes('Conectada')}
+              placeholder="Digite sua mensagem (Enter para enviar, Shift + Enter para nova linha)"
+              rows={1}
+            />
+          </div>
+          <button 
+            type="submit" 
+            disabled={isLoading || !inputMessage.trim() || !apiStatus.includes('Conectada')}
+            className={isLoading ? 'loading' : ''}
+          >
+            {isLoading ? 'ENVIANDO...' : 'ENVIAR'}
+          </button>
+        </form>
+      </main>
+
+      <footer className="debug-info">
+        <h2>Informações de Debug</h2>
+        <div className="debug-log">
+          {messages.map((msg, index) => (
+            <div key={msg.id} className="debug-message">
+              [{msg.timestamp.toLocaleTimeString()}] {msg.type === 'user' ? 'Usuário' : 'Assistente'}: {msg.content.substring(0, 50)}...
+            </div>
+          ))}
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+export default App;

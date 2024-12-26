@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "echo \"🔨 Construindo a imagem de teste...\" && docker build -t render-api-test . && echo \"\\n🚀 Executando o teste...\" && docker run --rm render-api-test",
+    "test:build": "docker build -t render-api-test .",
+    "test:run": "docker run --rm render-api-test"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

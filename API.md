@@ -1,182 +1,158 @@
-# Documentação da API do Oráculo 🤖
+# Oracle API Documentation
 
-## Visão Geral
+## Estrutura do Projeto
 
-O Oráculo é uma API de chat que utiliza o modelo Gemini 1.0 Pro da Google para gerar respostas inteligentes em português do Brasil.
-
-## Ambientes Disponíveis
-
-- **Desenvolvimento (Local)**
-
-  ```
-  http://localhost:8000
-  ```
-
-- **Produção (Render)**
-  ```
-  https://oraculo-api-latest.onrender.com
-  ```
+```
+backend/
+├── api/
+│   └── routes.py         # Rotas da API
+├── models/
+│   └── document.py       # Modelo de documento
+├── services/
+│   └── vector_store.py   # Serviço de gerenciamento de vetores e busca
+└── utils/                # Utilitários
+```
 
 ## Endpoints
 
-### 1. Chat (POST /api/chat)
+### POST /api/v1/documents/
 
-Processa mensagens do usuário e retorna respostas do modelo Gemini.
+Adiciona novos documentos ao índice.
 
-#### Request
-
-```http
-POST /api/chat
-Content-Type: application/json
-
-{
-  "message": "Qual é a diferença entre IA e Machine Learning?"
-}
-```
-
-#### Response Success (200 OK)
+**Request:**
 
 ```json
 {
-  "response": "A Inteligência Artificial (IA) é um campo mais amplo que engloba..."
-}
-```
-
-#### Response Error (422 Unprocessable Entity)
-
-```json
-{
-  "detail": [
+  "documents": [
     {
-      "loc": ["body", "message"],
-      "msg": "field required",
-      "type": "value_error.missing"
+      "content": "Texto do documento",
+      "metadata": {
+        "type": "profile",
+        "tags": ["biografia", "profissional"]
+      }
     }
   ]
 }
 ```
 
-### 2. Health Check (GET /health)
-
-Verifica o status da API e do modelo.
-
-#### Request
-
-```http
-GET /health
-```
-
-#### Response Success (200 OK)
+**Response:**
 
 ```json
 {
-  "status": "healthy",
-  "model": "gemini-1.0-pro"
+  "message": "Processando 1 documentos em background"
 }
 ```
 
-## Exemplos de Uso
+### POST /api/v1/search/
 
-### cURL
+Realiza busca semântica nos documentos.
 
-```bash
-# Chat
-curl -X POST "http://localhost:8000/api/chat" \
-  -H "Content-Type: application/json" \
-  -d '{"message": "O que é machine learning?"}'
+**Request:**
 
-# Health Check
-curl http://localhost:8000/health
-```
-
-### Python
-
-```python
-import requests
-
-def chat_with_oracle(message: str, base_url: str = "http://localhost:8000"):
-    response = requests.post(
-        f"{base_url}/api/chat",
-        json={"message": message}
-    )
-    return response.json()
-
-# Exemplo de uso
-response = chat_with_oracle("O que é machine learning?")
-print(response["response"])
-```
-
-### TypeScript/React
-
-```typescript
-import axios from "axios";
-
-interface ChatResponse {
-  response: string;
-}
-
-async function chatWithOracle(
-  message: string,
-  baseUrl: string = "http://localhost:8000"
-): Promise<string> {
-  try {
-    const response = await axios.post<ChatResponse>(`${baseUrl}/api/chat`, {
-      message,
-    });
-    return response.data.response;
-  } catch (error) {
-    console.error("Erro:", error);
-    throw new Error("Falha ao processar mensagem");
+```json
+{
+  "query": "string",
+  "k": 4,
+  "filters": {
+    "type": "profile",
+    "tecnologias": ["Python"],
+    "content_types": ["biografia"]
   }
 }
 ```
 
-## Considerações Técnicas
+**Response:**
 
-### Limites e Restrições
+```json
+[
+  {
+    "content": "Texto encontrado",
+    "metadata": {
+      "type": "profile",
+      "timestamp": "2024-03-21T10:30:00",
+      "pessoas": ["Diego Fornalha"],
+      "tecnologias": ["Python"],
+      "content_types": ["biografia"]
+    },
+    "embedding_id": 1
+  }
+]
+```
 
-- Tempo máximo de resposta: 60 segundos
-- Tamanho máximo da mensagem: 4096 caracteres
-- Rate limit: 60 requisições por minuto
-- Cold start no Render: ~50 segundos (plano gratuito)
+### GET /api/v1/health
 
-### CORS
+Verifica o status da API.
 
-Origens permitidas:
+**Response:**
 
-- `http://localhost:3000` (Frontend Dev)
-- `http://localhost:5173` (Frontend Dev Vite)
-- `https://oraculo-asimov.vercel.app` (Frontend Prod)
+```json
+{
+  "status": "healthy",
+  "documents_loaded": 3,
+  "index_size": 3
+}
+```
 
-### Boas Práticas
+## Funcionalidades
 
-1. **Tratamento de Erros**
+### Deduplicação Inteligente
 
-   - Sempre implemente tratamento de erros
-   - Verifique o status da API antes de enviar mensagens
-   - Implemente retry com backoff para falhas temporárias
+- Threshold de similaridade: 0.8
+- Análise de conteúdo para evitar redundância
+- Consolidação de informações similares
 
-2. **Performance**
+### Processamento de Metadados
 
-   - Cache respostas frequentes
-   - Implemente timeout adequado (recomendado: 30s)
-   - Considere o cold start no plano gratuito do Render
+- Extração automática de entidades
+- Categorização de conteúdo
+- Normalização de nomes e termos
+- Indexação otimizada para busca rápida
 
-3. **UX**
-   - Mostre feedback de loading durante requisições
-   - Mantenha o usuário informado sobre o status da conexão
-   - Permita retry em caso de falhas
+### Busca Avançada
 
-## Documentação Interativa
+- Busca semântica com FAISS
+- Filtragem por metadados
+- Combinação de múltiplos critérios
+- Ordenação por relevância
 
-- **Swagger UI**: `/docs`
-- **ReDoc**: `/redoc`
-- **OpenAPI JSON**: `/openapi.json`
+### Exemplo de Uso
 
-## Suporte
+```python
+# Busca por tipo específico
+docs = vector_store.filter_by_metadata({
+    "content_types": "tutorial"
+})
 
-Para reportar problemas ou sugerir melhorias:
+# Busca combinada
+docs = vector_store.filter_by_metadata({
+    "pessoas": "Diego Fornalha",
+    "tecnologias": "Python",
+    "content_types": "projeto"
+})
+```
 
-1. Abra uma issue no GitHub
-2. Envie um email para suporte@asimov.academy
-3. Acesse nossa comunidade no Discord
+## Notas de Implementação
+
+1. **Indexação**:
+
+   - Uso de FAISS para busca semântica
+   - Índice invertido para metadados
+   - Batch processing para melhor performance
+
+2. **Otimizações**:
+
+   - Processamento em background
+   - Deduplicação automática
+   - Caching de embeddings
+   - Normalização de entidades
+
+3. **Persistência**:
+
+   - Salvamento automático de índices
+   - Backup de metadados
+   - Formato JSON otimizado
+
+4. **Segurança**:
+   - Validação de entrada
+   - Sanitização de dados
+   - Logging de operações

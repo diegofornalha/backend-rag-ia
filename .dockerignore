@@ -1,43 +1,69 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
 
-# Virtual Environment
-.env
-.venv
-env/
+# Ambientes virtuais
+.venv/
 venv/
 ENV/
 
-# IDE
+# Node.js
+**/node_modules/
+**/npm-debug.log
+**/yarn-debug.log
+**/yarn-error.log
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/.Python
+**/build/
+**/develop-eggs/
+**/dist/
+**/downloads/
+**/eggs/
+**/.eggs/
+**/lib/
+**/lib64/
+**/parts/
+**/sdist/
+**/var/
+**/wheels/
+**/*.egg-info/
+**/.installed.cfg
+**/*.egg
+
+# Testes
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+
+# IDEs
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# Logs
-*.log
-logs/
-log/
+# Ambiente
+.env
+.env.local
+.env.*.local
+!.env.example
 
-# Sistema
-.DS_Store
-Thumbs.db 
+# Git
+.git/
+.gitignore
+
+# Docker
+.docker/
+docker-compose*.yml
+
+# Logs
+logs/
+*.log
+
+# Cache
+.cache/
+.mypy_cache/ 
