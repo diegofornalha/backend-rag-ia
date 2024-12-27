@@ -17,7 +17,10 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
+
+-- Drop the trigger if it exists
+DROP TRIGGER IF EXISTS update_statistics_updated_at ON statistics;
 
 -- Trigger para atualizar o timestamp
 CREATE TRIGGER update_statistics_updated_at
