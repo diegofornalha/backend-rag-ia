@@ -1,149 +1,111 @@
 import json
+import hashlib
 import requests
 import time
-import os
-import hashlib
+from pathlib import Path
 
+# URL da API
 API_URL = "https://backend-rag-ia.onrender.com/api/v1"
-DOCUMENTS = [
-    "documents/steve_jobs.json",
-    "documents/bill_gates.json",
-    "documents/elon_musk.json"
-]
 
-def generate_document_hash(content):
-    """Gera um hash único para o documento baseado apenas no conteúdo."""
-    # Normaliza o texto: remove espaços extras e converte para minúsculas
-    normalized_content = " ".join(content.lower().split())
-    # Gera o hash usando SHA-256 que é mais seguro que MD5
-    return hashlib.sha256(normalized_content.encode()).hexdigest()
+def calculate_hash(content: str) -> str:
+    """Calcula o hash do conteúdo do documento."""
+    return hashlib.sha256(content.encode()).hexdigest()
 
-def format_document(data):
-    """Formata o documento para o formato esperado pela API."""
-    content = data["document"]["content"]
-    document_hash = generate_document_hash(content)
-    return {
-        "content": content,
-        "metadata": {
-            **data["document"]["metadata"],
-            **data["metadata_global"],
-            "document_hash": document_hash  # Hash dentro do metadata
-        }
-    }
-
-def check_document_exists(document_hash):
-    """Verifica se o documento já existe no Supabase."""
+def check_document_exists(document_hash: str) -> bool:
+    """Verifica se o documento já existe no banco."""
     try:
-        response = requests.get(
-            f"{API_URL}/documents/check/{document_hash}",
-            headers={"Content-Type": "application/json"}
-        )
-        return response.status_code == 200
-    except:
+        response = requests.get(f"{API_URL}/documents/check/{document_hash}")
+        if response.status_code == 200:
+            return response.json()["exists"]
+        return False
+    except Exception as e:
+        print(f"Erro ao verificar documento: {e}")
         return False
 
-def upload_document(file_path):
+def upload_document(file_path: str) -> bool:
+    """Faz upload de um documento para a API."""
     try:
-        print(f"\n📄 Processando {file_path}...")
-        
+        # Carrega o documento
         with open(file_path, 'r') as f:
-            raw_document = json.load(f)
-            print("✅ Arquivo JSON lido com sucesso")
+            data = json.load(f)
         
-        # Formata o documento
-        print("🔄 Formatando documento...")
-        document = format_document(raw_document)
-        document_hash = document["metadata"]["document_hash"]
-        print(f"✅ Documento formatado. Hash: {document_hash[:8]}...")
+        # Extrai conteúdo e metadados
+        content = data["document"]["content"]
+        metadata = {
+            **data["metadata_global"],
+            **data["document"]["metadata"]
+        }
+        
+        # Calcula o hash do conteúdo
+        document_hash = calculate_hash(content)
         
         # Verifica se já existe
-        print("🔍 Verificando se documento já existe...")
         if check_document_exists(document_hash):
-            print(f"⚠️ Documento {file_path} já existe, pulando...")
-            return
-        print("✅ Documento não existe, prosseguindo com upload")
-        
-        print(f"\n📤 Enviando {file_path}...")
-        response = requests.post(
-            f"{API_URL}/documents/",
-            json=document,
-            headers={"Content-Type": "application/json"}
-        )
-        
-        if response.status_code == 200:
-            print(f"✅ {file_path} enviado com sucesso!")
-            print(f"📝 Resposta: {response.json()}")
-        else:
-            print(f"❌ Erro ao enviar {file_path}")
-            print(f"📊 Status: {response.status_code}")
-            try:
-                error_detail = response.json().get('detail', 'Sem detalhes do erro')
-                print(f"❗ Erro detalhado: {error_detail}")
-            except:
-                print(f"📝 Resposta bruta: {response.text}")
+            print(f"📝 Documento {file_path} já existe (hash: {document_hash})")
+            return True
             
-    except FileNotFoundError:
-        print(f"❌ Arquivo {file_path} não encontrado")
-    except json.JSONDecodeError as e:
-        print(f"❌ Erro ao decodificar {file_path} - formato JSON inválido")
-        print(f"❗ Detalhe: {str(e)}")
+        # Prepara o payload
+        payload = {
+            "content": content,
+            "metadata": metadata,
+            "document_hash": document_hash
+        }
+        
+        # Envia para a API
+        print(f"📤 Enviando {file_path}...")
+        response = requests.post(f"{API_URL}/documents/", json=payload)
+        
+        # Verifica se o documento foi criado, mesmo com status 500
+        if response.status_code in [201, 500]:
+            # Verifica se o documento existe após o upload
+            if check_document_exists(document_hash):
+                print(f"✅ Documento {file_path} enviado com sucesso!")
+                return True
+            
+        print(f"❌ Erro ao enviar {file_path}: {response.status_code}")
+        if response.text:
+            print(f"📝 Resposta: {response.text}")
+        return False
+            
     except Exception as e:
-        print(f"❌ Erro inesperado ao enviar {file_path}")
-        print(f"❗ Detalhe: {str(e)}")
-        if hasattr(e, 'response'):
-            try:
-                error_detail = e.response.json().get('detail', 'Sem detalhes do erro')
-                print(f"❗ Erro da API: {error_detail}")
-            except:
-                print(f"📝 Resposta bruta: {e.response.text if e.response else 'Sem resposta'}")
+        print(f"❌ Erro ao processar {file_path}: {e}")
+        return False
 
 def main():
-    print("🚀 Iniciando upload dos documentos...")
-    
+    """Função principal."""
     # Verifica se a API está online
     try:
-        print("🔍 Verificando status da API...")
-        health = requests.get(f"{API_URL}/health")
-        if health.status_code != 200:
-            print("❌ API não está respondendo!")
-            print(f"📊 Status: {health.status_code}")
-            print(f"📝 Resposta: {health.text}")
+        response = requests.get(f"{API_URL}/health")
+        if response.status_code != 200:
+            print("❌ API offline!")
             return
-        print("✅ API está online!")
+        print("✅ API online!")
     except Exception as e:
-        print(f"❌ Erro ao verificar status da API")
-        print(f"❗ Detalhe: {str(e)}")
+        print(f"❌ Erro ao verificar API: {e}")
         return
     
-    # Verifica se o diretório documents existe
-    if not os.path.exists("documents"):
-        print("❌ Diretório 'documents' não encontrado!")
-        return
+    # Lista de documentos
+    documents = [
+        "documents/steve_jobs.json",
+        "documents/bill_gates.json",
+        "documents/elon_musk.json"
+    ]
     
-    # Primeira leva de documentos
-    print("\n📦 Enviando primeira leva de documentos...")
-    for doc in DOCUMENTS[:1]:  # Apenas Steve Jobs
-        upload_document(doc)
-        time.sleep(2)
+    # Processa cada documento
+    sucessos = 0
+    falhas = 0
     
-    # Segunda leva
-    print("\n📦 Enviando segunda leva de documentos...")
-    for doc in DOCUMENTS[1:2]:  # Apenas Bill Gates
-        upload_document(doc)
-        time.sleep(2)
+    for doc in documents:
+        if upload_document(doc):
+            sucessos += 1
+        else:
+            falhas += 1
+        time.sleep(1)  # Espera 1 segundo entre uploads
     
-    # Terceira leva
-    print("\n📦 Enviando terceira leva de documentos...")
-    for doc in DOCUMENTS[2:]:  # Apenas Elon Musk
-        upload_document(doc)
-        time.sleep(2)
-    
-    # Teste de duplicidade
-    print("\n🔄 Testando duplicidade...")
-    print("Tentando enviar Steve Jobs novamente...")
-    upload_document(DOCUMENTS[0])
-    
-    print("\n✨ Processo finalizado!")
+    print(f"\n✨ Processo finalizado!")
+    print(f"✅ {sucessos} documentos enviados com sucesso")
+    if falhas > 0:
+        print(f"❌ {falhas} documentos falharam")
 
 if __name__ == "__main__":
     main() 
