@@ -9,6 +9,8 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from sentence_transformers import SentenceTransformer
+import sys
+import fastapi
 
 # Configuração de logging
 logging.basicConfig(
@@ -327,3 +329,105 @@ async def delete_all_documents():
     except Exception as e:
         logger.error(f"Erro ao remover documentos: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
+
+@app.get("/api/v1/debug")
+async def debug_info():
+    """Retorna informações detalhadas para debug."""
+    try:
+        logger.info("🔍 Coletando informações de debug...")
+        debug_info = {
+            "timestamp": datetime.now().isoformat(),
+            "environment": {
+                "python_version": sys.version,
+                "fastapi_version": fastapi.__version__,
+                "supabase_initialized": supabase is not None,
+                "model_initialized": model is not None
+            }
+        }
+        
+        # Verifica conexão com Supabase
+        try:
+            logger.info("🔌 Testando conexão com Supabase...")
+            test_query = supabase.table("documents").select("count").execute()
+            debug_info["supabase"] = {
+                "connection": "ok",
+                "response": test_query.data
+            }
+        except Exception as e:
+            debug_info["supabase"] = {
+                "connection": "error",
+                "error": str(e)
+            }
+            
+        # Verifica documentos
+        try:
+            logger.info("📝 Consultando documentos...")
+            docs = supabase.table("documents").select("*").execute()
+            debug_info["documents"] = {
+                "count": len(docs.data),
+                "latest": docs.data[-3:] if docs.data else []
+            }
+        except Exception as e:
+            debug_info["documents"] = {
+                "error": str(e)
+            }
+            
+        # Verifica estatísticas
+        try:
+            logger.info("📊 Consultando estatísticas...")
+            stats = supabase.table("statistics").select("*").execute()
+            debug_info["statistics"] = {
+                "data": stats.data,
+                "documents_count": next(
+                    (item["value"] for item in stats.data if item["key"] == "documents_count"),
+                    None
+                )
+            }
+        except Exception as e:
+            debug_info["statistics"] = {
+                "error": str(e)
+            }
+            
+        # Verifica embeddings
+        try:
+            logger.info("🔤 Consultando embeddings...")
+            embeddings = supabase.table("embeddings").select("*").execute()
+            debug_info["embeddings"] = {
+                "count": len(embeddings.data),
+                "latest": embeddings.data[-3:] if embeddings.data else []
+            }
+        except Exception as e:
+            debug_info["embeddings"] = {
+                "error": str(e)
+            }
+            
+        # Testa modelo
+        try:
+            logger.info("🧠 Testando modelo...")
+            test_text = "teste de embedding"
+            test_embedding = model.get_embedding(test_text)
+            debug_info["model"] = {
+                "status": "ok",
+                "embedding_size": len(test_embedding),
+                "test_text": test_text
+            }
+        except Exception as e:
+            debug_info["model"] = {
+                "status": "error",
+                "error": str(e)
+            }
+            
+        logger.info("✅ Debug info coletada com sucesso")
+        return debug_info
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao coletar debug info: {str(e)}")
+        logger.exception("Detalhes do erro:")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": str(e),
+                "timestamp": datetime.now().isoformat()
+            }
+        ) 
