@@ -10,12 +10,19 @@ def load_document(file_path: str) -> dict:
         doc = json.load(f)
         
     # Gera um hash do conteúdo
-    content_hash = hashlib.md5(doc['content'].encode()).hexdigest()
+    content_hash = hashlib.md5(doc['document']['content'].encode()).hexdigest()
     
-    # Adiciona o hash aos metadados
-    doc['metadata']['document_hash'] = content_hash
+    # Prepara o documento no formato esperado pela API
+    formatted_doc = {
+        'content': doc['document']['content'],
+        'metadata': {
+            **doc['document']['metadata'],
+            **doc['metadata_global'],
+            'document_hash': content_hash
+        }
+    }
     
-    return doc
+    return formatted_doc
 
 def upload_document(doc: dict, api_url: str) -> dict:
     """Envia um documento para a API."""
@@ -28,7 +35,7 @@ def upload_document(doc: dict, api_url: str) -> dict:
 
 def main():
     # Configurações
-    API_URL = "http://localhost:8000/api/v1"
+    API_URL = "http://localhost:8000"
     DOCS_DIR = Path("documents")
     
     print("🔍 Procurando documentos JSON...")
@@ -43,7 +50,7 @@ def main():
         try:
             # Carrega o documento
             doc = load_document(str(file_path))
-            print(f"✅ Documento carregado: {doc['metadata'].get('title', 'Sem título')}")
+            print(f"✅ Documento carregado: {doc['metadata'].get('title', file_path.stem)}")
             
             # Envia para a API
             print("📤 Enviando para a API...")

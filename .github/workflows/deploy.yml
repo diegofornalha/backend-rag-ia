@@ -1,0 +1,183 @@
+name: Deploy Progressivo
+
+on:
+  workflow_run:
+    workflows: ["Build e Publicação"]
+    types:
+      - completed
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DEPLOY_TIMEOUT: "15m"
+  ERROR_THRESHOLD: "1"
+  LATENCY_THRESHOLD: "500"
+  MEMORY_THRESHOLD: "80"
+  CPU_THRESHOLD: "80"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      deploy_id: ${{ steps.deploy_id.outputs.id }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - id: deploy_id
+        run: echo "id=$(date +%s)" >> $GITHUB_OUTPUT
+
+      - id: version
+        run: echo "version=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+  deploy-preview:
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: preview
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy para Preview
+        id: deploy
+        run: |
+          # Deploy para ambiente de preview do Render
+          curl -X POST ${{ vars.RENDER_DEPLOY_HOOK_PREVIEW }}
+          echo "url=${{ vars.APP_URL }}" >> $GITHUB_OUTPUT
+          sleep 60  # Aguarda deploy inicializar
+
+      - name: Testes de Smoke
+        run: |
+          ./scripts/smoke_tests.sh ${{ vars.APP_URL }}
+
+      - name: Testes de Performance
+        run: |
+          python -m pytest tests/performance/ --asyncio-mode=auto
+
+      - name: Verificar Métricas Iniciais
+        run: |
+          ./scripts/monitor_canary.sh --timeout=5m \
+            --threshold-error=$ERROR_THRESHOLD \
+            --threshold-latency=$LATENCY_THRESHOLD \
+            --threshold-cpu=$CPU_THRESHOLD \
+            --threshold-memory=$MEMORY_THRESHOLD
+
+  deploy-canary:
+    needs: [prepare, deploy-preview]
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      status: ${{ steps.monitor.outputs.status }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy Canary (10%)
+        run: |
+          # Deploy para 10% do tráfego
+          curl -X POST ${{ vars.RENDER_DEPLOY_HOOK_10 }}
+          sleep 60  # Aguarda deploy inicializar
+
+      - name: Monitorar Canary
+        id: monitor
+        run: |
+          if ./scripts/monitor_canary.sh --timeout=$DEPLOY_TIMEOUT \
+            --threshold-error=$ERROR_THRESHOLD \
+            --threshold-latency=$LATENCY_THRESHOLD \
+            --threshold-cpu=$CPU_THRESHOLD \
+            --threshold-memory=$MEMORY_THRESHOLD; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Verificar Logs
+        run: |
+          ./scripts/check_error_logs.sh --service=app-canary --window=15
+
+  deploy-production:
+    needs: [prepare, deploy-canary]
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy Progressivo
+        run: |
+          # Deploy progressivo (25%, 50%, 75%, 100%)
+          for percentage in 25 50 75 100; do
+            echo "Escalando para $percentage%..."
+            
+            # Atualizar porcentagem de tráfego
+            curl -X POST ${{ vars.RENDER_DEPLOY_HOOK_SCALE }} \
+              -H "Content-Type: application/json" \
+              -d "{\"percentage\": $percentage}"
+            
+            sleep 300  # Aguarda estabilização
+            
+            # Verificar saúde
+            if ! ./scripts/check_health.sh \
+              --threshold-success=99 \
+              --threshold-latency=$LATENCY_THRESHOLD; then
+              echo "Falha na verificação de saúde em $percentage%"
+              exit 1
+            fi
+            
+            # Verificar métricas
+            if ! ./scripts/monitor_canary.sh --timeout=5m \
+              --threshold-error=$ERROR_THRESHOLD \
+              --threshold-latency=$LATENCY_THRESHOLD \
+              --threshold-cpu=$CPU_THRESHOLD \
+              --threshold-memory=$MEMORY_THRESHOLD; then
+              echo "Falha nas métricas em $percentage%"
+              exit 1
+            fi
+          done
+
+      - name: Finalizar Deploy
+        run: |
+          # Finalizar deploy no Render
+          curl -X POST ${{ vars.RENDER_DEPLOY_HOOK_100 }}
+
+      - name: Notificar Sucesso
+        if: success()
+        uses: act10ns/slack@v2
+        with:
+          status: ${{ job.status }}
+          channel: "#deploys"
+          message: "Deploy ${{ needs.prepare.outputs.deploy_id }} concluído com sucesso!"
+
+  rollback:
+    needs: [prepare]
+    runs-on: ubuntu-latest
+    if: failure()
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Executar Rollback
+        run: |
+          # Reverter para versão anterior no Render
+          curl -X POST ${{ vars.RENDER_DEPLOY_HOOK_ROLLBACK }}
+
+          # Verificar saúde após rollback
+          if ! ./scripts/check_health.sh; then
+            echo "ALERTA: Problemas persistem após rollback!"
+          fi
+
+      - name: Notificar Equipe
+        uses: act10ns/slack@v2
+        with:
+          status: ${{ job.status }}
+          channel: "#deploys"
+          message: |
+            Deploy ${{ needs.prepare.outputs.deploy_id }} falhou e foi revertido
+            Versão: ${{ needs.prepare.outputs.version }}
+            Ambiente: ${{ github.event.deployment.environment }}
+            Detalhes: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

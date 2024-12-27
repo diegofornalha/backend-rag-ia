@@ -5,6 +5,7 @@ import os
 from typing import Optional
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from config.config import get_settings
 
 load_dotenv()
 
@@ -23,8 +24,9 @@ class SupabaseManager:
     def __init__(self) -> None:
         """Inicializa o cliente Supabase."""
         if self._client is None:
-            supabase_url = os.getenv("SUPABASE_URL")
-            supabase_key = os.getenv("SUPABASE_KEY")
+            settings = get_settings()
+            supabase_url = settings.SUPABASE_URL
+            supabase_key = settings.SUPABASE_KEY
             
             if not supabase_url or not supabase_key:
                 raise ValueError(
@@ -39,6 +41,10 @@ class SupabaseManager:
         if self._client is None:
             raise RuntimeError("Cliente Supabase não foi inicializado")
         return self._client
+
+def create_supabase_client() -> Client:
+    """Cria e retorna um cliente Supabase."""
+    return SupabaseManager().client
 
 # Instância global do cliente Supabase
 supabase = SupabaseManager().client 

@@ -1,13 +1,11 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import logging
 import os
 from dotenv import load_dotenv
-from supabase import create_client, Client
 from sentence_transformers import SentenceTransformer
 import sys
 import fastapi
@@ -19,16 +17,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Carrega variáveis de ambiente
-load_dotenv()
+# Carrega configurações
+from config.config import get_settings
+settings = get_settings()
+
+# Importa modelos e serviços do cluster Supabase
+from clusters.supabase.models.database import Document, Query
+from clusters.supabase.services.supabase_client import create_supabase_client
 
 # Configuração do Supabase
-supabase_url = os.getenv("SUPABASE_URL")
-supabase_key = os.getenv("SUPABASE_KEY")
-supabase: Client = create_client(supabase_url, supabase_key) if supabase_url and supabase_key else None
+supabase = create_supabase_client() if settings.SUPABASE_URL and settings.SUPABASE_KEY else None
 
 # Carrega o modelo
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer(settings.MODEL_NAME)
+
+# Inicializa o cluster
+from clusters import get_cluster
+cluster = get_cluster()
 
 # Cria a aplicação FastAPI
 app = FastAPI()
@@ -208,62 +213,10 @@ async def update_documents_count():
 async def health_check():
     """Verifica o status da API e retorna informações detalhadas."""
     try:
-        logger.info("🔍 Iniciando health check...")
-        
-        # Verifica conexão com Supabase
-        if not supabase:
-            logger.error("❌ Cliente Supabase não inicializado")
-            raise RuntimeError("Cliente Supabase não inicializado")
-            
-        # Consulta documentos
-        logger.info("📝 Consultando documentos...")
-        docs = supabase.table("documents").select("id").execute()
-        count = len(docs.data)
-        logger.info(f"📊 Contagem bruta: {count}")
-        
-        # Atualiza a contagem na tabela de estatísticas
-        logger.info("🔄 Atualizando contagem...")
-        await update_documents_count()
-        
-        # Verifica embeddings
-        logger.info("🔤 Consultando embeddings...")
-        embeddings = supabase.table("embeddings").select("id").execute()
-        embeddings_count = len(embeddings.data)
-        logger.info(f"📊 Total de embeddings: {embeddings_count}")
-        
-        # Busca a contagem da tabela de estatísticas
-        logger.info("📊 Buscando contagem armazenada...")
-        stats = supabase.table("statistics").select("*").eq("key", "documents_count").execute()
-        stored_count = stats.data[0]["value"] if stats.data else count
-        logger.info(f"📊 Contagem armazenada: {stored_count}")
-        
-        result = {
-            "status": "healthy",
-            "message": "API está funcionando normalmente",
-            "documents_count": stored_count,
-            "embeddings_count": embeddings_count,
-            "timestamp": datetime.now().isoformat(),
-            "debug": {
-                "raw_count": count,
-                "stored_count": stored_count,
-                "last_update": stats.data[0]["updated_at"] if stats.data else None
-            }
-        }
-        logger.info(f"📤 Retornando resposta: {result}")
-        return result
-        
+        return await cluster.get_health_check()
     except Exception as e:
         logger.error(f"❌ Erro no health check: {str(e)}")
-        logger.exception("Detalhes do erro:")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "status": "unhealthy",
-                "message": str(e),
-                "documents_count": 0,
-                "timestamp": datetime.now().isoformat()
-            }
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/search/")
 async def search_documents(query: Query):
