@@ -85,6 +85,7 @@ async def health_check():
     """Verifica o status da API e retorna a contagem de documentos."""
     try:
         logger.info("🔍 Iniciando health check...")
+        debug_info = {}
         
         # Verifica conexão com Supabase
         if not supabase:
@@ -93,22 +94,45 @@ async def health_check():
             
         # Consulta documentos
         logger.info("📝 Consultando documentos...")
-        docs = supabase.table("documents").select("*").execute()
-        count = len(docs.data)
-        logger.info(f"📊 Total de documentos: {count}")
+        try:
+            docs = supabase.table("documents").select("*").execute()
+            count = len(docs.data)
+            debug_info["documents_query"] = "ok"
+            debug_info["documents_raw_count"] = count
+            logger.info(f"📊 Total de documentos: {count}")
+        except Exception as e:
+            debug_info["documents_query_error"] = str(e)
+            count = 0
         
         # Atualiza a contagem na tabela de estatísticas
-        await update_documents_count()
+        try:
+            stats_count = await update_documents_count()
+            debug_info["stats_update"] = "ok"
+            debug_info["stats_count"] = stats_count
+        except Exception as e:
+            debug_info["stats_update_error"] = str(e)
         
         # Verifica embeddings
         logger.info("🔤 Consultando embeddings...")
-        embeddings = supabase.table("embeddings").select("*").execute()
-        embeddings_count = len(embeddings.data)
-        logger.info(f"📊 Total de embeddings: {embeddings_count}")
+        try:
+            embeddings = supabase.table("embeddings").select("*").execute()
+            embeddings_count = len(embeddings.data)
+            debug_info["embeddings_query"] = "ok"
+            debug_info["embeddings_count"] = embeddings_count
+            logger.info(f"📊 Total de embeddings: {embeddings_count}")
+        except Exception as e:
+            debug_info["embeddings_query_error"] = str(e)
+            embeddings_count = 0
         
         # Busca a contagem da tabela de estatísticas
-        stats = supabase.table("statistics").select("*").eq("key", "documents_count").execute()
-        stored_count = stats.data[0]["value"] if stats.data else count
+        try:
+            stats = supabase.table("statistics").select("*").eq("key", "documents_count").execute()
+            stored_count = stats.data[0]["value"] if stats.data else count
+            debug_info["stats_query"] = "ok"
+            debug_info["stored_count"] = stored_count
+        except Exception as e:
+            debug_info["stats_query_error"] = str(e)
+            stored_count = count
         
         logger.info(f"✅ Health check completo - Documentos: {count}, Embeddings: {embeddings_count}, Contagem armazenada: {stored_count}")
         
@@ -118,8 +142,9 @@ async def health_check():
             "documents_count": stored_count,
             "embeddings_count": embeddings_count,
             "timestamp": datetime.now().isoformat(),
-            "documents": docs.data,
-            "allow_empty_deploys": ALLOW_EMPTY_DEPLOYS
+            "documents": docs.data if "docs" in locals() else [],
+            "allow_empty_deploys": ALLOW_EMPTY_DEPLOYS,
+            "debug_info": debug_info
         }
         
     except Exception as e:
@@ -129,7 +154,8 @@ async def health_check():
             "status": "unhealthy",
             "message": str(e),
             "documents_count": 0,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "debug_info": {"error": str(e)}
         } 
 
 @app.post("/api/v1/search/")
