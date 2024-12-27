@@ -53,7 +53,7 @@ def upload_document(file_path):
         # Formata o documento
         print("🔄 Formatando documento...")
         document = format_document(raw_document)
-        document_hash = document["document_hash"]
+        document_hash = document["metadata"]["document_hash"]
         print(f"✅ Documento formatado. Hash: {document_hash[:8]}...")
         
         # Verifica se já existe
