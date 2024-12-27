@@ -45,8 +45,6 @@ function App() {
   // Efeitos
   useEffect(() => {
     checkApiHealth();
-    const interval = setInterval(checkApiHealth, 5000);
-    return () => clearInterval(interval);
   }, [selectedEnvironment]);
 
   useEffect(() => {
