@@ -134,4 +134,21 @@ async def check_document_exists(document_hash: str) -> Dict[str, bool]:
             
     except Exception as e:
         logger.error(f"Erro ao verificar documento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/documents/count")
+async def count_documents() -> Dict[str, int]:
+    """
+    Conta o número total de documentos.
+    
+    Returns:
+        Dict com a contagem de documentos.
+    """
+    try:
+        result = supabase.table("documents").select("id", count="exact").execute()
+        count = result.count if result.count is not None else 0
+        return {"count": count}
+            
+    except Exception as e:
+        logger.error(f"Erro ao contar documentos: {e}")
         raise HTTPException(status_code=500, detail=str(e)) 
