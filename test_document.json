@@ -1,0 +1,16 @@
+{
+  "metadata_global": {
+    "language": "pt-BR",
+    "pessoas": ["Teste"],
+    "topics": ["teste"]
+  },
+  "document": {
+    "content": "Este é um documento de teste para verificar o upload.",
+    "metadata": {
+      "source": "test",
+      "author": "Test Author",
+      "title": "Test Document",
+      "type": "test"
+    }
+  }
+}
