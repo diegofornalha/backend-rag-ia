@@ -96,10 +96,28 @@ def main():
         print("❌ Diretório 'documents' não encontrado!")
         return
     
-    # Upload dos documentos
-    for doc in DOCUMENTS:
+    # Primeira leva de documentos
+    print("\n📦 Enviando primeira leva de documentos...")
+    for doc in DOCUMENTS[:1]:  # Apenas Steve Jobs
         upload_document(doc)
-        time.sleep(2)  # Espera 2 segundos entre cada upload
+        time.sleep(2)
+    
+    # Segunda leva
+    print("\n📦 Enviando segunda leva de documentos...")
+    for doc in DOCUMENTS[1:2]:  # Apenas Bill Gates
+        upload_document(doc)
+        time.sleep(2)
+    
+    # Terceira leva
+    print("\n📦 Enviando terceira leva de documentos...")
+    for doc in DOCUMENTS[2:]:  # Apenas Elon Musk
+        upload_document(doc)
+        time.sleep(2)
+    
+    # Teste de duplicidade
+    print("\n🔄 Testando duplicidade...")
+    print("Tentando enviar Steve Jobs novamente...")
+    upload_document(DOCUMENTS[0])
     
     print("\n✨ Processo finalizado!")
 
