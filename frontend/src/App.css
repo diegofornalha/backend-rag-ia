@@ -28,55 +28,83 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0;
 }
 
 /* Header */
 .app-header {
-  background-color: #f8f9fa;
-  padding: 1rem;
-  border-bottom: 1px solid #dee2e6;
-}
-
-.app-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #212529;
+  display: none;
 }
 
 .controls {
   display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
+  align-items: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
 }
 
 .environment-selector {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
+  gap: 1rem;
 }
 
 .environment-selector label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
   font-size: 0.875rem;
-  color: #6c757d;
+  color: #718096;
 }
 
-.environment-selector select {
-  padding: 0.5rem;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  background-color: #e2e8f0;
+  border-radius: 30px;
+  padding: 4px;
+  cursor: pointer;
+  min-width: 140px;
+  border: 1px solid #cbd5e0;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.toggle-switch.connected {
+  background-color: #d8f5e5;
+  border-color: #38a169;
+}
+
+.toggle-switch.connected::before {
+  background-color: #38a169;
+}
+
+.toggle-option {
+  flex: 1;
+  padding: 6px 8px;
+  text-align: center;
+  color: #4a5568;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 25px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  user-select: none;
+}
+
+.toggle-option.selected {
+  color: #1a202c;
   background-color: white;
-  font-size: 0.875rem;
-  color: #212529;
-  min-width: 200px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.environment-selector select:focus {
-  outline: none;
-  border-color: #86b7fe;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+.toggle-switch.connected .toggle-option.selected {
+  background-color: #38a169;
+  color: white;
+}
+
+/* Esconde o select original */
+.environment-selector select {
+  display: none;
 }
 
 /* Status da API */
@@ -84,34 +112,89 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex: 1;
 }
 
 .status-indicator {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   font-weight: 500;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.status-indicator.connected {
+  background-color: #f0fff4;
+  color: #22543d;
+}
+
+.status-indicator.disconnected {
+  background-color: #fff5f5;
+  color: #822727;
+}
+
+.documents-count {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  background-color: #f7fafc;
+  color: #2d3748;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 
 .status-indicator::before {
   content: '';
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: 10px;
+  transition: all 0.3s ease;
 }
 
-.status-indicator.connected::before {
-  background-color: #28a745;
+.retry-button {
+  padding: 0.5rem 1.25rem;
+  background-color: #0366d6;
+  color: white;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  width: auto;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.status-indicator.disconnected::before {
-  background-color: #dc3545;
+.retry-button:hover {
+  background-color: #0256b9;
+  transform: translateY(-1px);
+}
+
+.retry-button:active {
+  transform: translateY(0);
 }
 
 /* Container do chat */
@@ -204,10 +287,15 @@ body {
   padding: 1rem;
   border-top: 1px solid #e1e4e8;
   background-color: white;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .input-container {
-  margin-bottom: 1rem;
+  flex: 1;
+  margin-bottom: 0;
+  position: relative;
 }
 
 textarea {
@@ -290,10 +378,12 @@ button.loading::after {
 
 /* Debug info */
 .debug-info {
-  background-color: #1a1a1a;
+  position: static;
+  margin-top: 1rem;
+  background-color: #1a202c;
   border-radius: 8px;
   padding: 1rem;
-  margin-top: 2rem;
+  width: 100%;
 }
 
 .debug-info h2 {
@@ -303,14 +393,14 @@ button.loading::after {
 }
 
 .debug-log {
-  background-color: #2d2d2d;
-  border-radius: 4px;
-  padding: 1rem;
+  color: #e2e8f0;
   font-family: 'Monaco', 'Consolas', monospace;
   font-size: 0.875rem;
-  color: #e1e4e8;
-  max-height: 200px;
-  overflow-y: auto;
+  line-height: 1.5;
+  background-color: #2d3748;
+  padding: 0.75rem;
+  border-radius: 6px;
+  max-height: none;
 }
 
 .debug-message {
@@ -402,4 +492,81 @@ button.loading::after {
 
 .suggestion.selected {
   background-color: #e9ecef;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e1e4e8;
+}
+
+.chat-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.documents-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #718096;
+  padding: 0.5rem 0.75rem;
+  background-color: #f7fafc;
+  border-radius: 8px;
+}
+
+/* Remove o botão de enviar */
+button[type="submit"] {
+  display: none;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.debug-toggle {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #718096;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  width: auto;
+}
+
+.debug-toggle:hover {
+  background-color: #f7fafc;
+  color: #4a5568;
+}
+
+.debug-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Animação para o debug info */
+.debug-info {
+  animation: slideIn 0.3s ease-out;
+  transition: all 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

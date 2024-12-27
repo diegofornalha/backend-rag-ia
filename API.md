@@ -88,8 +88,20 @@ Verifica o status da API.
 ```json
 {
   "status": "healthy",
-  "documents_loaded": 3,
-  "index_size": 3
+  "message": "API está funcionando normalmente",
+  "documents_count": 3
+}
+```
+
+### GET /api/v1/documents/count
+
+Retorna o número total de documentos armazenados.
+
+**Response:**
+
+```json
+{
+  "count": 3
 }
 ```
 

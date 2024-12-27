@@ -21,10 +21,12 @@ function App() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState<string>('Testando conexão...');
+  const [documentsCount, setDocumentsCount] = useState<number>(0);
   const [selectedEnvironment, setSelectedEnvironment] = useState<Environment>({
     name: 'Produção',
     apiUrl: '/api/v1'
   });
+  const [showDebug, setShowDebug] = useState(true);
 
   // Referências
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -72,13 +74,16 @@ function App() {
         const data = await response.json();
         console.log('Dados da API:', data);
         setApiStatus(`API Conectada`);
+        setDocumentsCount(data.documents_count || 0);
       } else {
         console.error('API indisponível:', response.status, response.statusText);
         setApiStatus('API Indisponível');
+        setDocumentsCount(0);
       }
     } catch (error) {
       console.error('Erro ao verificar status da API:', error);
       setApiStatus('Erro de conexão');
+      setDocumentsCount(0);
     }
   };
 
@@ -198,39 +203,32 @@ function App() {
 
   return (
     <div className="app-container">
-      <header className="app-header">
-        <h1>Chat API</h1>
-        <div className="controls">
-          <div className="environment-selector">
-            <label>
-              Ambiente
-              <select 
-                value={selectedEnvironment.name}
-                onChange={handleEnvironmentChange}
-              >
-                {environments.map(env => (
-                  <option key={env.name} value={env.name}>
-                    {env.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+      <main className="chat-container">
+        <div className="chat-header">
+          <h1 className="chat-title">Chat API</h1>
+          <div className="header-controls">
+            {documentsCount > 0 && (
+              <div className="documents-info">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 2C3 1.44772 3.44772 1 4 1H9L13 5V14C13 14.5523 12.5523 15 12 15H4C3.44772 15 3 14.5523 3 14V2Z" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M9 1V5H13" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                {documentsCount} documento{documentsCount !== 1 ? 's' : ''}
+              </div>
+            )}
+            <button 
+              className="debug-toggle"
+              onClick={() => setShowDebug(!showDebug)}
+              title={showDebug ? "Ocultar Debug Info" : "Mostrar Debug Info"}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4V4C8.13401 4 5 7.13401 5 11V12C5 15.866 8.13401 19 12 19V19C15.866 19 19 15.866 19 12V11C19 7.13401 15.866 4 12 4Z" stroke="currentColor" strokeWidth="2"/>
+                <path d="M12 15V19M12 8L12 12M15 12H19M5 12H9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
           </div>
         </div>
-      </header>
 
-      <div className="api-status">
-        <span className={`status-indicator ${apiStatus.includes('Conectada') ? 'connected' : 'disconnected'}`}>
-          {apiStatus}
-        </span>
-        {apiStatus !== 'API Conectada' && (
-          <button onClick={handleRetry} className="retry-button">
-            TENTAR NOVAMENTE
-          </button>
-        )}
-      </div>
-
-      <main className="chat-container">
         <div className="messages-container">
           {messages.length === 0 ? (
             <div className="empty-state">
@@ -274,30 +272,45 @@ function App() {
               onChange={handleTextareaChange}
               onKeyPress={handleKeyPress}
               disabled={isLoading || !apiStatus.includes('Conectada')}
-              placeholder="Digite sua mensagem (Enter para enviar, Shift + Enter para nova linha)"
+              placeholder=""
               rows={1}
             />
           </div>
-          <button 
-            type="submit" 
-            disabled={isLoading || !inputMessage.trim() || !apiStatus.includes('Conectada')}
-            className={isLoading ? 'loading' : ''}
+          <div 
+            className={`toggle-switch ${apiStatus.includes('Conectada') ? 'connected' : ''}`}
+            data-selected={selectedEnvironment.name}
+            onClick={() => {
+              const newEnv = selectedEnvironment.name === 'Produção' ? 
+                environments.find(e => e.name === 'Ambiente Local') : 
+                environments.find(e => e.name === 'Produção');
+              if (newEnv) {
+                setSelectedEnvironment(newEnv);
+              }
+            }}
           >
-            {isLoading ? 'ENVIANDO...' : 'ENVIAR'}
-          </button>
+            <div className={`toggle-option ${selectedEnvironment.name === 'Produção' ? 'selected' : ''}`}>
+              Produção
+            </div>
+            <div className={`toggle-option ${selectedEnvironment.name === 'Ambiente Local' ? 'selected' : ''}`}>
+              Local
+            </div>
+          </div>
         </form>
       </main>
 
-      <footer className="debug-info">
-        <h2>Informações de Debug</h2>
-        <div className="debug-log">
-          {messages.map((msg, index) => (
-            <div key={msg.id} className="debug-message">
-              [{msg.timestamp.toLocaleTimeString()}] {msg.type === 'user' ? 'Usuário' : 'Assistente'}: {msg.content.substring(0, 50)}...
-            </div>
-          ))}
+      {showDebug && (
+        <div className="debug-info">
+          <div className="debug-log">
+            <strong>Debug Info</strong>
+            <br />
+            API Status: <span style={{ color: apiStatus.includes('Conectada') ? '#68d391' : '#fc8181' }}>{apiStatus}</span>
+            <br />
+            Ambiente: <span style={{ color: '#90cdf4' }}>{selectedEnvironment.name}</span>
+            <br />
+            Documentos: <span style={{ color: '#9ae6b4' }}>{documentsCount}</span>
+          </div>
         </div>
-      </footer>
+      )}
     </div>
   );
 }

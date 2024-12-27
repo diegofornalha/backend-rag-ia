@@ -52,3 +52,23 @@ async def add_document(document: Document):
     except Exception as e:
         logger.error(f"Erro ao adicionar documento: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
+
+@app.get("/api/v1/health")
+async def health_check():
+    """Verifica o status da API."""
+    try:
+        # Conta documentos
+        result = supabase.table("documents").select("id", count="exact").execute()
+        count = result.count if result.count is not None else 0
+        
+        return {
+            "status": "healthy",
+            "message": "API está funcionando normalmente",
+            "documents_count": count
+        }
+    except Exception as e:
+        logger.error(f"Erro no health check: {str(e)}")
+        return {
+            "status": "unhealthy",
+            "message": str(e)
+        } 
