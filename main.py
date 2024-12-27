@@ -109,13 +109,18 @@ async def check_document(document_hash: str):
 async def add_document(document: Document):
     """Adiciona um novo documento e retorna informações detalhadas."""
     try:
+        logger.info("📝 Iniciando adição de documento...")
+        
         # Extrai o document_hash dos metadados
         document_hash = document.metadata.pop("document_hash", None)
+        logger.info(f"🔑 Hash do documento: {document_hash}")
         
         # Verifica se já existe um documento com este hash
         if document_hash:
+            logger.info("🔍 Verificando documento existente...")
             existing = supabase.table("documents").select("id").eq("document_hash", document_hash).execute()
             if len(existing.data) > 0:
+                logger.info(f"⚠️ Documento já existe: {existing.data[0]['id']}")
                 return JSONResponse(
                     status_code=409,
                     content={
@@ -126,7 +131,9 @@ async def add_document(document: Document):
                 )
         
         # Gera o embedding
+        logger.info("🔤 Gerando embedding...")
         embedding = model.get_embedding(document.content)
+        logger.info(f"✅ Embedding gerado: {len(embedding)} dimensões")
         
         # Prepara os dados para inserção
         data = {
@@ -137,21 +144,28 @@ async def add_document(document: Document):
         }
         
         # Insere no Supabase
+        logger.info("💾 Inserindo documento no Supabase...")
         response = supabase.table("documents").insert(data).execute()
+        logger.info(f"✅ Documento inserido: {response.data[0]['id']}")
         
         # Atualiza a contagem
+        logger.info("🔄 Atualizando contagem de documentos...")
         new_count = await update_documents_count()
+        logger.info(f"📊 Nova contagem: {new_count}")
         
         # Retorna resposta detalhada
-        return {
+        result = {
             "status": "success",
             "message": "Documento adicionado com sucesso",
             "document": response.data[0],
             "documents_count": new_count
         }
+        logger.info(f"📤 Retornando resposta: {result}")
+        return result
         
     except Exception as e:
-        logger.error(f"Erro ao adicionar documento: {str(e)}")
+        logger.error(f"❌ Erro ao adicionar documento: {str(e)}")
+        logger.exception("Detalhes do erro:")
         return JSONResponse(
             status_code=500,
             content={
@@ -196,24 +210,32 @@ async def health_check():
         
         # Verifica conexão com Supabase
         if not supabase:
+            logger.error("❌ Cliente Supabase não inicializado")
             raise RuntimeError("Cliente Supabase não inicializado")
             
         # Consulta documentos
+        logger.info("📝 Consultando documentos...")
         docs = supabase.table("documents").select("id").execute()
         count = len(docs.data)
+        logger.info(f"📊 Contagem bruta: {count}")
         
         # Atualiza a contagem na tabela de estatísticas
+        logger.info("🔄 Atualizando contagem...")
         await update_documents_count()
         
         # Verifica embeddings
+        logger.info("🔤 Consultando embeddings...")
         embeddings = supabase.table("embeddings").select("id").execute()
         embeddings_count = len(embeddings.data)
+        logger.info(f"📊 Total de embeddings: {embeddings_count}")
         
         # Busca a contagem da tabela de estatísticas
+        logger.info("📊 Buscando contagem armazenada...")
         stats = supabase.table("statistics").select("*").eq("key", "documents_count").execute()
         stored_count = stats.data[0]["value"] if stats.data else count
+        logger.info(f"📊 Contagem armazenada: {stored_count}")
         
-        return {
+        result = {
             "status": "healthy",
             "message": "API está funcionando normalmente",
             "documents_count": stored_count,
@@ -225,9 +247,12 @@ async def health_check():
                 "last_update": stats.data[0]["updated_at"] if stats.data else None
             }
         }
+        logger.info(f"📤 Retornando resposta: {result}")
+        return result
         
     except Exception as e:
         logger.error(f"❌ Erro no health check: {str(e)}")
+        logger.exception("Detalhes do erro:")
         return JSONResponse(
             status_code=500,
             content={
