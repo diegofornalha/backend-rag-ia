@@ -26,9 +26,9 @@ def format_document(data):
         "content": content,
         "metadata": {
             **data["document"]["metadata"],
-            **data["metadata_global"]
-        },
-        "document_hash": document_hash  # Hash no nível raiz
+            **data["metadata_global"],
+            "document_hash": document_hash  # Hash dentro do metadata
+        }
     }
 
 def check_document_exists(document_hash):
