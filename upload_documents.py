@@ -11,22 +11,22 @@ DOCUMENTS = [
     "documents/elon_musk.json"
 ]
 
-def generate_document_hash(content, metadata):
-    """Gera um hash único para o documento baseado no conteúdo e tipo."""
-    key = f"{content}-{metadata.get('type', '')}"
-    return hashlib.md5(key.encode()).hexdigest()
+def generate_document_hash(content):
+    """Gera um hash único para o documento baseado apenas no conteúdo."""
+    # Normaliza o texto: remove espaços extras e converte para minúsculas
+    normalized_content = " ".join(content.lower().split())
+    # Gera o hash usando SHA-256 que é mais seguro que MD5
+    return hashlib.sha256(normalized_content.encode()).hexdigest()
 
 def format_document(data):
     """Formata o documento para o formato esperado pela API."""
+    content = data["document"]["content"]
     return {
-        "content": data["document"]["content"],
+        "content": content,
         "metadata": {
             **data["document"]["metadata"],
             **data["metadata_global"],
-            "document_hash": generate_document_hash(
-                data["document"]["content"],
-                data["document"]["metadata"]
-            )
+            "document_hash": generate_document_hash(content)
         }
     }
 

@@ -8,6 +8,7 @@ API de busca semântica e processamento de documentos usando FastAPI, Supabase e
 - Python 3.12+
 - Supabase Account
 - Google Cloud (para Gemini API)
+- Render Account
 
 ## Variáveis de Ambiente
 
@@ -50,13 +51,13 @@ SUPABASE_KEY=your_supabase_anon_key
 ### Pull da Imagem
 
 ```bash
-docker pull ghcr.io/diegofornalha/backend:latest
+docker pull ghcr.io/diegofornalha/backend-rag-ia:latest
 ```
 
 ### Executando o Container
 
 ```bash
-docker run -d -p 8000:8000 --env-file .env --name backend ghcr.io/diegofornalha/backend:latest
+docker run -d -p 8000:8000 --env-file .env --name backend ghcr.io/diegofornalha/backend-rag-ia:latest
 ```
 
 ### Verificando o Status
