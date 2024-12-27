@@ -21,13 +21,14 @@ def generate_document_hash(content):
 def format_document(data):
     """Formata o documento para o formato esperado pela API."""
     content = data["document"]["content"]
+    document_hash = generate_document_hash(content)
     return {
         "content": content,
         "metadata": {
             **data["document"]["metadata"],
-            **data["metadata_global"],
-            "document_hash": generate_document_hash(content)
-        }
+            **data["metadata_global"]
+        },
+        "document_hash": document_hash  # Hash no nível raiz
     }
 
 def check_document_exists(document_hash):
@@ -48,7 +49,7 @@ def upload_document(file_path):
         
         # Formata o documento
         document = format_document(raw_document)
-        document_hash = document["metadata"]["document_hash"]
+        document_hash = document["document_hash"]  # Agora pegamos direto do nível raiz
         
         # Verifica se já existe
         if check_document_exists(document_hash):
