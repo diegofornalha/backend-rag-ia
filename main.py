@@ -53,6 +53,9 @@ async def add_document(document: Document):
         logger.error(f"Erro ao adicionar documento: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
 
+# Constantes e configurações
+ALLOW_EMPTY_DEPLOYS = False  # Nova constante para controlar deploys vazios
+
 @app.get("/api/v1/health")
 async def health_check():
     """Verifica o status da API e retorna a contagem de documentos."""
@@ -85,7 +88,8 @@ async def health_check():
             "documents_count": count,
             "embeddings_count": embeddings_count,
             "timestamp": datetime.now().isoformat(),
-            "documents": docs.data  # Adicionando os documentos na resposta para debug
+            "documents": docs.data,  # Adicionando os documentos na resposta para debug
+            "allow_empty_deploys": ALLOW_EMPTY_DEPLOYS  # Adicionando a configuração na resposta
         }
         
     except Exception as e:
