@@ -57,31 +57,38 @@ async def add_document(document: Document):
 async def health_check():
     """Verifica o status da API e retorna a contagem de documentos."""
     try:
-        logger.info("Iniciando health check...")
+        logger.info("🔍 Iniciando health check...")
         
         # Verifica conexão com Supabase
-        logger.info("Verificando conexão com Supabase...")
         if not supabase:
             raise RuntimeError("Cliente Supabase não inicializado")
             
-        # Consulta documentos usando a mesma lógica do endpoint de verificação
-        logger.info("Consultando documentos...")
-        response = supabase.table("documents").select("id").execute()
-        count = len(response.data)
-        logger.info(f"Contagem de documentos: {count}")
+        # Consulta documentos
+        docs = supabase.table("documents").select("*").execute()
+        count = len(docs.data)
+        
+        # Verifica embeddings
+        embeddings = supabase.table("embeddings").select("*").execute()
+        embeddings_count = len(embeddings.data)
+        
+        logger.info(f"📊 Documentos: {count}, Embeddings: {embeddings_count}")
         
         return {
             "status": "healthy",
             "message": "API está funcionando normalmente",
-            "documents_count": count
+            "documents_count": count,
+            "embeddings_count": embeddings_count,
+            "timestamp": datetime.now().isoformat()
         }
+        
     except Exception as e:
-        logger.error(f"Erro no health check: {str(e)}")
+        logger.error(f"❌ Erro no health check: {str(e)}")
         logger.exception("Detalhes do erro:")
         return {
             "status": "unhealthy",
             "message": str(e),
-            "documents_count": 0
+            "documents_count": 0,
+            "timestamp": datetime.now().isoformat()
         } 
 
 @app.post("/api/v1/search/")
