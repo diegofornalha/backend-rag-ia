@@ -61,7 +61,7 @@ function App() {
 
   const checkApiHealth = async () => {
     try {
-      console.log('Verificando saúde da API:', `${selectedEnvironment.apiUrl}/health`);
+      console.log('🔍 Verificando saúde da API:', `${selectedEnvironment.apiUrl}/health`);
       const response = await fetch(`${selectedEnvironment.apiUrl}/health`, {
         headers: {
           'Accept': 'application/json',
@@ -78,14 +78,23 @@ function App() {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Dados da API:', data);
+        console.log('📊 Dados da API:', data);
+        
+        // Verifica se temos os dados dos documentos
+        if (data.documents) {
+          console.log('📝 Documentos encontrados:', data.documents);
+          setDocumentsCount(data.documents.length);
+        } else {
+          console.log('❌ Nenhum documento retornado na resposta');
+          setDocumentsCount(data.documents_count || 0);
+        }
+        
         setApiStatus(`API Conectada`);
-        setDocumentsCount(data.documents_count || 0);
         
         // Atualiza a cada 10 segundos
         setTimeout(checkApiHealth, 10000);
       } else {
-        console.error('API indisponível:', response.status, response.statusText);
+        console.error('❌ API indisponível:', response.status, response.statusText);
         setApiStatus('API Indisponível');
         setDocumentsCount(0);
         
@@ -93,7 +102,7 @@ function App() {
         setTimeout(checkApiHealth, 10000);
       }
     } catch (error) {
-      console.error('Erro ao verificar status da API:', error);
+      console.error('❌ Erro ao verificar status da API:', error);
       setApiStatus('Erro de conexão');
       setDocumentsCount(0);
       
