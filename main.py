@@ -22,7 +22,7 @@ async def check_document(document_hash: str):
 async def add_document(document: Document):
     try:
         # Extrai o document_hash dos metadados
-        document_hash = document.metadata.get("document_hash")
+        document_hash = document.metadata.pop("document_hash", None)  # Remove do metadata e guarda
         
         # Verifica se já existe um documento com este hash
         if document_hash:
@@ -39,9 +39,9 @@ async def add_document(document: Document):
         # Prepara os dados para inserção
         data = {
             "content": document.content,
-            "metadata": document.metadata,
+            "metadata": document.metadata,  # Metadata sem o hash
             "embedding": embedding,
-            "document_hash": document_hash  # Adiciona o hash
+            "document_hash": document_hash  # Hash no nível raiz
         }
         
         # Insere no Supabase
