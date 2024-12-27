@@ -22,6 +22,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState<string>('Testando conexão...');
   const [documentsCount, setDocumentsCount] = useState<number>(0);
+  const [lastCheck, setLastCheck] = useState<string>('');
   const [selectedEnvironment, setSelectedEnvironment] = useState<Environment>({
     name: 'Produção',
     apiUrl: '/api/v1'
@@ -36,11 +37,11 @@ function App() {
   const environments: Environment[] = [
     {
       name: 'Produção',
-      apiUrl: '/api/v1'
+      apiUrl: 'https://backend-rag-ia.onrender.com/api/v1'
     },
     {
       name: 'Ambiente Local',
-      apiUrl: '/api/v1'
+      apiUrl: 'http://localhost:8000/api/v1'
     }
   ];
 
@@ -68,22 +69,36 @@ function App() {
         }
       });
       
-      console.log('Resposta da API:', response.status, response.statusText);
+      // Atualiza timestamp
+      setLastCheck(new Date().toLocaleString('pt-BR', { 
+        dateStyle: 'short', 
+        timeStyle: 'medium',
+        hour12: false 
+      }));
       
       if (response.ok) {
         const data = await response.json();
         console.log('Dados da API:', data);
         setApiStatus(`API Conectada`);
         setDocumentsCount(data.documents_count || 0);
+        
+        // Atualiza a cada 10 segundos
+        setTimeout(checkApiHealth, 10000);
       } else {
         console.error('API indisponível:', response.status, response.statusText);
         setApiStatus('API Indisponível');
         setDocumentsCount(0);
+        
+        // Tenta novamente em 10 segundos
+        setTimeout(checkApiHealth, 10000);
       }
     } catch (error) {
       console.error('Erro ao verificar status da API:', error);
       setApiStatus('Erro de conexão');
       setDocumentsCount(0);
+      
+      // Tenta novamente em 10 segundos
+      setTimeout(checkApiHealth, 10000);
     }
   };
 
@@ -300,14 +315,12 @@ function App() {
 
       {showDebug && (
         <div className="debug-info">
+          <h2>Debug Info</h2>
           <div className="debug-log">
-            <strong>Debug Info</strong>
-            <br />
-            API Status: <span style={{ color: apiStatus.includes('Conectada') ? '#68d391' : '#fc8181' }}>{apiStatus}</span>
-            <br />
-            Ambiente: <span style={{ color: '#90cdf4' }}>{selectedEnvironment.name}</span>
-            <br />
-            Documentos: <span style={{ color: '#9ae6b4' }}>{documentsCount}</span>
+            <div>Última Verificação: {lastCheck}</div>
+            <div>API Status: {apiStatus}</div>
+            <div>Ambiente: {selectedEnvironment.name}</div>
+            <div>Documentos: {documentsCount}</div>
           </div>
         </div>
       )}
