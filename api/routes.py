@@ -8,6 +8,7 @@ import logging
 
 from services.vector_store import VectorStore
 from models.database import Document, DocumentCreate
+from services.supabase_client import supabase
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ class DocumentInput(BaseModel):
     """Modelo para input de documento."""
     content: str
     metadata: Dict[str, Any] = {}
+    document_hash: Optional[str] = None
 
 class QueryInput(BaseModel):
     """Modelo para input de busca."""
@@ -35,9 +37,18 @@ async def add_document(document: DocumentInput) -> Dict[str, Any]:
     """
     try:
         vector_store = VectorStore()
+        
+        # Extrai o document_hash do input
+        document_hash = document.document_hash
+        metadata = document.metadata
+        
+        # Adiciona o document_hash aos metadados se fornecido
+        if document_hash:
+            metadata["document_hash"] = document_hash
+        
         result = await vector_store.add_document(
             content=document.content,
-            metadata=document.metadata
+            metadata=metadata
         )
         
         if result:
@@ -103,4 +114,24 @@ async def delete_document(doc_id: int) -> Dict[str, str]:
             
     except Exception as e:
         logger.error(f"Erro ao remover documento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/documents/check/{document_hash}")
+async def check_document_exists(document_hash: str) -> Dict[str, bool]:
+    """
+    Verifica se um documento já existe pelo hash.
+    
+    Args:
+        document_hash: Hash do documento.
+        
+    Returns:
+        Dict indicando se o documento existe.
+    """
+    try:
+        result = supabase.table("documents").select("id").eq("document_hash", document_hash).execute()
+        exists = bool(result.data)
+        return {"exists": exists}
+            
+    except Exception as e:
+        logger.error(f"Erro ao verificar documento: {e}")
         raise HTTPException(status_code=500, detail=str(e)) 
