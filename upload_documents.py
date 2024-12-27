@@ -44,19 +44,26 @@ def check_document_exists(document_hash):
 
 def upload_document(file_path):
     try:
+        print(f"\n📄 Processando {file_path}...")
+        
         with open(file_path, 'r') as f:
             raw_document = json.load(f)
+            print("✅ Arquivo JSON lido com sucesso")
         
         # Formata o documento
+        print("🔄 Formatando documento...")
         document = format_document(raw_document)
-        document_hash = document["document_hash"]  # Agora pegamos direto do nível raiz
+        document_hash = document["document_hash"]
+        print(f"✅ Documento formatado. Hash: {document_hash[:8]}...")
         
         # Verifica se já existe
+        print("🔍 Verificando se documento já existe...")
         if check_document_exists(document_hash):
             print(f"⚠️ Documento {file_path} já existe, pulando...")
             return
+        print("✅ Documento não existe, prosseguindo com upload")
         
-        print(f"\nEnviando {file_path}...")
+        print(f"\n📤 Enviando {file_path}...")
         response = requests.post(
             f"{API_URL}/documents/",
             json=document,
@@ -65,31 +72,47 @@ def upload_document(file_path):
         
         if response.status_code == 200:
             print(f"✅ {file_path} enviado com sucesso!")
-            print(f"Resposta: {response.json()}")
+            print(f"📝 Resposta: {response.json()}")
         else:
             print(f"❌ Erro ao enviar {file_path}")
-            print(f"Status: {response.status_code}")
-            print(f"Resposta: {response.text}")
+            print(f"📊 Status: {response.status_code}")
+            try:
+                error_detail = response.json().get('detail', 'Sem detalhes do erro')
+                print(f"❗ Erro detalhado: {error_detail}")
+            except:
+                print(f"📝 Resposta bruta: {response.text}")
             
     except FileNotFoundError:
         print(f"❌ Arquivo {file_path} não encontrado")
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
         print(f"❌ Erro ao decodificar {file_path} - formato JSON inválido")
+        print(f"❗ Detalhe: {str(e)}")
     except Exception as e:
-        print(f"❌ Erro inesperado ao enviar {file_path}: {str(e)}")
+        print(f"❌ Erro inesperado ao enviar {file_path}")
+        print(f"❗ Detalhe: {str(e)}")
+        if hasattr(e, 'response'):
+            try:
+                error_detail = e.response.json().get('detail', 'Sem detalhes do erro')
+                print(f"❗ Erro da API: {error_detail}")
+            except:
+                print(f"📝 Resposta bruta: {e.response.text if e.response else 'Sem resposta'}")
 
 def main():
     print("🚀 Iniciando upload dos documentos...")
     
     # Verifica se a API está online
     try:
+        print("🔍 Verificando status da API...")
         health = requests.get(f"{API_URL}/health")
         if health.status_code != 200:
             print("❌ API não está respondendo!")
+            print(f"📊 Status: {health.status_code}")
+            print(f"📝 Resposta: {health.text}")
             return
         print("✅ API está online!")
     except Exception as e:
-        print(f"❌ Erro ao verificar status da API: {str(e)}")
+        print(f"❌ Erro ao verificar status da API")
+        print(f"❗ Detalhe: {str(e)}")
         return
     
     # Verifica se o diretório documents existe
