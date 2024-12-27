@@ -57,9 +57,18 @@ async def add_document(document: Document):
 async def health_check():
     """Verifica o status da API."""
     try:
-        # Conta documentos
-        result = supabase.table("documents").select("id", count="exact").execute()
-        count = result.count if hasattr(result, 'count') else len(result.data)
+        logger.info("Iniciando health check...")
+        
+        # Verifica conexão com Supabase
+        logger.info("Verificando conexão com Supabase...")
+        if not supabase:
+            raise RuntimeError("Cliente Supabase não inicializado")
+            
+        # Consulta documentos usando a mesma lógica do endpoint de verificação
+        logger.info("Consultando documentos...")
+        response = supabase.table("documents").select("id").execute()
+        count = len(response.data)
+        logger.info(f"Contagem de documentos: {count}")
         
         return {
             "status": "healthy",
@@ -68,8 +77,41 @@ async def health_check():
         }
     except Exception as e:
         logger.error(f"Erro no health check: {str(e)}")
+        logger.exception("Detalhes do erro:")
         return {
             "status": "unhealthy",
             "message": str(e),
             "documents_count": 0
         } 
+
+@app.post("/api/v1/search/")
+async def search_documents(query: Query):
+    """Realiza busca semântica nos documentos."""
+    try:
+        # Verifica se é uma pergunta sobre quantidade de documentos
+        if any(keyword in query.query.lower() for keyword in ["quantos documentos", "número de documentos", "total de documentos"]):
+            response = supabase.table("documents").select("id").execute()
+            count = len(response.data)
+            return [{
+                "content": f"Atualmente há {count} documento(s) no sistema.",
+                "metadata": {"type": "system_info"}
+            }]
+            
+        # Busca semântica normal
+        query_embedding = model.get_embedding(query.query)
+        
+        # Realiza a busca
+        results = supabase.rpc(
+            'match_documents',
+            {
+                'query_embedding': query_embedding,
+                'match_threshold': 0.7,
+                'match_count': query.k or 4
+            }
+        ).execute()
+        
+        return results.data
+        
+    except Exception as e:
+        logger.error(f"Erro na busca: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) 

@@ -42,4 +42,9 @@ class Embedding(EmbeddingBase):
 
     class Config:
         """Configuração do modelo."""
-        from_attributes = True 
+        from_attributes = True
+
+class Query(BaseModel):
+    """Modelo para consultas de busca."""
+    query: str
+    k: Optional[int] = 4 
