@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Verifica variáveis de ambiente necessárias
-if [ -z "$OPENAI_API_KEY" ]; then
-    echo "Error: OPENAI_API_KEY não está definida"
+if [ -z "$GEMINI_API_KEY" ]; then
+    echo "Error: GEMINI_API_KEY não está definida"
     exit 1
 fi
 
