@@ -115,3 +115,36 @@ async def search_documents(query: Query):
     except Exception as e:
         logger.error(f"Erro na busca: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
+
+@app.delete("/api/v1/documents/{document_id}")
+async def delete_document(document_id: int):
+    """Remove um documento pelo ID."""
+    try:
+        # Remove o documento
+        response = supabase.table("documents").delete().eq("id", document_id).execute()
+        
+        if len(response.data) > 0:
+            return {"message": f"Documento {document_id} removido com sucesso"}
+        else:
+            raise HTTPException(status_code=404, detail="Documento não encontrado")
+            
+    except Exception as e:
+        logger.error(f"Erro ao remover documento: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/v1/documents/all")
+async def delete_all_documents():
+    """Remove todos os documentos."""
+    try:
+        # Remove todos os documentos
+        response = supabase.table("documents").delete().neq("id", 0).execute()
+        count = len(response.data)
+        
+        return {
+            "message": f"{count} documento(s) removido(s) com sucesso",
+            "count": count
+        }
+            
+    except Exception as e:
+        logger.error(f"Erro ao remover documentos: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e)) 
