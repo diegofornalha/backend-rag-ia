@@ -9,6 +9,7 @@ class DocumentBase(BaseModel):
     """Modelo base para documentos."""
     content: str
     metadata: Dict[str, Any] = Field(default_factory=dict)
+    document_hash: Optional[str] = None
 
 class DocumentCreate(DocumentBase):
     """Modelo para criação de documentos."""

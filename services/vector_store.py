@@ -39,10 +39,14 @@ class VectorStore:
             Document: Documento criado ou None se houver erro.
         """
         try:
+            # Extrai o document_hash dos metadados
+            document_hash = metadata.get("document_hash") if metadata else None
+            
             # Cria documento
             doc_data = DocumentCreate(
                 content=content,
-                metadata=metadata or {}
+                metadata=metadata or {},
+                document_hash=document_hash
             )
             
             result = supabase.table("documents").insert(doc_data.model_dump()).execute()
