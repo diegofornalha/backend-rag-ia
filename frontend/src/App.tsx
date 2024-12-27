@@ -38,7 +38,7 @@ function App() {
     },
     {
       name: 'Produção',
-      apiUrl: 'https://oraculo-api-latest.onrender.com'
+      apiUrl: 'https://backend-rag-ia.onrender.com'
     }
   ];
 
