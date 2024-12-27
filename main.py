@@ -107,17 +107,22 @@ async def check_document(document_hash: str):
 
 @app.post("/api/v1/documents/")
 async def add_document(document: Document):
+    """Adiciona um novo documento e retorna informações detalhadas."""
     try:
         # Extrai o document_hash dos metadados
-        document_hash = document.metadata.pop("document_hash", None)  # Remove do metadata e guarda
+        document_hash = document.metadata.pop("document_hash", None)
         
         # Verifica se já existe um documento com este hash
         if document_hash:
             existing = supabase.table("documents").select("id").eq("document_hash", document_hash).execute()
             if len(existing.data) > 0:
                 return JSONResponse(
-                    status_code=409,  # Conflict
-                    content={"message": "Documento já existe"}
+                    status_code=409,
+                    content={
+                        "status": "error",
+                        "message": "Documento já existe",
+                        "document_id": existing.data[0]["id"]
+                    }
                 )
         
         # Gera o embedding
@@ -126,19 +131,35 @@ async def add_document(document: Document):
         # Prepara os dados para inserção
         data = {
             "content": document.content,
-            "metadata": document.metadata,  # Metadata sem o hash
+            "metadata": document.metadata,
             "embedding": embedding,
-            "document_hash": document_hash  # Hash no nível raiz
+            "document_hash": document_hash
         }
         
         # Insere no Supabase
         response = supabase.table("documents").insert(data).execute()
         
-        return response.data[0]
+        # Atualiza a contagem
+        new_count = await update_documents_count()
+        
+        # Retorna resposta detalhada
+        return {
+            "status": "success",
+            "message": "Documento adicionado com sucesso",
+            "document": response.data[0],
+            "documents_count": new_count
+        }
         
     except Exception as e:
         logger.error(f"Erro ao adicionar documento: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": str(e),
+                "detail": "Erro ao adicionar documento"
+            }
+        )
 
 # Constantes e configurações
 ALLOW_EMPTY_DEPLOYS = False  # Nova constante para controlar deploys vazios
@@ -169,89 +190,28 @@ async def update_documents_count():
 
 @app.get("/api/v1/health")
 async def health_check():
-    """Verifica o status da API e retorna a contagem de documentos."""
+    """Verifica o status da API e retorna informações detalhadas."""
     try:
         logger.info("🔍 Iniciando health check...")
-        debug_info = {
-            "model_status": "not_checked",
-            "supabase_status": "not_checked",
-            "database_status": "not_checked"
-        }
-        
-        # Verifica modelo
-        try:
-            if not model:
-                debug_info["model_status"] = "not_initialized"
-                raise RuntimeError("Modelo não inicializado")
-            test_embedding = model.get_embedding("teste")
-            if len(test_embedding) > 0:
-                debug_info["model_status"] = "ok"
-                debug_info["embedding_size"] = len(test_embedding)
-        except Exception as e:
-            debug_info["model_status"] = "error"
-            debug_info["model_error"] = str(e)
-            logger.error(f"❌ Erro ao verificar modelo: {str(e)}")
         
         # Verifica conexão com Supabase
         if not supabase:
-            debug_info["supabase_status"] = "not_initialized"
-            logger.error("❌ Cliente Supabase não inicializado")
             raise RuntimeError("Cliente Supabase não inicializado")
-        else:
-            debug_info["supabase_status"] = "initialized"
-            
-        # Testa conexão com banco
-        try:
-            test_query = supabase.table("documents").select("count").execute()
-            debug_info["database_status"] = "ok"
-        except Exception as e:
-            debug_info["database_status"] = "error"
-            debug_info["database_error"] = str(e)
-            logger.error(f"❌ Erro ao testar conexão com banco: {str(e)}")
             
         # Consulta documentos
-        logger.info("📝 Consultando documentos...")
-        try:
-            docs = supabase.table("documents").select("*").execute()
-            count = len(docs.data)
-            debug_info["documents_query"] = "ok"
-            debug_info["documents_raw_count"] = count
-            logger.info(f"📊 Total de documentos: {count}")
-        except Exception as e:
-            debug_info["documents_query_error"] = str(e)
-            count = 0
+        docs = supabase.table("documents").select("id").execute()
+        count = len(docs.data)
         
         # Atualiza a contagem na tabela de estatísticas
-        try:
-            stats_count = await update_documents_count()
-            debug_info["stats_update"] = "ok"
-            debug_info["stats_count"] = stats_count
-        except Exception as e:
-            debug_info["stats_update_error"] = str(e)
+        await update_documents_count()
         
         # Verifica embeddings
-        logger.info("🔤 Consultando embeddings...")
-        try:
-            embeddings = supabase.table("embeddings").select("*").execute()
-            embeddings_count = len(embeddings.data)
-            debug_info["embeddings_query"] = "ok"
-            debug_info["embeddings_count"] = embeddings_count
-            logger.info(f"📊 Total de embeddings: {embeddings_count}")
-        except Exception as e:
-            debug_info["embeddings_query_error"] = str(e)
-            embeddings_count = 0
+        embeddings = supabase.table("embeddings").select("id").execute()
+        embeddings_count = len(embeddings.data)
         
         # Busca a contagem da tabela de estatísticas
-        try:
-            stats = supabase.table("statistics").select("*").eq("key", "documents_count").execute()
-            stored_count = stats.data[0]["value"] if stats.data else count
-            debug_info["stats_query"] = "ok"
-            debug_info["stored_count"] = stored_count
-        except Exception as e:
-            debug_info["stats_query_error"] = str(e)
-            stored_count = count
-        
-        logger.info(f"✅ Health check completo - Documentos: {count}, Embeddings: {embeddings_count}, Contagem armazenada: {stored_count}")
+        stats = supabase.table("statistics").select("*").eq("key", "documents_count").execute()
+        stored_count = stats.data[0]["value"] if stats.data else count
         
         return {
             "status": "healthy",
@@ -259,21 +219,24 @@ async def health_check():
             "documents_count": stored_count,
             "embeddings_count": embeddings_count,
             "timestamp": datetime.now().isoformat(),
-            "documents": docs.data if "docs" in locals() else [],
-            "allow_empty_deploys": ALLOW_EMPTY_DEPLOYS,
-            "debug_info": debug_info
+            "debug": {
+                "raw_count": count,
+                "stored_count": stored_count,
+                "last_update": stats.data[0]["updated_at"] if stats.data else None
+            }
         }
         
     except Exception as e:
         logger.error(f"❌ Erro no health check: {str(e)}")
-        logger.exception("Detalhes do erro:")
-        return {
-            "status": "unhealthy",
-            "message": str(e),
-            "documents_count": 0,
-            "timestamp": datetime.now().isoformat(),
-            "debug_info": {"error": str(e)}
-        } 
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "unhealthy",
+                "message": str(e),
+                "documents_count": 0,
+                "timestamp": datetime.now().isoformat()
+            }
+        )
 
 @app.post("/api/v1/search/")
 async def search_documents(query: Query):
