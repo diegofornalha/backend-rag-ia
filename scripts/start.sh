@@ -62,5 +62,14 @@ fi
 log "✓ Dependências verificadas"
 
 # Inicia o servidor
-log "Iniciando servidor..."
-exec uvicorn oracle:app --host 0.0.0.0 --port 8000 --log-level info 
+log "Iniciando servidor com Gunicorn..."
+exec gunicorn oracle:app \
+    --workers 4 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --bind 0.0.0.0:8000 \
+    --log-level info \
+    --timeout 120 \
+    --keep-alive 5 \
+    --access-logfile - \
+    --error-logfile - \
+    --capture-output 
