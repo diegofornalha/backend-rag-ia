@@ -59,7 +59,7 @@ async def health_check():
     try:
         # Conta documentos
         result = supabase.table("documents").select("id", count="exact").execute()
-        count = result.count if result.count is not None else 0
+        count = result.count if hasattr(result, 'count') else len(result.data)
         
         return {
             "status": "healthy",
@@ -70,5 +70,6 @@ async def health_check():
         logger.error(f"Erro no health check: {str(e)}")
         return {
             "status": "unhealthy",
-            "message": str(e)
+            "message": str(e),
+            "documents_count": 0
         } 
