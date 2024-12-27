@@ -19,10 +19,12 @@ fi
 
 # Inicia o servidor com Gunicorn
 gunicorn main:app \
-    --workers 2 \
+    --workers 1 \
     --worker-class uvicorn.workers.UvicornWorker \
     --bind 0.0.0.0:8000 \
-    --timeout 120 \
+    --timeout 300 \
     --worker-tmp-dir /dev/shm \
-    --max-requests 1000 \
-    --max-requests-jitter 50 
+    --max-requests 500 \
+    --max-requests-jitter 50 \
+    --preload \
+    --worker-connections 50 
