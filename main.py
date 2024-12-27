@@ -1,3 +1,67 @@
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+import logging
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
+from sentence_transformers import SentenceTransformer
+
+# Configuração de logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Carrega variáveis de ambiente
+load_dotenv()
+
+# Configuração do Supabase
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_key = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(supabase_url, supabase_key) if supabase_url and supabase_key else None
+
+# Carrega o modelo
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# Cria a aplicação FastAPI
+app = FastAPI()
+
+# Adiciona middleware de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Middleware de logging
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = datetime.now()
+    method = request.method
+    path = request.url.path
+    
+    logger.info(f"📥 {method} {path} - Iniciando requisição")
+    
+    try:
+        response = await call_next(request)
+        
+        end_time = datetime.now()
+        duration = (end_time - start_time).total_seconds()
+        
+        logger.info(f"📤 {method} {path} - {response.status_code} - {duration:.2f}s")
+        
+        return response
+    except Exception as e:
+        logger.error(f"❌ {method} {path} - Erro: {str(e)}")
+        raise
+
 @app.get("/api/v1/documents/check/{document_hash}")
 async def check_document(document_hash: str):
     """Verifica se um documento já existe baseado no hash."""
