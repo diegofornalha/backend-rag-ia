@@ -62,6 +62,29 @@ async def log_requests(request: Request, call_next):
         logger.error(f"❌ {method} {path} - Erro: {str(e)}")
         raise
 
+# Middleware de resposta JSON
+@app.middleware("http")
+async def add_json_headers(request: Request, call_next):
+    response = await call_next(request)
+    if response.headers.get("content-type") == "application/json":
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Expose-Headers"] = "*"
+    return response
+
+# Handler de erros global
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Erro não tratado: {str(exc)}")
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "message": str(exc),
+            "path": request.url.path,
+            "timestamp": datetime.now().isoformat()
+        }
+    )
+
 @app.get("/api/v1/documents/check/{document_hash}")
 async def check_document(document_hash: str):
     """Verifica se um documento já existe baseado no hash."""
