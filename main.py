@@ -55,7 +55,7 @@ async def add_document(document: Document):
 
 @app.get("/api/v1/health")
 async def health_check():
-    """Verifica o status da API."""
+    """Verifica o status da API e retorna a contagem de documentos."""
     try:
         logger.info("Iniciando health check...")
         
