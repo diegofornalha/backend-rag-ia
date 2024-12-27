@@ -1,129 +1,94 @@
-# Chat Application
+# Oráculo API
 
-Uma aplicação de chat completa com frontend React e backend FastAPI.
+API de busca semântica e processamento de documentos usando FastAPI, Supabase e LangChain.
 
-## 🏗️ Estrutura do Projeto
+## Requisitos
 
-```
-.
-├── frontend/     # Frontend React + TypeScript + Vite
-└── backend/      # Backend FastAPI + Python
-```
-
-## 🚀 Frontend
-
-### Funcionalidades
-
-- Interface de chat com campo de mensagem e resposta
-- Seletor de ambiente (Local/Render)
-- Indicador de status da conexão
-- Interface responsiva com Material-UI
-
-### Requisitos
-
-- Node.js (versão 14 ou superior)
-- npm (gerenciador de pacotes do Node.js)
-
-### Scripts
-
-```bash
-# Desenvolvimento
-npm run dev
-
-# Build de produção
-npm run build
-
-# Preview da build
-npm run preview
-
-# Testes
-npm test
-
-# Build dos testes
-npm run test:build
-
-# Execução dos testes
-npm run test:run
-```
-
-### Ambientes
-
-1. **Local**
-
-   - URL: `http://localhost:8000`
-   - Desenvolvimento e testes
-
-2. **Render**
-   - URL: `https://seu-backend-no-render.com`
-   - Ambiente de produção
-
-## 🛠️ Backend
-
-### Funcionalidades
-
-- API RESTful com FastAPI
-- Integração com modelos de IA
-- Suporte a WebSockets para chat em tempo real
-- Containerização com Docker
-
-### Requisitos
-
-- Python 3.8+
 - Docker
-- Poetry (gerenciamento de dependências)
+- Python 3.12+
+- Supabase Account
+- Google Cloud (para Gemini API)
 
-### Comandos
+## Variáveis de Ambiente
 
-```bash
-# Instalar dependências
-poetry install
+Crie um arquivo `.env` com as seguintes variáveis:
 
-# Executar localmente
-poetry run uvicorn main:app --reload
+```env
+# Configurações do Servidor
+PORT=8000
+HOST=0.0.0.0
+ENV=prod
+PYTHON_VERSION=3.12.0
 
-# Build do container
-docker build -t chat-api .
+# API Keys e Tokens
+GEMINI_API_KEY=your_gemini_api_key
+GITHUB_TOKEN=your_github_token
+RENDER_DEPLOY_HOOK=your_render_deploy_hook
 
-# Executar container
-docker run -p 8000:8000 chat-api
+# LangChain
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+LANGCHAIN_API_KEY=your_langchain_api_key
+LANGCHAIN_PROJECT=your_project_name
+LANGCHAIN_CACHE_DIR=/app/cache/langchain
+
+# CORS
+CORS_ORIGINS=["http://localhost:3000","http://localhost:5173"]
+
+# Outras Configurações
+LOG_LEVEL=INFO
+WORKERS=4
+DEBUG=False
+
+# Supabase
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_anon_key
 ```
 
-## 🚀 Deploy
+## Usando a Imagem Docker
 
-### Frontend (Render)
+### Pull da Imagem
 
-1. Conecte seu repositório
-2. Crie um Web Service
-3. Configure:
-   - Build Command: `npm install && npm run build`
-   - Start Command: `npm run preview`
+```bash
+docker pull ghcr.io/diegofornalha/backend:latest
+```
 
-### Backend (Render)
+### Executando o Container
 
-1. Conecte seu repositório
-2. Crie um Web Service
-3. Configure:
-   - Build Command: `docker build -t chat-api .`
-   - Start Command: `docker run -p 8000:8000 chat-api`
-   - Environment Variables: Configure conforme necessário
+```bash
+docker run -d -p 8000:8000 --env-file .env --name backend ghcr.io/diegofornalha/backend:latest
+```
 
-## 📝 Desenvolvimento
+### Verificando o Status
+
+```bash
+curl http://localhost:8000/api/v1/health
+```
+
+## Desenvolvimento Local
 
 1. Clone o repositório
-2. Configure o ambiente de desenvolvimento
-3. Execute frontend e backend localmente
-4. Faça suas alterações
-5. Execute os testes
-6. Envie um Pull Request
+2. Crie um ambiente virtual: `python -m venv venv`
+3. Ative o ambiente virtual: `source venv/bin/activate` (Linux/Mac) ou `venv\Scripts\activate` (Windows)
+4. Instale as dependências: `pip install -r requirements.txt`
+5. Configure as variáveis de ambiente no arquivo `.env`
+6. Execute o servidor: `uvicorn oracle:app --reload`
 
-## 🤝 Contribuição
+## Endpoints da API
 
-1. Fork o projeto
-2. Crie sua Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a Branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
+- `GET /api/v1/health`: Verifica a saúde da aplicação
+- `POST /api/v1/documents/`: Adiciona um documento
+- `POST /api/v1/search/`: Realiza busca por similaridade
+- `DELETE /api/v1/documents/{doc_id}`: Remove um documento
 
-## 📄 Licença
+## CI/CD
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+O projeto usa GitHub Actions para:
+
+1. Construir a imagem Docker
+2. Publicar a imagem no GitHub Container Registry
+3. Fazer deploy automático no Render
+
+## Licença
+
+MIT
