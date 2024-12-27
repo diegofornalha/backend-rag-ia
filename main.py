@@ -132,7 +132,7 @@ async def delete_document(document_id: int):
         logger.error(f"Erro ao remover documento: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/api/v1/documents/all")
+@app.delete("/api/v1/documents-all")
 async def delete_all_documents():
     """Remove todos os documentos."""
     try:
