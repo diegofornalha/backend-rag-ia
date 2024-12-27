@@ -56,6 +56,30 @@ async def add_document(document: Document):
 # Constantes e configurações
 ALLOW_EMPTY_DEPLOYS = False  # Nova constante para controlar deploys vazios
 
+async def update_documents_count():
+    """Atualiza a contagem de documentos na tabela de estatísticas."""
+    try:
+        # Consulta a quantidade atual de documentos
+        docs = supabase.table("documents").select("id").execute()
+        count = len(docs.data)
+        
+        # Atualiza ou insere a contagem na tabela de estatísticas
+        stats = {
+            "key": "documents_count",
+            "value": count,
+            "updated_at": datetime.now().isoformat()
+        }
+        
+        # Tenta atualizar primeiro
+        response = supabase.table("statistics").upsert(stats).execute()
+        
+        logger.info(f"✅ Contagem de documentos atualizada: {count}")
+        return count
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao atualizar contagem de documentos: {str(e)}")
+        return None
+
 @app.get("/api/v1/health")
 async def health_check():
     """Verifica o status da API e retorna a contagem de documentos."""
@@ -72,7 +96,9 @@ async def health_check():
         docs = supabase.table("documents").select("*").execute()
         count = len(docs.data)
         logger.info(f"📊 Total de documentos: {count}")
-        logger.info(f"🔍 Dados dos documentos: {docs.data}")
+        
+        # Atualiza a contagem na tabela de estatísticas
+        await update_documents_count()
         
         # Verifica embeddings
         logger.info("🔤 Consultando embeddings...")
@@ -80,16 +106,20 @@ async def health_check():
         embeddings_count = len(embeddings.data)
         logger.info(f"📊 Total de embeddings: {embeddings_count}")
         
-        logger.info(f"✅ Health check completo - Documentos: {count}, Embeddings: {embeddings_count}")
+        # Busca a contagem da tabela de estatísticas
+        stats = supabase.table("statistics").select("*").eq("key", "documents_count").execute()
+        stored_count = stats.data[0]["value"] if stats.data else count
+        
+        logger.info(f"✅ Health check completo - Documentos: {count}, Embeddings: {embeddings_count}, Contagem armazenada: {stored_count}")
         
         return {
             "status": "healthy",
             "message": "API está funcionando normalmente",
-            "documents_count": count,
+            "documents_count": stored_count,
             "embeddings_count": embeddings_count,
             "timestamp": datetime.now().isoformat(),
-            "documents": docs.data,  # Adicionando os documentos na resposta para debug
-            "allow_empty_deploys": ALLOW_EMPTY_DEPLOYS  # Adicionando a configuração na resposta
+            "documents": docs.data,
+            "allow_empty_deploys": ALLOW_EMPTY_DEPLOYS
         }
         
     except Exception as e:
