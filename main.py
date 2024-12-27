@@ -85,12 +85,42 @@ async def health_check():
     """Verifica o status da API e retorna a contagem de documentos."""
     try:
         logger.info("🔍 Iniciando health check...")
-        debug_info = {}
+        debug_info = {
+            "model_status": "not_checked",
+            "supabase_status": "not_checked",
+            "database_status": "not_checked"
+        }
+        
+        # Verifica modelo
+        try:
+            if not model:
+                debug_info["model_status"] = "not_initialized"
+                raise RuntimeError("Modelo não inicializado")
+            test_embedding = model.get_embedding("teste")
+            if len(test_embedding) > 0:
+                debug_info["model_status"] = "ok"
+                debug_info["embedding_size"] = len(test_embedding)
+        except Exception as e:
+            debug_info["model_status"] = "error"
+            debug_info["model_error"] = str(e)
+            logger.error(f"❌ Erro ao verificar modelo: {str(e)}")
         
         # Verifica conexão com Supabase
         if not supabase:
+            debug_info["supabase_status"] = "not_initialized"
             logger.error("❌ Cliente Supabase não inicializado")
             raise RuntimeError("Cliente Supabase não inicializado")
+        else:
+            debug_info["supabase_status"] = "initialized"
+            
+        # Testa conexão com banco
+        try:
+            test_query = supabase.table("documents").select("count").execute()
+            debug_info["database_status"] = "ok"
+        except Exception as e:
+            debug_info["database_status"] = "error"
+            debug_info["database_error"] = str(e)
+            logger.error(f"❌ Erro ao testar conexão com banco: {str(e)}")
             
         # Consulta documentos
         logger.info("📝 Consultando documentos...")
