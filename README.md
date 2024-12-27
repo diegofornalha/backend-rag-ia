@@ -97,7 +97,12 @@ O projeto usa GitHub Actions para:
 Para evitar problemas ao fazer alterações no projeto, sempre siga esta ordem:
 
 1. Fazer as alterações no código
-2. Commitar e fazer push para o GitHub
+2. Commitar as mudanças:
+   ```bash
+   git add .
+   git commit -m "descrição das alterações"
+   git push  # ⚠️ IMPORTANTE: Não esquecer do push!
+   ```
 3. **Aguardar o deploy completo no Render**
    - Esperar o build terminar
    - Aguardar o serviço reiniciar
@@ -115,6 +120,15 @@ Se os testes forem feitos antes do deploy terminar, você pode encontrar erros p
 - O deploy no Render pode levar alguns minutos
 - Em planos gratuitos, o cold start inicial pode demorar mais
 - Aguarde a confirmação de "Deploy Success" antes de prosseguir
+
+### 📝 Checklist de Deploy
+
+- [ ] Código commitado localmente
+- [ ] Push realizado para o GitHub
+- [ ] Build iniciado no Render
+- [ ] Build concluído com sucesso
+- [ ] Serviço reiniciado
+- [ ] API respondendo corretamente
 
 ## Licença
 
