@@ -89,6 +89,32 @@ O projeto usa GitHub Actions para:
 2. Publicar a imagem no GitHub Container Registry
 3. Fazer deploy automático no Render
 
+## Processo de Deploy e Alterações
+
+### ⚠️ Ordem Importante de Alterações
+
+Para evitar problemas ao fazer alterações no projeto, sempre siga esta ordem:
+
+1. Fazer as alterações no código
+2. Commitar e fazer push para o GitHub
+3. **Aguardar o deploy completo no Render**
+   - Esperar o build terminar
+   - Aguardar o serviço reiniciar
+   - Confirmar que está rodando com as novas alterações
+4. Só então testar as novas funcionalidades
+
+Se os testes forem feitos antes do deploy terminar, você pode encontrar erros porque:
+
+- O código antigo ainda está rodando
+- Novos endpoints podem não estar disponíveis
+- Alterações no banco de dados podem não estar sincronizadas
+
+### 🔄 Tempo de Deploy
+
+- O deploy no Render pode levar alguns minutos
+- Em planos gratuitos, o cold start inicial pode demorar mais
+- Aguarde a confirmação de "Deploy Success" antes de prosseguir
+
 ## Licença
 
 MIT
