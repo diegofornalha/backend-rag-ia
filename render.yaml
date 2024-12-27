@@ -5,6 +5,7 @@ services:
     runtime: docker
     repo: https://github.com/diegofornalha/backend-rag-ia
     plan: free
+    healthCheckPath: /api/v1/health
     envVars:
       - key: NEXT_PUBLIC_API_URL
         sync: false
