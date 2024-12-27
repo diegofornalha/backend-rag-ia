@@ -1,9 +1,10 @@
 services:
   - type: web
-    name: oraculo-api
-    env: docker
+    name: backend-rag-ia
+    runtime: docker
+    repo: https://github.com/diegofornalha/backend-rag-ia
     region: oregon
-    plan: starter
+    plan: free
     healthCheckPath: /api/v1/health
     envVars:
       - key: PYTHON_VERSION
@@ -13,12 +14,23 @@ services:
       - key: HOST
         value: 0.0.0.0
       - key: CORS_ORIGINS
-        value: '["*"]'
+        value: '["http://localhost:3000","http://localhost:5173","https://oraculo-asimov.vercel.app"]'
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-    buildCommand: docker build -t oraculo-api .
-    startCommand: docker run -p 8000:8000 oraculo-api
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+      - key: LANGCHAIN_ENDPOINT
+        value: https://api.smith.langchain.com
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCHAIN_PROJECT
+        sync: false
+      - key: LANGCHAIN_CACHE_DIR
+        value: /app/cache/langchain
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+version: "1"
