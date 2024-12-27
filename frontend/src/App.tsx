@@ -22,8 +22,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState<string>('Testando conexão...');
   const [selectedEnvironment, setSelectedEnvironment] = useState<Environment>({
-    name: 'Ambiente Local',
-    apiUrl: 'http://localhost:8000'
+    name: 'Produção',
+    apiUrl: '/api/v1'
   });
 
   // Referências
@@ -33,12 +33,12 @@ function App() {
   // Ambientes disponíveis
   const environments: Environment[] = [
     {
-      name: 'Ambiente Local',
-      apiUrl: 'http://localhost:8000'
+      name: 'Produção',
+      apiUrl: '/api/v1'
     },
     {
-      name: 'Produção',
-      apiUrl: 'https://backend-rag-ia.onrender.com'
+      name: 'Ambiente Local',
+      apiUrl: '/api/v1'
     }
   ];
 
@@ -60,16 +60,27 @@ function App() {
 
   const checkApiHealth = async () => {
     try {
-      const response = await fetch(`${selectedEnvironment.apiUrl}/api/v1/health`);
+      console.log('Verificando saúde da API:', `${selectedEnvironment.apiUrl}/health`);
+      const response = await fetch(`${selectedEnvironment.apiUrl}/health`, {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Resposta da API:', response.status, response.statusText);
+      
       if (response.ok) {
         const data = await response.json();
-        setApiStatus(`API Conectada (${data.documents_loaded} documentos carregados)`);
+        console.log('Dados da API:', data);
+        setApiStatus(`API Conectada`);
       } else {
+        console.error('API indisponível:', response.status, response.statusText);
         setApiStatus('API Indisponível');
       }
     } catch (error) {
-      setApiStatus('Erro de conexão');
       console.error('Erro ao verificar status da API:', error);
+      setApiStatus('Erro de conexão');
     }
   };
 
@@ -90,108 +101,78 @@ function App() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
-
+    
+    if (!inputMessage.trim()) return;
+    
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: inputMessage,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
-
-      const userMessage: Message = {
-        id: Date.now().toString(),
-        type: 'user',
-        content: inputMessage.trim(),
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, userMessage]);
-      setInputMessage('');
-
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
-
-      // Se a pergunta for sobre quem é o mais famoso
-      if (inputMessage.toLowerCase().includes('mais famoso')) {
-        const famousMessage: Message = {
-          id: `${Date.now()}-famous`,
-          type: 'assistant',
-          content: `Com base nas informações disponíveis, Elon Musk é considerado o mais famoso atualmente, devido a:
-
-1. Impacto Global:
-   - Tesla revolucionou a indústria automotiva elétrica
-   - SpaceX alcançou marcos históricos na exploração espacial
-   - Aquisição e transformação do Twitter em X
-   - Presença constante na mídia e redes sociais
-
-2. Diversidade de Empreendimentos:
-   - Atua em múltiplos setores inovadores
-   - Tesla (carros elétricos)
-   - SpaceX (exploração espacial)
-   - Neuralink (interfaces cérebro-computador)
-   - The Boring Company (infraestrutura)
-   - X/Twitter (mídia social)
-
-3. Influência Atual:
-   - Forte presença nas redes sociais
-   - Impacto direto em mercados globais
-   - Projetos visionários em andamento`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, famousMessage]);
-        setIsLoading(false);
-        return;
-      }
-
-      // Faz a busca na API
-      const searchResponse = await fetch(`${selectedEnvironment.apiUrl}/api/v1/search/`, {
+      console.log('Enviando busca para:', `${selectedEnvironment.apiUrl}/search`);
+      const response = await fetch(`${selectedEnvironment.apiUrl}/search`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          query: userMessage.content,
+        body: JSON.stringify({ 
+          query: inputMessage,
           k: 4
         })
       });
-
-      if (!searchResponse.ok) {
-        throw new Error('Erro na busca');
-      }
-
-      const searchResults = await searchResponse.json();
       
-      // Se não encontrou resultados, fornece uma resposta amigável
-      if (searchResults.length === 0) {
-        const noResultsMessage: Message = {
-          id: `${Date.now()}-no-results`,
-          type: 'assistant',
-          content: `⚠️ Não encontrei informações sobre "${inputMessage.trim()}" nos documentos disponíveis.
-
-Importante: Esta resposta está baseada apenas nos documentos que tenho disponíveis, e eles não contêm essa informação específica.
-
-Você pode:
-1. Tentar reformular sua pergunta
-2. Selecionar "Todos os documentos" para uma busca mais ampla
-3. Fazer uma pergunta sobre outro tema`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, noResultsMessage]);
-      } else {
-        // Adiciona os resultados como mensagens
-        searchResults.forEach((result: any) => {
-          const apiMessage: Message = {
-            id: `${Date.now()}-${Math.random()}`,
+      console.log('Resposta da busca:', response.status, response.statusText);
+      
+      if (response.ok) {
+        const results = await response.json();
+        console.log('Resultados da busca:', results);
+        
+        if (results.length === 0) {
+          const noResultsMessage: Message = {
+            id: `${Date.now()}-no-results`,
             type: 'assistant',
-            content: result.content,
-            metadata: result.metadata,
+            content: `Não encontrei informações sobre "${inputMessage}" nos documentos disponíveis. Por favor, tente reformular sua pergunta ou faça uma pergunta sobre outro tema.`,
             timestamp: new Date()
           };
-          setMessages(prev => [...prev, apiMessage]);
-        });
+          setMessages(prev => [...prev, noResultsMessage]);
+        } else {
+          // Formata os resultados em uma mensagem
+          const formattedResults = results.map((doc: any) => 
+            `${doc.content}\n\n${Object.entries(doc.metadata || {})
+              .map(([key, value]) => `${key}: ${value}`)
+              .join('\n')}`
+          ).join('\n\n---\n\n');
+          
+          const assistantMessage: Message = {
+            id: `${Date.now()}-results`,
+            type: 'assistant',
+            content: formattedResults,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, assistantMessage]);
+        }
+      } else {
+        console.error('Erro na resposta:', response.status, response.statusText);
+        const errorMessage: Message = {
+          id: `${Date.now()}-error`,
+          type: 'assistant',
+          content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
       }
-
     } catch (error) {
-      console.error('Erro ao processar mensagem:', error);
+      console.error('Erro ao enviar mensagem:', error);
       const errorMessage: Message = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-error`,
         type: 'assistant',
         content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente.',
         timestamp: new Date()
