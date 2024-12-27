@@ -61,24 +61,31 @@ async def health_check():
         
         # Verifica conexão com Supabase
         if not supabase:
+            logger.error("❌ Cliente Supabase não inicializado")
             raise RuntimeError("Cliente Supabase não inicializado")
             
         # Consulta documentos
+        logger.info("📝 Consultando documentos...")
         docs = supabase.table("documents").select("*").execute()
         count = len(docs.data)
+        logger.info(f"📊 Total de documentos: {count}")
+        logger.info(f"🔍 Dados dos documentos: {docs.data}")
         
         # Verifica embeddings
+        logger.info("🔤 Consultando embeddings...")
         embeddings = supabase.table("embeddings").select("*").execute()
         embeddings_count = len(embeddings.data)
+        logger.info(f"📊 Total de embeddings: {embeddings_count}")
         
-        logger.info(f"📊 Documentos: {count}, Embeddings: {embeddings_count}")
+        logger.info(f"✅ Health check completo - Documentos: {count}, Embeddings: {embeddings_count}")
         
         return {
             "status": "healthy",
             "message": "API está funcionando normalmente",
             "documents_count": count,
             "embeddings_count": embeddings_count,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "documents": docs.data  # Adicionando os documentos na resposta para debug
         }
         
     except Exception as e:
