@@ -37,17 +37,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configuração CORS para origem específica
+# Configuração CORS específica para porta 3000
 origins = [
-    os.getenv("FRONTEND_URL", "http://localhost:3000")  # URL do frontend
+    "http://localhost:3000",  # Frontend na porta 3000
 ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Você pode restringir para métodos específicos se desejar
-    allow_headers=["*"],  # Você pode restringir para headers específicos se desejar
+    allow_methods=["GET", "POST", "PUT", "DELETE"],  # Métodos HTTP permitidos
+    allow_headers=["*"],
 )
 
 # Middleware de logging
