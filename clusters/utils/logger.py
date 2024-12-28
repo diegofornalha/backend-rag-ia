@@ -10,9 +10,10 @@ import logging.handlers
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union, Literal
+from typing import Optional, Union, Literal, Any, TypeVar, cast, Dict
 
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+LoggerType = TypeVar('LoggerType', logging.Logger, logging.LoggerAdapter[logging.Logger])
 
 class LoggerConfig:
     """Configuração centralizada para logging."""
@@ -24,7 +25,9 @@ class LoggerConfig:
         log_file: Optional[Union[str, Path]] = None,
         max_bytes: int = 10_485_760,  # 10MB
         backup_count: int = 5,
-        format_string: Optional[str] = None
+        format_string: Optional[str] = None,
+        rag_debug: bool = False,
+        extra: Optional[Dict[str, Any]] = None
     ) -> None:
         """Inicializa a configuração do logger.
         
@@ -35,18 +38,31 @@ class LoggerConfig:
             max_bytes: Tamanho máximo do arquivo de log antes da rotação
             backup_count: Número de arquivos de backup a manter
             format_string: String de formatação personalizada para as mensagens
+            rag_debug: Se True, habilita logging detalhado para operações RAG
+            extra: Campos extras para o LoggerAdapter
         """
         self.name = name
         self.level = level
         self.log_file = Path(log_file) if log_file else None
         self.max_bytes = max_bytes
         self.backup_count = backup_count
-        self.format_string = format_string or (
-            "%(asctime)s | %(levelname)-8s | %(name)s | "
-            "%(filename)s:%(lineno)d | %(message)s"
-        )
+        self.rag_debug = rag_debug
+        self.extra = extra or {}
+        
+        # Formato especial para debug RAG se habilitado
+        if rag_debug and not format_string:
+            self.format_string = (
+                "%(asctime)s | %(levelname)-8s | RAG | %(name)s | "
+                "%(filename)s:%(lineno)d | %(message)s | "
+                "vector_dim=%(vector_dim)s | chunk_size=%(chunk_size)s"
+            )
+        else:
+            self.format_string = format_string or (
+                "%(asctime)s | %(levelname)-8s | %(name)s | "
+                "%(filename)s:%(lineno)d | %(message)s"
+            )
 
-def setup_logger(config: LoggerConfig) -> logging.Logger:
+def setup_logger(config: LoggerConfig) -> LoggerType:
     """Configura e retorna um logger com as configurações especificadas.
     
     Args:
@@ -58,54 +74,56 @@ def setup_logger(config: LoggerConfig) -> logging.Logger:
     logger = logging.getLogger(config.name)
     logger.setLevel(config.level)
     
-    # Remove handlers existentes para evitar duplicação
-    for handler in logger.handlers[:]:
-        logger.removeHandler(handler)
+    # Limpa handlers existentes
+    logger.handlers = []
     
-    # Formatter padrão
+    # Configura o formatter
     formatter = logging.Formatter(config.format_string)
     
-    # Handler para console
+    # Adiciona handler para console
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
     
-    # Handler para arquivo (se especificado)
+    # Adiciona handler para arquivo se especificado
     if config.log_file:
-        # Cria o diretório de logs se não existir
-        os.makedirs(os.path.dirname(config.log_file), exist_ok=True)
+        # Cria diretório para logs se não existir
+        config.log_file.parent.mkdir(parents=True, exist_ok=True)
         
         file_handler = logging.handlers.RotatingFileHandler(
-            filename=config.log_file,
+            str(config.log_file),
             maxBytes=config.max_bytes,
-            backupCount=config.backup_count,
-            encoding="utf-8"
+            backupCount=config.backup_count
         )
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
     
-    return logger
+    # Adiciona contexto extra para RAG se debug estiver habilitado
+    if config.rag_debug:
+        extra = {
+            'vector_dim': 'N/A',
+            'chunk_size': 'N/A',
+            **config.extra
+        }
+        return cast(LoggerType, logging.LoggerAdapter(logger, extra=extra))
 
-# Logger padrão da aplicação
-default_logger = setup_logger(
-    LoggerConfig(
-        name="app",
-        level="INFO",
-        log_file="logs/app.log"
-    )
-)
+    return cast(LoggerType, logger)
 
 def get_logger(
     name: str,
     level: Union[LogLevel, str] = "INFO",
-    log_file: Optional[Union[str, Path]] = None
-) -> logging.Logger:
+    log_file: Optional[Union[str, Path]] = None,
+    rag_debug: bool = False,
+    extra: Optional[Dict[str, Any]] = None
+) -> LoggerType:
     """Obtém um logger configurado com o nome especificado.
     
     Args:
         name: Nome do logger
         level: Nível de logging
         log_file: Caminho para o arquivo de log (opcional)
+        rag_debug: Se True, habilita logging detalhado para operações RAG
+        extra: Campos extras para o LoggerAdapter
         
     Returns:
         Logger configurado
@@ -117,6 +135,17 @@ def get_logger(
         LoggerConfig(
             name=name,
             level=level,
-            log_file=log_file
+            log_file=log_file,
+            rag_debug=rag_debug,
+            extra=extra
         )
-    ) 
+    )
+
+# Logger padrão da aplicação
+default_logger = setup_logger(
+    LoggerConfig(
+        name="app",
+        level="INFO",
+        log_file="logs/app.log"
+    )
+) 

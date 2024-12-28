@@ -33,7 +33,10 @@ class SupabaseManager:
                     "SUPABASE_URL e SUPABASE_KEY devem estar definidos no .env"
                 )
             
-            self._client = create_client(supabase_url, supabase_key)
+            try:
+                self._client = create_client(supabase_url, supabase_key)
+            except Exception as e:
+                raise RuntimeError(f"Erro ao criar cliente Supabase: {str(e)}")
     
     @property
     def client(self) -> Client:
@@ -44,7 +47,14 @@ class SupabaseManager:
 
 def create_supabase_client() -> Client:
     """Cria e retorna um cliente Supabase."""
-    return SupabaseManager().client
+    try:
+        return SupabaseManager().client
+    except Exception as e:
+        raise RuntimeError(f"Erro ao obter cliente Supabase: {str(e)}")
 
 # Instância global do cliente Supabase
-supabase = SupabaseManager().client 
+try:
+    supabase = create_supabase_client()
+except Exception as e:
+    print(f"⚠️ Aviso: Não foi possível inicializar o cliente Supabase: {str(e)}")
+    supabase = None 

@@ -51,6 +51,18 @@ class MessageTemplate:
     PROCESS_START = "Iniciando processamento: {process}"
     PROCESS_END = "Processamento finalizado: {process}"
     PROCESS_ERROR = "Erro durante processamento: {process}. Erro: {error}"
+    
+    # RAG Específico
+    EMBEDDING_SUCCESS = "Embeddings gerados com sucesso para documento: {doc_id}"
+    EMBEDDING_ERROR = "Erro ao gerar embeddings para documento: {doc_id}. Erro: {error}"
+    DOCUMENT_INDEXED = "Documento indexado com sucesso: {doc_id}"
+    DOCUMENT_INDEX_ERROR = "Erro ao indexar documento: {doc_id}. Erro: {error}"
+    QUERY_PROCESSING = "Processando consulta: {query_text}"
+    QUERY_RESULTS = "Encontrados {count} resultados relevantes para a consulta"
+    QUERY_ERROR = "Erro ao processar consulta: {query_text}. Erro: {error}"
+    VECTOR_STORE_ERROR = "Erro no armazenamento de vetores: {operation}. Erro: {error}"
+    CHUNK_PROCESSING = "Processando chunks do documento: {doc_id}"
+    CHUNK_ERROR = "Erro ao processar chunks do documento: {doc_id}. Erro: {error}"
 
 def format_message(
     template: str,

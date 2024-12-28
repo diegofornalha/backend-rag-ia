@@ -26,17 +26,38 @@ from clusters.supabase.models.database import Document, Query
 from clusters.supabase.services.supabase_client import create_supabase_client
 
 # Configuração do Supabase
-supabase = create_supabase_client() if settings.SUPABASE_URL and settings.SUPABASE_KEY else None
+try:
+    supabase = create_supabase_client()
+    logger.info("✅ Cliente Supabase inicializado com sucesso")
+except Exception as e:
+    logger.error(f"❌ Erro ao inicializar cliente Supabase: {str(e)}")
+    if settings.ENVIRONMENT == "production":
+        raise
+    else:
+        logger.warning("⚠️ Continuando sem Supabase em ambiente de desenvolvimento")
+        supabase = None
 
 # Carrega o modelo
-model = SentenceTransformer(settings.MODEL_NAME)
+try:
+    model = SentenceTransformer(settings.MODEL_NAME)
+    logger.info(f"✅ Modelo {settings.MODEL_NAME} carregado com sucesso")
+except Exception as e:
+    logger.error(f"❌ Erro ao carregar modelo: {str(e)}")
+    raise
 
 # Inicializa o cluster
 from clusters import get_cluster
 cluster = get_cluster()
+logger.info(f"✅ Cluster inicializado: {cluster.__class__.__name__}")
 
 # Cria a aplicação FastAPI
-app = FastAPI()
+app = FastAPI(
+    title="RAG API",
+    description="API para sistema RAG com Supabase",
+    version="1.0.0",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc"
+)
 
 # Adiciona middleware de CORS
 app.add_middleware(
@@ -92,10 +113,37 @@ async def generic_exception_handler(request: Request, exc: Exception):
         }
     )
 
+@app.get("/api/v1/health")
+async def health_check():
+    """Verifica a saúde da API."""
+    try:
+        health = await cluster.get_health_check()
+        return {
+            "status": "healthy",
+            "message": "API está funcionando normalmente",
+            "details": health,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Erro no health check: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao verificar saúde da API: {str(e)}"
+        )
+
 @app.get("/api/v1/documents/check/{document_hash}")
 async def check_document(document_hash: str):
     """Verifica se um documento já existe baseado no hash."""
     try:
+        if not supabase:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "error",
+                    "message": "Supabase não está disponível"
+                }
+            )
+            
         # Consulta o Supabase
         response = supabase.table("documents").select("id").eq("document_hash", document_hash).execute()
         
@@ -110,12 +158,21 @@ async def check_document(document_hash: str):
         )
     except Exception as e:
         logger.error(f"Erro ao verificar documento: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/documents/")
 async def add_document(document: Document):
     """Adiciona um novo documento e retorna informações detalhadas."""
     try:
+        if not supabase:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "error",
+                    "message": "Supabase não está disponível"
+                }
+            )
+            
         logger.info("📝 Iniciando adição de documento...")
         
         # Extrai o document_hash dos metadados
@@ -139,15 +196,16 @@ async def add_document(document: Document):
         
         # Gera o embedding
         logger.info("🔤 Gerando embedding...")
-        embedding = model.get_embedding(document.content)
+        embedding = model.encode(document.content)
         logger.info(f"✅ Embedding gerado: {len(embedding)} dimensões")
         
         # Prepara os dados para inserção
         data = {
             "content": document.content,
             "metadata": document.metadata,
-            "embedding": embedding,
-            "document_hash": document_hash
+            "embedding": embedding.tolist(),
+            "document_hash": document_hash,
+            "created_at": datetime.now().isoformat()
         }
         
         # Insere no Supabase
@@ -157,7 +215,7 @@ async def add_document(document: Document):
         
         # Atualiza a contagem
         logger.info("🔄 Atualizando contagem de documentos...")
-        new_count = await update_documents_count()
+        new_count = await cluster.update_documents_count()
         logger.info(f"📊 Nova contagem: {new_count}")
         
         # Retorna resposta detalhada
@@ -182,205 +240,127 @@ async def add_document(document: Document):
             }
         )
 
-# Constantes e configurações
-ALLOW_EMPTY_DEPLOYS = False  # Nova constante para controlar deploys vazios
-
-async def update_documents_count():
-    """Atualiza a contagem de documentos na tabela de estatísticas."""
-    try:
-        # Consulta a quantidade atual de documentos
-        docs = supabase.table("documents").select("id").execute()
-        count = len(docs.data)
-        
-        # Atualiza ou insere a contagem na tabela de estatísticas
-        stats = {
-            "key": "documents_count",
-            "value": count,
-            "updated_at": datetime.now().isoformat()
-        }
-        
-        # Tenta atualizar primeiro
-        response = supabase.table("statistics").upsert(stats).execute()
-        
-        logger.info(f"✅ Contagem de documentos atualizada: {count}")
-        return count
-        
-    except Exception as e:
-        logger.error(f"❌ Erro ao atualizar contagem de documentos: {str(e)}")
-        return None
-
-@app.get("/api/v1/health")
-async def health_check():
-    """Verifica o status da API e retorna informações detalhadas."""
-    try:
-        return await cluster.get_health_check()
-    except Exception as e:
-        logger.error(f"❌ Erro no health check: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.post("/api/v1/search/")
 async def search_documents(query: Query):
-    """Realiza busca semântica nos documentos."""
+    """Busca documentos similares baseado em uma query."""
     try:
-        # Verifica se é uma pergunta sobre quantidade de documentos
-        if any(keyword in query.query.lower() for keyword in ["quantos documentos", "número de documentos", "total de documentos"]):
-            response = supabase.table("documents").select("id").execute()
-            count = len(response.data)
-            return [{
-                "content": f"Atualmente há {count} documento(s) no sistema.",
-                "metadata": {"type": "system_info"}
-            }]
-            
-        # Busca semântica normal
-        query_embedding = model.get_embedding(query.query)
-        
-        # Realiza a busca
-        results = supabase.rpc(
-            'match_documents',
-            {
-                'query_embedding': query_embedding,
-                'match_threshold': 0.7,
-                'match_count': query.k or 4
-            }
-        ).execute()
-        
-        return results.data
-        
+        # Define um valor padrão para k se for None
+        k = query.k if query.k is not None else 4
+        results = await cluster.search_similar(query.query, k)
+        return {
+            "status": "success",
+            "results": results,
+            "count": len(results),
+            "query": query.query
+        }
     except Exception as e:
         logger.error(f"Erro na busca: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao realizar busca: {str(e)}"
+        )
 
 @app.delete("/api/v1/documents/{document_id}")
-async def delete_document(document_id: int):
-    """Remove um documento pelo ID."""
+async def delete_document(document_id: str):
+    """Remove um documento e seus embeddings."""
     try:
-        # Remove o documento
-        response = supabase.table("documents").delete().eq("id", document_id).execute()
-        
-        if len(response.data) > 0:
-            return {"message": f"Documento {document_id} removido com sucesso"}
-        else:
-            raise HTTPException(status_code=404, detail="Documento não encontrado")
+        if not supabase:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "error",
+                    "message": "Supabase não está disponível"
+                }
+            )
             
+        # Remove embeddings
+        success = await cluster.delete_embeddings(document_id)
+        if not success:
+            raise HTTPException(
+                status_code=500,
+                detail="Erro ao remover embeddings"
+            )
+            
+        # Remove documento
+        response = supabase.table("documents").delete().eq("id", document_id).execute()
+        if not response.data:
+            raise HTTPException(
+                status_code=404,
+                detail="Documento não encontrado"
+            )
+            
+        return {
+            "status": "success",
+            "message": "Documento removido com sucesso",
+            "document_id": document_id
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Erro ao remover documento: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao remover documento: {str(e)}"
+        )
 
 @app.delete("/api/v1/documents-all")
 async def delete_all_documents():
-    """Remove todos os documentos."""
+    """Remove todos os documentos e embeddings."""
     try:
+        if not supabase:
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "status": "error",
+                    "message": "Supabase não está disponível"
+                }
+            )
+            
         # Remove todos os documentos
-        response = supabase.table("documents").delete().neq("id", 0).execute()
-        count = len(response.data)
+        response = supabase.table("documents").delete().neq("id", "").execute()
+        
+        # Remove todos os embeddings
+        response_emb = supabase.table("embeddings").delete().neq("id", "").execute()
         
         return {
-            "message": f"{count} documento(s) removido(s) com sucesso",
-            "count": count
+            "status": "success",
+            "message": "Todos os documentos foram removidos",
+            "documents_removed": len(response.data),
+            "embeddings_removed": len(response_emb.data)
         }
-            
     except Exception as e:
-        logger.error(f"Erro ao remover documentos: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        logger.error(f"Erro ao remover todos os documentos: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao remover documentos: {str(e)}"
+        )
 
 @app.get("/api/v1/debug")
 async def debug_info():
-    """Retorna informações detalhadas para debug."""
+    """Retorna informações de debug."""
     try:
-        logger.info("🔍 Coletando informações de debug...")
-        debug_info = {
-            "timestamp": datetime.now().isoformat(),
-            "environment": {
-                "python_version": sys.version,
-                "fastapi_version": fastapi.__version__,
-                "supabase_initialized": supabase is not None,
-                "model_initialized": model is not None
-            }
+        return {
+            "status": "success",
+            "environment": settings.ENVIRONMENT,
+            "debug": settings.DEBUG,
+            "model": {
+                "name": settings.MODEL_NAME,
+                "embedding_dim": settings.EMBEDDING_DIM
+            },
+            "supabase": {
+                "available": supabase is not None,
+                "url": settings.SUPABASE_URL if settings.DEBUG else "***",
+            },
+            "cluster": {
+                "type": cluster.__class__.__name__,
+                "documents": await cluster.get_documents_count(),
+                "embeddings": await cluster.get_embeddings_count()
+            },
+            "timestamp": datetime.now().isoformat()
         }
-        
-        # Verifica conexão com Supabase
-        try:
-            logger.info("🔌 Testando conexão com Supabase...")
-            test_query = supabase.table("documents").select("count").execute()
-            debug_info["supabase"] = {
-                "connection": "ok",
-                "response": test_query.data
-            }
-        except Exception as e:
-            debug_info["supabase"] = {
-                "connection": "error",
-                "error": str(e)
-            }
-            
-        # Verifica documentos
-        try:
-            logger.info("📝 Consultando documentos...")
-            docs = supabase.table("documents").select("*").execute()
-            debug_info["documents"] = {
-                "count": len(docs.data),
-                "latest": docs.data[-3:] if docs.data else []
-            }
-        except Exception as e:
-            debug_info["documents"] = {
-                "error": str(e)
-            }
-            
-        # Verifica estatísticas
-        try:
-            logger.info("📊 Consultando estatísticas...")
-            stats = supabase.table("statistics").select("*").execute()
-            debug_info["statistics"] = {
-                "data": stats.data,
-                "documents_count": next(
-                    (item["value"] for item in stats.data if item["key"] == "documents_count"),
-                    None
-                )
-            }
-        except Exception as e:
-            debug_info["statistics"] = {
-                "error": str(e)
-            }
-            
-        # Verifica embeddings
-        try:
-            logger.info("🔤 Consultando embeddings...")
-            embeddings = supabase.table("embeddings").select("*").execute()
-            debug_info["embeddings"] = {
-                "count": len(embeddings.data),
-                "latest": embeddings.data[-3:] if embeddings.data else []
-            }
-        except Exception as e:
-            debug_info["embeddings"] = {
-                "error": str(e)
-            }
-            
-        # Testa modelo
-        try:
-            logger.info("🧠 Testando modelo...")
-            test_text = "teste de embedding"
-            test_embedding = model.get_embedding(test_text)
-            debug_info["model"] = {
-                "status": "ok",
-                "embedding_size": len(test_embedding),
-                "test_text": test_text
-            }
-        except Exception as e:
-            debug_info["model"] = {
-                "status": "error",
-                "error": str(e)
-            }
-            
-        logger.info("✅ Debug info coletada com sucesso")
-        return debug_info
-        
     except Exception as e:
-        logger.error(f"❌ Erro ao coletar debug info: {str(e)}")
-        logger.exception("Detalhes do erro:")
-        return JSONResponse(
+        logger.error(f"Erro ao obter informações de debug: {str(e)}")
+        raise HTTPException(
             status_code=500,
-            content={
-                "status": "error",
-                "message": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
+            detail=f"Erro ao obter informações de debug: {str(e)}"
         ) 
