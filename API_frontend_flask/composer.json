@@ -1,0 +1,14 @@
+{
+  "name": "api-frontend-flask",
+  "description": "Frontend Flask para API",
+  "commands": {
+    "Frontend (porta 2000)": {
+      "command": "source .env && source .venv/bin/activate && python3 -m flask run --debug --port 2000",
+      "description": "Inicia o servidor frontend na porta 2000"
+    },
+    "Backend (porta 3000)": {
+      "command": "source .env && source .venv/bin/activate && python3 -m flask run --debug --port 3000",
+      "description": "Inicia o servidor backend na porta 3000"
+    }
+  }
+}

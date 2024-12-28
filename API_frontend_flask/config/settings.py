@@ -15,7 +15,7 @@ class Settings:
     
     # Configurações do Flask
     DEBUG: bool = os.getenv("FLASK_DEBUG", "True").lower() == "true"
-    PORT: int = int(os.getenv("FLASK_PORT", "1000"))
+    PORT: int = int(os.getenv("FLASK_PORT", "2000"))
     HOST: str = os.getenv("FLASK_HOST", "0.0.0.0")
     SECRET_KEY: str = os.getenv("FLASK_SECRET_KEY", "your-secret-key")
     
@@ -25,7 +25,7 @@ class Settings:
     STATIC_URL_PATH: str = "/static"
     
     # Configurações de API
-    RAG_API_URL: str = os.getenv("RAG_API_URL", "http://localhost:5000")
+    RAG_API_URL: str = os.getenv("RAG_API_URL", "http://localhost:3000")
     
     def get_config(self) -> Dict[str, Any]:
         """Retorna as configurações como dicionário."""

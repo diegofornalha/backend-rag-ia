@@ -64,14 +64,9 @@ Atualize os arquivos de documentação da API sempre que houver uma alteração 
 ### Logs e Endpoints
 
 ```log
-# Logs de Inicialização
-🚀 Iniciando API Frontend Flask...
-✅ API Frontend Flask iniciada - Versão 1.0.0
-📝 Documentação: http://localhost:1000/docs
-
-# Endpoints Disponíveis
-- Aplicação: http://127.0.0.1:1000
-- Documentação: http://localhost:1000/docs
+# Endpoints Ativos
+✅ Documentação API: http://localhost:2000/docs
+❌ Frontend: http://localhost:2000/ (em desenvolvimento)
 
 # Informações do Debugger
 - Debug mode: on
@@ -139,7 +134,7 @@ FLASK_DEBUG=1
 
 # Configurações do Servidor
 HOST=0.0.0.0
-PORT=1000
+PORT=2000
 DEBUG=True
 
 # Configurações da Aplicação
@@ -162,3 +157,82 @@ Para carregar as variáveis de ambiente:
 ```bash
 source .env
 ```
+
+# Status Atual do Projeto
+
+```status
+✅ Documentação API (/docs)
+- Swagger UI funcionando em http://localhost:2000/docs
+- Documentação completa das rotas
+- Interface interativa para teste de endpoints
+
+❌ Frontend Principal (/)
+- Em desenvolvimento
+- Erro atual: BuildError no endpoint 'instances_page'
+- Necessário corrigir rotas e templates
+
+# Próximos Passos
+1. Corrigir rotas do frontend principal
+2. Verificar templates base/home.html
+3. Ajustar configuração de blueprints
+```
+
+# Rotas da Aplicação
+
+## Endpoints Principais
+
+```endpoints
+1. 🏠 Interface Principal
+   URL: http://localhost:2000/
+   Método: GET
+   Descrição: Página inicial com cards de navegação
+
+2. 📱 Gerenciamento de Instâncias
+   URL: http://localhost:2000/instances
+   Método: GET
+   Descrição: Gerenciamento de instâncias do WhatsApp
+
+3. 💬 Gerenciamento de Mensagens
+   URL: http://localhost:2000/messages
+   Método: GET
+   Descrição: Interface para envio e gestão de mensagens
+
+4. 📚 Documentação API
+   URL: http://localhost:2000/docs
+   Método: GET
+   Descrição: Swagger UI com documentação interativa
+
+5. 🏥 Health Check
+   URL: http://localhost:2000/health
+   Método: GET
+   Descrição: Status da aplicação em JSON
+```
+
+## Status dos Endpoints
+
+```status
+✅ GET  /           → Home page
+✅ GET  /instances  → Página de instâncias
+✅ GET  /messages   → Página de mensagens
+✅ GET  /docs       → Documentação Swagger
+✅ GET  /health     → Health check
+❌ POST /messages   → Envio de mensagens (405 - Não implementado)
+```
+
+## Como Acessar
+
+1. Inicie o servidor:
+
+   ```bash
+   source .env && python3 -m flask run --debug --port 2000
+   ```
+
+2. Abra no navegador:
+
+   - Home: http://localhost:2000
+   - Docs: http://localhost:2000/docs
+
+3. Monitore os logs:
+   - Debug PIN: Gerado a cada execução
+   - Hot-reload: Ativado para desenvolvimento
+   - Logs: Visíveis no terminal
