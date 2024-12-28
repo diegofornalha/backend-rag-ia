@@ -1,3 +1,64 @@
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+import logging
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
+from sentence_transformers import SentenceTransformer
+import sys
+import fastapi
+from models.document import Document
+
+# Configuração de logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Carrega variáveis de ambiente
+load_dotenv()
+
+# Configuração do Supabase
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_key = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(supabase_url, supabase_key) if supabase_url and supabase_key else None
+
+# Carrega o modelo
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# Cria a aplicação FastAPI
+app = FastAPI()
+
+# Adiciona middleware de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Middleware de logging
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = datetime.now()
+    method = request.method
+    path = request.url.path
+    
+    response = await call_next(request)
+    
+    end_time = datetime.now()
+    duration = (end_time - start_time).total_seconds() * 1000
+    
+    logger.info(f"{method} {path} - {response.status_code} - {duration:.2f}ms")
+    
+    return response
+
 @app.get("/api/v1/documents/check/{document_hash}")
 async def check_document(document_hash: str):
     """Verifica se um documento já existe baseado no hash."""
@@ -33,21 +94,31 @@ async def add_document(document: Document):
                     content={"message": "Documento já existe"}
                 )
         
-        # Gera o embedding
-        embedding = model.get_embedding(document.content)
-        
-        # Prepara os dados para inserção
-        data = {
+        # Primeiro, insere o documento
+        doc_data = {
             "content": document.content,
             "metadata": document.metadata,  # Metadata sem o hash
-            "embedding": embedding,
             "document_hash": document_hash  # Hash no nível raiz
         }
         
-        # Insere no Supabase
-        response = supabase.table("documents").insert(data).execute()
+        doc_response = supabase.table("documents").insert(doc_data).execute()
+        document_id = doc_response.data[0]["id"]
         
-        return response.data[0]
+        # Gera o embedding
+        embedding = model.encode(document.content)
+        
+        # Insere o embedding
+        embedding_data = {
+            "document_id": document_id,
+            "embedding": embedding.tolist()  # Convertendo numpy array para lista
+        }
+        
+        embedding_response = supabase.table("embeddings").insert(embedding_data).execute()
+        
+        # Atualiza o documento com o ID do embedding
+        supabase.table("documents").update({"embedding_id": embedding_response.data[0]["id"]}).eq("id", document_id).execute()
+        
+        return doc_response.data[0]
         
     except Exception as e:
         logger.error(f"Erro ao adicionar documento: {str(e)}")

@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 # URL da API
-API_URL = "https://backend-rag-ia.onrender.com/api/v1"
+API_URL = "http://localhost:8000/api/v1"
 
 def calculate_hash(content: str) -> str:
     """Calcula o hash do conteúdo do documento."""
@@ -55,12 +55,10 @@ def upload_document(file_path: str) -> bool:
         print(f"📤 Enviando {file_path}...")
         response = requests.post(f"{API_URL}/documents/", json=payload)
         
-        # Verifica se o documento foi criado, mesmo com status 500
-        if response.status_code in [201, 500]:
-            # Verifica se o documento existe após o upload
-            if check_document_exists(document_hash):
-                print(f"✅ Documento {file_path} enviado com sucesso!")
-                return True
+        # Verifica se o documento foi criado com sucesso (200 ou 201)
+        if response.status_code in [200, 201]:
+            print(f"✅ Documento {file_path} enviado com sucesso!")
+            return True
             
         print(f"❌ Erro ao enviar {file_path}: {response.status_code}")
         if response.text:
