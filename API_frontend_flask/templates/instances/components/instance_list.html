@@ -1,0 +1,13 @@
+<!-- Lista de Instâncias -->
+<div class="mt-4 space-y-2">
+    <div v-for="instance in instances" :key="instance.id" 
+         @click="selectInstance(instance)"
+         :class="{'bg-green-50 border-green-500': selectedInstance?.id === instance.id}"
+         class="flex items-center p-2 rounded-md hover:bg-gray-100 cursor-pointer border-l-4 border-transparent">
+        <span :class="{'text-green-600': instance.status === 'connected'}" class="w-2 h-2 rounded-full mr-2" 
+              :class="statusDot(instance.status)"></span>
+        <div>
+            <p class="text-sm font-medium text-gray-900">${instance.name}</p>
+        </div>
+    </div>
+</div> 

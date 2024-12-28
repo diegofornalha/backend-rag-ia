@@ -1,0 +1,45 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Chat System API",
+    "description": "API para o sistema de chat",
+    "version": "1.0.0"
+  },
+  "basePath": "/",
+  "schemes": ["http"],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Página principal do chat",
+        "description": "Retorna a interface do chat",
+        "produces": ["text/html"],
+        "responses": {
+          "200": {
+            "description": "Página HTML do chat"
+          }
+        }
+      }
+    },
+    "/chat": {
+      "post": {
+        "summary": "Enviar mensagem",
+        "description": "Envia uma mensagem e recebe uma resposta do assistente",
+        "consumes": ["application/x-www-form-urlencoded"],
+        "parameters": [
+          {
+            "name": "message",
+            "in": "formData",
+            "description": "Mensagem a ser enviada",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redireciona para a página principal"
+          }
+        }
+      }
+    }
+  }
+}

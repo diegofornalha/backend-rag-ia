@@ -40,3 +40,6 @@ lerna-debug.log*
 faiss_index_docs.json
 faiss_index_metadata.json
 faiss_index.faiss 
+
+# VSCode
+.vscode/ 

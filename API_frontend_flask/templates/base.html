@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Chat System{% endblock %}</title>
+    
+    {# CSS #}
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% block styles %}{% endblock %}
+</head>
+<body class="h-full bg-gray-100">
+    {# Flash Messages - Jinja2 #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-4 right-4 z-50">
+                {% for category, message in messages %}
+                    <div class="p-4 mb-2 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700 border-red-500{% else %}bg-green-100 text-green-700 border-green-500{% endif %} border-l-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {# Main Container #}
+    <div>
+        {# Static Navigation - Jinja2 #}
+        {% block nav %}{% endblock %}
+
+        {# Static Header - Jinja2 #}
+        {% block header %}{% endblock %}
+
+        {# Main Content - Jinja2 #}
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        {# Static Footer - Jinja2 #}
+        {% block footer %}{% endblock %}
+    </div>
+
+    {# Additional Scripts #}
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

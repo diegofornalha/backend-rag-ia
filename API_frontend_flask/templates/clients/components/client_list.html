@@ -1,0 +1,16 @@
+<!-- Lista de Clientes -->
+<div class="mt-4 space-y-2 overflow-y-auto max-h-[calc(100vh-350px)]">
+    <div class="border-t border-gray-200 pt-4">
+        <div v-for="client in filteredClients" :key="client.id"
+            class="flex items-center p-2 rounded-md hover:bg-gray-100 cursor-pointer mb-2">
+            <div class="flex-shrink-0">
+                <span class="inline-block h-8 w-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center">
+                    ${client.name[0].toUpperCase()}
+                </span>
+            </div>
+            <div class="ml-3 flex-1">
+                <p class="text-sm font-medium text-gray-900">${client.name}</p>
+            </div>
+        </div>
+    </div>
+</div> 

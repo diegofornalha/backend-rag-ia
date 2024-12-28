@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{# Static Title - Jinja2 #}
+{% block title %}Chat System{% endblock %}
+
+{# Static Navigation - Jinja2 #}
+{% block nav %}
+<nav class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="/" class="text-green-600 font-bold text-xl">Chat System</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{# Main Content - Jinja2 #}
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-4rem)]">
+    <!-- Chat Header -->
+    {% include 'chat/components/chat_header.html' %}
+
+    <!-- Chat Container -->
+    <div class="flex-1 overflow-hidden">
+        <div class="h-full flex flex-col">
+            <!-- Chat History -->
+            {% include 'chat/components/chat_history.html' %}
+
+            <!-- Chat Input -->
+            <div class="border-t border-gray-200 p-4">
+                <form method="POST" action="{{ url_for('chat') }}" class="flex space-x-4">
+                    <input type="text" 
+                           name="message" 
+                           class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" 
+                           placeholder="Digite sua mensagem..."
+                           required>
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Enviar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,25 @@
+<!-- Ações do Agente -->
+<div class="space-y-4">
+    <div v-for="(action, index) in sortedAvailableActions" :key="index"
+        v-show="!action.hidden"
+        class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow relative">
+        <div class="flex justify-between items-start">
+            <div class="flex-1 cursor-pointer" @click="executeAction(action)">
+                <h5 class="text-sm font-medium text-gray-900">${action.description}</h5>
+                <p class="text-xs text-gray-500 mt-1">${action.details || 'Clique para executar esta ação'}</p>
+                <div class="mt-1 flex items-center">
+                    <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                        Prioridade: ${action.priority}
+                    </span>
+                </div>
+            </div>
+            <button @click.stop="toggleActionVisibility(action)" 
+                class="p-1 text-gray-400 hover:text-gray-600">
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                        d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div> 

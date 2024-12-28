@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <!-- Conteúdo do agente -->
+    <div class="flex flex-col h-screen">
+        <!-- Cabeçalho -->
+        <div class="bg-white shadow">
+            <div class="px-4 py-6 sm:px-6 lg:px-8">
+                <h1 class="text-2xl font-semibold text-gray-900">Área do Agente</h1>
+            </div>
+        </div>
+
+        <!-- Área de Chat -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <template v-for="message in messages" :key="message.timestamp">
+                <!-- Mensagem do Usuário -->
+                <div v-if="message.type === 'user'" class="flex justify-end">
+                    <div class="bg-green-100 text-gray-800 rounded-lg py-2 px-4 max-w-md">
+                        <p class="text-sm">{{ message.content }}</p>
+                        <span class="text-xs text-gray-500 mt-1">{{ formatTime(message.timestamp) }}</span>
+                    </div>
+                </div>
+                
+                <!-- Mensagem do Assistente -->
+                <div v-else-if="message.type === 'assistant'" class="flex justify-start">
+                    <div class="bg-white text-gray-800 rounded-lg py-2 px-4 max-w-md shadow">
+                        <p class="text-sm">{{ message.content }}</p>
+                        <span class="text-xs text-gray-500 mt-1">{{ formatTime(message.timestamp) }}</span>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Input de Mensagem -->
+        <div class="border-t bg-white p-4">
+            <form @submit.prevent="sendMessage" class="flex space-x-4">
+                <input type="text" 
+                    v-model="newMessage" 
+                    placeholder="Digite sua mensagem..." 
+                    class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                
+                <button type="submit" 
+                    :disabled="!newMessage.trim()"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    Enviar
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const { createApp } = Vue
+
+createApp({
+    delimiters: ['${', '}'],
+    data() {
+        return {
+            newMessage: '',
+            chatHistory: [{
+                type: 'assistant',
+                content: 'Olá! Sou o assistente IA. Como posso ajudar você hoje?',
+                timestamp: new Date()
+            }],
+            isLoading: false,
+            initialMessage: '{{ initial_message }}',
+            instances: [],
+            selectedInstance: null,
+            showAddInstanceModal: false,
+            newInstance: {
+                name: ''
+            }
+        }
+    },
+    methods: {
+        async loadInstances() {
+            try {
+                const response = await axios.get('/instances')
+                this.instances = response.data
+            } catch (error) {
+                console.error('Erro ao carregar instâncias:', error)
+            }
+        },
+        async addInstance() {
+            if (!this.newInstance.name) {
+                alert('Por favor, insira um nome para a instância')
+                return
+            }
+
+            try {
+                const response = await axios.post('/instances', {
+                    instance_name: this.newInstance.name
+                })
+                
+                if (response.data.success) {
+                    this.instances.push(response.data.instance)
+                    this.showAddInstanceModal = false
+                    this.newInstance.name = ''
+                }
+            } catch (error) {
+                console.error('Erro ao adicionar instância:', error)
+                alert('Erro ao adicionar instância. Por favor, tente novamente.')
+            }
+        },
+        async deleteInstance(id) {
+            if (!confirm('Tem certeza que deseja deletar esta instância?')) return
+
+            try {
+                const response = await axios.delete(`/instances/${id}`)
+                if (response.data.success) {
+                    this.instances = this.instances.filter(instance => instance.id !== id)
+                    if (this.selectedInstance?.id === id) {
+                        this.selectedInstance = null
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao deletar instância:', error)
+                alert('Erro ao deletar instância. Por favor, tente novamente.')
+            }
+        },
+        selectInstance(instance) {
+            this.selectedInstance = instance
+        },
+        statusDot(status) {
+            return {
+                'connected': 'bg-green-600',
+                'disconnected': 'bg-red-600',
+                'pending': 'bg-yellow-600'
+            }[status] || 'bg-gray-600'
+        },
+        async sendMessage(message = null) {
+            const messageToSend = message || this.newMessage.trim()
+            if (!messageToSend || this.isLoading) return
+
+            this.chatHistory.push({
+                type: 'user',
+                content: messageToSend,
+                timestamp: new Date()
+            })
+            this.newMessage = ''
+            this.scrollToBottom()
+
+            this.isLoading = true
+            try {
+                const response = await axios.post('/chat/agent', {
+                    message: messageToSend
+                })
+
+                this.chatHistory.push({
+                    type: 'assistant',
+                    content: response.data.response,
+                    timestamp: new Date()
+                })
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error)
+                this.chatHistory.push({
+                    type: 'assistant',
+                    content: 'Desculpe, ocorreu um erro ao processar sua mensagem.',
+                    timestamp: new Date()
+                })
+            } finally {
+                this.isLoading = false
+                this.scrollToBottom()
+            }
+        },
+        scrollToBottom() {
+            this.$nextTick(() => {
+                const chatHistory = this.$refs.chatHistory
+                chatHistory.scrollTop = chatHistory.scrollHeight
+            })
+        },
+        formatTime(date) {
+            return new Date(date).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        }
+    },
+    mounted() {
+        this.loadInstances()
+        // Se houver uma mensagem inicial, envia automaticamente
+        if (this.initialMessage) {
+            this.$nextTick(() => {
+                this.sendMessage(this.initialMessage)
+            })
+        }
+    }
+}).mount('#app')
+</script>
+{% endblock %} 

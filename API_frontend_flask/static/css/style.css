@@ -1,0 +1,45 @@
+/* Animações para o toast de notificação */
+.notification-enter-active,
+.notification-leave-active {
+    transition: all 0.3s ease;
+}
+
+.notification-enter-from,
+.notification-leave-to {
+    transform: translateY(30px);
+    opacity: 0;
+}
+
+/* Estilo para inputs desabilitados */
+input:disabled,
+select:disabled,
+textarea:disabled {
+    background-color: #f3f4f6;
+    cursor: not-allowed;
+}
+
+/* Hover effects nos cards */
+.card-hover {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+}
+
+/* Animação de loading */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Estilo para o modal backdrop */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+} 

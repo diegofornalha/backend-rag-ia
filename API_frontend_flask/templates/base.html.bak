@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Chat System{% endblock %}</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        {% block header %}{% endblock %}
+
+        <!-- Main Content -->
+        {% block content %}{% endblock %}
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="fixed top-4 right-4 z-50">
+                    {% for message in messages %}
+                        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-2">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Base Scripts -->
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+
+        createApp({
+            delimiters: ['${', '}'],
+            data() {
+                return {
+                    isLoading: false,
+                    showAlert: false,
+                    alertType: 'info',
+                    alertMessage: '',
+                    showConfirmModal: false,
+                    confirmTitle: '',
+                    confirmMessage: '',
+                    confirmAction: null,
+                    messages: {{ messages|tojson|safe if messages else '[]' }},
+                    newMessage: '',
+                    selectedGroup: null
+                }
+            },
+            methods: {
+                showMessage(message, type = 'info') {
+                    this.alertMessage = message;
+                    this.alertType = type;
+                    this.showAlert = true;
+                    setTimeout(() => {
+                        this.showAlert = false;
+                    }, 3000);
+                },
+                closeAlert() {
+                    this.showAlert = false;
+                },
+                confirm(title, message, action) {
+                    this.confirmTitle = title;
+                    this.confirmMessage = message;
+                    this.confirmAction = action;
+                    this.showConfirmModal = true;
+                },
+                formatTime(timestamp) {
+                    return new Date(timestamp * 1000).toLocaleTimeString();
+                },
+                async sendMessage() {
+                    if (!this.newMessage.trim()) return;
+                    
+                    const message = this.newMessage;
+                    this.newMessage = '';
+                    this.messages.push({
+                        type: 'user',
+                        content: message,
+                        timestamp: Date.now() / 1000
+                    });
+
+                    this.isLoading = true;
+                    try {
+                        const response = await fetch('/chat', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                message,
+                                group_id: this.selectedGroup?.id
+                            })
+                        });
+                        const data = await response.json();
+                        
+                        this.messages.push({
+                            type: 'assistant',
+                            content: data.response,
+                            timestamp: Date.now() / 1000
+                        });
+                    } catch (error) {
+                        this.showMessage('Erro ao enviar mensagem', 'error');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

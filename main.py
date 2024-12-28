@@ -22,8 +22,13 @@ from config.config import get_settings
 settings = get_settings()
 
 # Importa modelos e serviços do cluster Supabase
-from clusters.supabase.models.database import Document, Query
-from clusters.supabase.services.supabase_client import create_supabase_client
+from clusters_API.API_supabase.models.database import Document, Query
+from clusters_API.API_supabase.services.supabase_client import create_supabase_client
+
+# Importa routers dos diferentes clusters
+from clusters_API.API_supabase.api import router as supabase_router
+from clusters_API.API_whatsapp.api import router as whatsapp_router
+from clusters_API.API_tools.api import router as tools_router
 
 # Configuração do Supabase
 try:
@@ -46,14 +51,25 @@ except Exception as e:
     raise
 
 # Inicializa o cluster
-from clusters import get_cluster
+from clusters_API import get_cluster
 cluster = get_cluster()
 logger.info(f"✅ Cluster inicializado: {cluster.__class__.__name__}")
 
 # Cria a aplicação FastAPI
 app = FastAPI(
-    title="RAG API",
-    description="API para sistema RAG com Supabase",
+    title="API RAG",
+    description="""
+    Sistema RAG (Retrieval-Augmented Generation) que integra:
+
+    ### API Supabase
+    Gerenciamento de documentos e embeddings para recuperação de informações
+    
+    ### API WhatsApp
+    Integração com WhatsApp para comunicação e respostas
+    
+    ### API Tools
+    Ferramentas e utilitários de suporte ao sistema RAG
+    """,
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc"
@@ -67,6 +83,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Inclui os routers dos diferentes clusters
+app.include_router(supabase_router, prefix="/api/v1/rag/supabase", tags=["RAG Supabase"])
+app.include_router(whatsapp_router, prefix="/api/v1/rag/whatsapp", tags=["RAG WhatsApp"])
+app.include_router(tools_router, prefix="/api/v1/rag/tools", tags=["RAG Tools"])
 
 # Middleware de logging
 @app.middleware("http")

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="app" class="bg-white shadow overflow-hidden sm:rounded-lg min-h-screen">
+    <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+            Chat do Cliente
+        </h3>
+        <p v-if="groupInfo" class="mt-1 max-w-2xl text-sm text-gray-500">
+            Grupo: ${groupInfo.group_name}
+        </p>
+    </div>
+
+    <div class="flex flex-col h-[calc(100vh-200px)]">
+        <!-- Histórico de Mensagens -->
+        <div class="flex-1 p-4 overflow-y-auto" ref="chatHistory">
+            <div v-if="!groupInfo" class="flex items-center justify-center h-full">
+                <p class="text-gray-500">Carregando informações do grupo...</p>
+            </div>
+            <template v-else>
+                <!-- Mensagens -->
+                <div v-for="(message, index) in chatHistory" :key="index" 
+                     :class="{'justify-end': message.type === 'user'}"
+                     class="flex mb-4">
+                    <div :class="{
+                        'bg-blue-100': message.type === 'user',
+                        'bg-gray-100': message.type === 'assistant',
+                        'ml-auto': message.type === 'user'
+                    }" class="max-w-[70%] rounded-lg px-4 py-2">
+                        <div class="flex items-center mb-1">
+                            <span class="text-xs text-gray-500">
+                                ${message.type === 'user' ? 'Você' : 'Assistente'}
+                            </span>
+                            <span class="text-xs text-gray-400 ml-2">
+                                ${formatTime(message.timestamp)}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-800 whitespace-pre-wrap">${message.content}</p>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Área de Input -->
+        <div class="border-t border-gray-200 p-4 bg-white">
+            <div v-if="groupInfo" class="flex space-x-4">
+                <div class="flex-1">
+                    <textarea 
+                        v-model="newMessage" 
+                        @keydown.enter.prevent="sendMessage"
+                        placeholder="Digite sua mensagem..."
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        rows="2"
+                    ></textarea>
+                </div>
+                <button 
+                    @click="sendMessage"
+                    :disabled="!newMessage.trim() || isLoading"
+                    :class="{'opacity-50 cursor-not-allowed': !newMessage.trim() || isLoading}"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <svg v-if="isLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const { createApp } = Vue
+
+createApp({
+    delimiters: ['${', '}'],
+    data() {
+        return {
+            groupInfo: null,
+            newMessage: '',
+            chatHistory: [],
+            isLoading: false,
+            clientPhone: '5511912345678' // Exemplo - deve ser substituído pelo telefone real do cliente
+        }
+    },
+    methods: {
+        async loadGroupInfo() {
+            try {
+                const response = await axios.get(`/cliente/grupo/${this.clientPhone}`)
+                this.groupInfo = response.data
+                await this.loadChatHistory(this.groupInfo.group_id)
+            } catch (error) {
+                console.error('Erro ao carregar informações do grupo:', error)
+            }
+        },
+        async loadChatHistory(groupId) {
+            try {
+                const response = await axios.get(`/chat/${groupId}/history`)
+                this.chatHistory = response.data
+                if (this.chatHistory.length === 0) {
+                    this.chatHistory = [{
+                        type: 'assistant',
+                        content: 'Olá! Como posso ajudar você hoje?',
+                        timestamp: new Date()
+                    }]
+                }
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error)
+            }
+        },
+        async sendMessage() {
+            if (!this.newMessage.trim() || this.isLoading) return
+
+            const userMessage = this.newMessage.trim()
+            this.chatHistory.push({
+                type: 'user',
+                content: userMessage,
+                timestamp: new Date()
+            })
+            this.newMessage = ''
+            this.scrollToBottom()
+
+            this.isLoading = true
+            try {
+                const response = await axios.post('/chat', {
+                    group_id: this.groupInfo.group_id,
+                    message: userMessage
+                })
+
+                this.chatHistory.push({
+                    type: 'assistant',
+                    content: response.data.response,
+                    timestamp: new Date()
+                })
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error)
+                this.chatHistory.push({
+                    type: 'assistant',
+                    content: 'Desculpe, ocorreu um erro ao processar sua mensagem.',
+                    timestamp: new Date()
+                })
+            } finally {
+                this.isLoading = false
+                this.scrollToBottom()
+            }
+        },
+        scrollToBottom() {
+            this.$nextTick(() => {
+                const chatHistory = this.$refs.chatHistory
+                chatHistory.scrollTop = chatHistory.scrollHeight
+            })
+        },
+        formatTime(date) {
+            return new Date(date).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+        }
+    },
+    mounted() {
+        this.loadGroupInfo()
+    }
+}).mount('#app')
+</script>
+{% endblock %} 

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+            Bem-vindo à Interface Evolution API
+        </h3>
+        <p class="mt-1 max-w-2xl text-sm text-gray-500">
+            Gerencie suas instâncias e mensagens do WhatsApp de forma simples e eficiente.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+        <!-- Card de Instâncias -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5">
+                        <h4 class="text-lg font-medium text-gray-900">Instâncias</h4>
+                        <p class="text-sm text-gray-500">Gerencie suas instâncias do WhatsApp</p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <a href="{{ url_for('instances_page') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                        Gerenciar Instâncias
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Mensagens -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5">
+                        <h4 class="text-lg font-medium text-gray-900">Mensagens</h4>
+                        <p class="text-sm text-gray-500">Envie e gerencie mensagens</p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <a href="{{ url_for('messages_page') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        Enviar Mensagens
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Status -->
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                        <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-5">
+                        <h4 class="text-lg font-medium text-gray-900">Status</h4>
+                        <p class="text-sm text-gray-500">Monitore o status das conexões</p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        Serviço Online
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
