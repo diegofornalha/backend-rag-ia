@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 from sentence_transformers import SentenceTransformer
 import sys
-import fastapi
 from models.document import Document
 
 # Configuração de logging
@@ -32,15 +31,23 @@ supabase: Client = create_client(supabase_url, supabase_key) if supabase_url and
 model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # Cria a aplicação FastAPI
-app = FastAPI()
+app = FastAPI(
+    title="Documents API",
+    description="API para processamento de documentos e embeddings",
+    version="1.0.0"
+)
 
-# Adiciona middleware de CORS
+# Configuração CORS para origem específica
+origins = [
+    os.getenv("FRONTEND_URL", "http://localhost:3000")  # URL do frontend
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Você pode restringir para métodos específicos se desejar
+    allow_headers=["*"],  # Você pode restringir para headers específicos se desejar
 )
 
 # Middleware de logging
@@ -81,6 +88,7 @@ async def check_document(document_hash: str):
 
 @app.post("/api/v1/documents/")
 async def add_document(document: Document):
+    """Adiciona um novo documento e gera seu embedding."""
     try:
         # Extrai o document_hash dos metadados
         document_hash = document.metadata.pop("document_hash", None)  # Remove do metadata e guarda
