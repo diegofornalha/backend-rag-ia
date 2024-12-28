@@ -1,0 +1,93 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Frontend Flask API",
+    "description": "API para gerenciamento de instâncias e mensagens do WhatsApp",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5001",
+      "description": "Servidor de Desenvolvimento"
+    }
+  ],
+  "tags": [
+    {
+      "name": "instances",
+      "description": "Operações com instâncias do WhatsApp"
+    },
+    {
+      "name": "messages",
+      "description": "Operações com mensagens"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Página inicial",
+        "description": "Retorna a página inicial do sistema",
+        "responses": {
+          "200": {
+            "description": "Página HTML renderizada"
+          }
+        }
+      }
+    },
+    "/instances": {
+      "get": {
+        "tags": ["instances"],
+        "summary": "Lista de instâncias",
+        "description": "Retorna a página de gerenciamento de instâncias",
+        "responses": {
+          "200": {
+            "description": "Página HTML renderizada"
+          }
+        }
+      }
+    },
+    "/messages": {
+      "get": {
+        "tags": ["messages"],
+        "summary": "Gerenciamento de mensagens",
+        "description": "Retorna a página de gerenciamento de mensagens",
+        "responses": {
+          "200": {
+            "description": "Página HTML renderizada"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Status da API",
+        "description": "Verifica o status de saúde da API",
+        "responses": {
+          "200": {
+            "description": "API está saudável",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "healthy"
+                    },
+                    "service": {
+                      "type": "string",
+                      "example": "frontend_flask"
+                    },
+                    "version": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

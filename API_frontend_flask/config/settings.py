@@ -15,7 +15,7 @@ class Settings:
     
     # Configurações do Flask
     DEBUG: bool = os.getenv("FLASK_DEBUG", "True").lower() == "true"
-    PORT: int = int(os.getenv("FLASK_PORT", "5001"))
+    PORT: int = int(os.getenv("FLASK_PORT", "1000"))
     HOST: str = os.getenv("FLASK_HOST", "0.0.0.0")
     SECRET_KEY: str = os.getenv("FLASK_SECRET_KEY", "your-secret-key")
     

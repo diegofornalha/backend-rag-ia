@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_swagger_ui import get_swaggerui_blueprint
 import logging
 import os
 
@@ -40,6 +41,18 @@ def create_app():
     
     # Configura Jinja2
     setup_jinja(app)
+    
+    # Configuração do Swagger UI
+    SWAGGER_URL = '/docs'
+    API_URL = '/static/swagger.json'
+    swaggerui_blueprint = get_swaggerui_blueprint(
+        SWAGGER_URL,
+        API_URL,
+        config={
+            'app_name': "Frontend Flask API"
+        }
+    )
+    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
     
     # Registra os blueprints
     app.register_blueprint(main_blueprint)
