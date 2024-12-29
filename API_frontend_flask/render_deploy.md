@@ -19,6 +19,45 @@ sudo mv cli_v1.1.0 /usr/local/bin/render
 
 2. Ter uma conta no Render (dashboard.render.com)
 
+## CI/CD com GitHub Actions
+
+O projeto já possui integração contínua configurada através do GitHub Actions (`.github/workflows/docker-publish.yml`):
+
+1. **Triggers**:
+
+   - Push na branch `main`
+   - Pull Requests para `main`
+
+2. **Ações Automatizadas**:
+
+   - Build da imagem Docker
+   - Push para GitHub Container Registry
+   - Tags automáticas baseadas em:
+     - Branch
+     - Pull Request
+     - Versão semântica
+     - SHA do commit
+
+3. **Workflow**:
+
+```yaml
+name: Docker Build and Push
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+```
+
 ## Configuração Inicial
 
 1. **Login no Render CLI**:
@@ -68,6 +107,24 @@ O script `deploy.sh` automatiza:
 - Commit das alterações
 - Push para o GitHub
 - Deploy no Render
+
+## Fluxo de Deploy
+
+1. **Desenvolvimento Local**:
+
+   - Faça suas alterações
+   - Teste localmente
+   - Commit e push
+
+2. **CI/CD Automático**:
+
+   - GitHub Actions constrói a imagem Docker
+   - Push para o Container Registry
+   - Render detecta a nova imagem
+
+3. **Deploy no Render**:
+   - Manual via CLI: `./deploy.sh`
+   - Automático após CI: Configurado no `render.yaml`
 
 ## Monitoramento
 
@@ -148,8 +205,15 @@ render workspace set tea-ctm6tfdumphs73ddibgg
 render deploys logs $(render deploys list $RENDER_SERVICE_ID --output json | jq -r '.[0].id')
 ```
 
+4. **Problemas com CI/CD**:
+   - Verifique as Actions no GitHub
+   - Confirme as permissões do token
+   - Verifique os logs do Container Registry
+
 ## Links Úteis
 
 - [Dashboard do Render](https://dashboard.render.com)
 - [Documentação do Render CLI](https://render.com/docs/cli)
 - [Configuração do render.yaml](https://render.com/docs/yaml-spec)
+- [GitHub Actions](https://github.com/features/actions)
+- [Container Registry](https://github.com/features/packages)
