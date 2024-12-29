@@ -10,6 +10,9 @@ services:
     noHealthcheck: true
     plan: starter
     region: oregon
+    healthCheckPath: false
+    disableHealthcheck: true
+    healthCheckTimeout: 0
     envVars:
       - key: API_URL
         value: https://backend-rag-ia.onrender.com
