@@ -51,16 +51,31 @@
 
 - Gerar chave SSH: `ssh-keygen -t ed25519 -C "seu-email@exemplo.com"`
 - Adicionar chave pública no Render (Dashboard → Settings → SSH Keys)
-- Testar conexão: `ssh <service>@ssh.render.com`
+- Testar conexão: `ssh srv-ctmtqra3esus739sknb0@ssh.oregon.render.com`
 
-### 4.3 Comandos SSH Úteis
+### 4.3 Configuração SSH Local
 
-- Ver logs em tempo real: `ssh <service>@ssh.render.com tail -f /var/log/render/*.log`
-- Status do serviço: `ssh <service>@ssh.render.com systemctl status <service>`
-- Verificar deploy: `ssh <service>@ssh.render.com cat /etc/render/deploy.log`
-- Monitorar recursos: `ssh <service>@ssh.render.com top`
+```bash
+# Adicionar ao ~/.ssh/config
+Host render
+    HostName ssh.oregon.render.com
+    User srv-ctmtqra3esus739sknb0
+    IdentityFile ~/.ssh/id_ed25519
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+```
 
-### 4.4 Boas Práticas SSH
+### 4.4 Comandos SSH Úteis
+
+- Ver logs em tempo real: `ssh render tail -f /var/log/render/*.log`
+- Status do serviço: `ssh render systemctl status backend-rag-ia`
+- Verificar deploy: `ssh render cat /etc/render/deploy.log`
+- Monitorar recursos: `ssh render top`
+- Verificar arquivos: `ssh render ls -la /app/`
+- Verificar ambiente virtual: `ssh render ls -la /opt/venv/`
+- Verificar variáveis: `ssh render env | grep SUPABASE`
+
+### 4.5 Boas Práticas SSH
 
 - Manter chaves SSH seguras
 - Usar nomes descritivos para as chaves
