@@ -65,12 +65,48 @@
 
 ## 10. Troubleshooting via SSH
 
-### Acesso ao Servidor
+### Diagnóstico Inicial com ls -la
 
-```bash
-# Conectar ao servidor
-ssh srv-ctmtqra3esus739sknb0@ssh.oregon.render.com
-```
+O comando `ls -la` é fundamental para o diagnóstico inicial no servidor por várias razões:
+
+1. Estrutura do Projeto:
+
+   - Revela a estrutura completa de diretórios
+   - Mostra arquivos ocultos importantes (ex: .env, .gitignore)
+   - Identifica permissões e propriedades dos arquivos
+
+2. Verificação de Deployment:
+
+   - Confirma se todos os arquivos foram deployados corretamente
+   - Verifica datas de modificação dos arquivos
+   - Identifica possíveis problemas de permissão
+
+3. Localizando Arquivos Críticos:
+
+   ```bash
+   # Verificar diretório raiz
+   ls -la /app/
+
+   # Verificar diretório de logs
+   ls -la /app/logs/
+
+   # Verificar ambiente virtual
+   ls -la /opt/venv/
+   ```
+
+4. Por que funciona melhor que outros comandos:
+   - Não requer permissões especiais
+   - Fornece visão completa do sistema de arquivos
+   - Ajuda a identificar problemas de permissão ou arquivos faltantes
+
+### minhas configs
+
+Host render
+HostName ssh.oregon.render.com
+User srv-ctmtqra3esus739sknb0
+IdentityFile ~/.ssh/id_ed25519
+StrictHostKeyChecking no
+UserKnownHostsFile /dev/null
 
 ### Comandos Úteis no Servidor
 
