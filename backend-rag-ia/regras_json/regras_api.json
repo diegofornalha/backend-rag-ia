@@ -1,0 +1,28 @@
+{
+  "metadata_global": {
+    "language": "pt-BR",
+    "tipo": "regra",
+    "fonte": "REGRAS_API.md",
+    "data_criacao": "2024-12-29T18:09:22.272214",
+    "categorias": [
+      "regras",
+      "api"
+    ],
+    "id": "df0d1d423d582e4fb386b0156d19fe46"
+  },
+  "document": {
+    "content": "POST /api/v1/documents/:\nAdiciona novos documentos ao índice.\n**Request:**\n```json\n{\n\"documents\": [\n{\n\"content\": \"Texto do documento\",\n\"metadata\": {\n\"type\": \"profile\",\n\"tags\": [\"biografia\", \"profissional\"]\n}\n}\n]\n}\n```\n**Response:**\n```json\n{\n\"message\": \"Processando 1 documentos em background\"\n}\n```\n\nPOST /api/v1/search/:\nRealiza busca semântica nos documentos.\n**Request:**\n```json\n{\n\"query\": \"string\",\n\"k\": 4,\n\"filters\": {\n\"type\": \"profile\",\n\"tecnologias\": [\"Python\"],\n\"content_types\": [\"biografia\"]\n}\n}\n```\n**Response:**\n```json\n[\n{\n\"content\": \"Texto encontrado\",\n\"metadata\": {\n\"type\": \"profile\",\n\"timestamp\": \"2024-03-21T10:30:00\",\n\"pessoas\": [\"Diego Fornalha\"],\n\"tecnologias\": [\"Python\"],\n\"content_types\": [\"biografia\"]\n},\n\"embedding_id\": 1\n}\n]\n```\n\nGET /api/v1/health:\nVerifica o status da API.\n**Response:**\n```json\n{\n\"status\": \"healthy\",\n\"message\": \"API está funcionando normalmente\",\n\"documents_count\": 3\n}\n```\n\nGET /api/v1/documents/count:\nRetorna o número total de documentos armazenados.\n**Response:**\n```json\n{\n\"count\": 3\n}\n```\n\nDeduplicação Inteligente:\n- Threshold de similaridade: 0.8\n- Análise de conteúdo para evitar redundância\n- Consolidação de informações similares\n\nProcessamento de Metadados:\n- Extração automática de entidades\n- Categorização de conteúdo\n- Normalização de nomes e termos\n- Indexação otimizada para busca rápida\n\nBusca Avançada:\n- Busca semântica com FAISS\n- Filtragem por metadados\n- Combinação de múltiplos critérios\n- Ordenação por relevância\n\nExemplo de Uso:\n```python\n\nBusca por tipo específico:\ndocs = vector_store.filter_by_metadata({\n\"content_types\": \"tutorial\"\n})\n\nBusca combinada:\ndocs = vector_store.filter_by_metadata({\n\"pessoas\": \"Diego Fornalha\",\n\"tecnologias\": \"Python\",\n\"content_types\": \"projeto\"\n})\n```\n\nNotas de Implementação:\n1. **Indexação**:\n- Uso de FAISS para busca semântica\n- Índice invertido para metadados\n- Batch processing para melhor performance\n2. **Otimizações**:\n- Processamento em background\n- Deduplicação automática\n- Caching de embeddings\n- Normalização de entidades\n3. **Persistência**:\n- Salvamento automático de índices\n- Backup de metadados\n- Formato JSON otimizado\n4. **Segurança**:\n- Validação de entrada\n- Sanitização de dados\n- Logging de operações",
+    "metadata": {
+      "type": "regra",
+      "title": "REGRAS_API",
+      "autor": "sistema",
+      "formato_original": "markdown",
+      "tags": [
+        "documentação",
+        "regras",
+        "api"
+      ],
+      "versao": "1.0"
+    }
+  }
+}

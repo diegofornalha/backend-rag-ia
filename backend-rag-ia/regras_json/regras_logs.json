@@ -1,0 +1,28 @@
+{
+  "metadata_global": {
+    "language": "pt-BR",
+    "tipo": "regra",
+    "fonte": "REGRAS_LOGS.md",
+    "data_criacao": "2024-12-29T18:09:22.434686",
+    "categorias": [
+      "regras",
+      "logs"
+    ],
+    "id": "604ce20706b5cee6e982df73e2a2281d"
+  },
+  "document": {
+    "content": "1.1 Níveis de Log:\n- ERROR: Erros que precisam de atenção imediata\n- WARNING: Situações problemáticas mas não críticas\n- INFO: Informações gerais do sistema\n- DEBUG: Detalhes para desenvolvimento\n\n1.2 Formato Padrão:\n```python\n{\n\"timestamp\": \"2024-01-01T10:00:00Z\",\n\"level\": \"INFO\",\n\"service\": \"backend-rag-ia\",\n\"endpoint\": \"/api/v1/documents\",\n\"message\": \"Processando documento\",\n\"details\": {...},\n\"trace_id\": \"uuid4\"\n}\n```\n\n2.1 Logs da Aplicação:\n- Diretório: `/app/logs/`\n- Rotação: Diária\n- Retenção: 30 dias\n- Formato: JSON\n\n2.2 Logs do Render:\n- Dashboard do Render\n- Logs do deploy\n- Logs do sistema\n- Métricas de performance\n\n2.3 Logs do Sistema:\n- Logs do Python/Uvicorn\n- Logs do Docker\n- Logs do Sistema Operacional\n- Logs de Segurança\n\n3.1 Loki:\n```yaml\n\nConfiguração do Loki:\nauth_enabled: false\nserver:\nhttp_listen_port: 3100\nschema_config:\nconfigs:\n- from: 2020-05-15\nstore: boltdb\nobject_store: filesystem\nschema: v11\n```\n\n3.2 Retenção:\n- Logs de aplicação: 30 dias\n- Logs de erro: 90 dias\n- Logs de auditoria: 1 ano\n- Logs de deploy: 60 dias\n\n4.1 Via SSH:\n```bash\n\nLogs da aplicação:\nssh render tail -f /app/logs/app.log\n\nLogs do sistema:\nssh render journalctl -u backend-rag-ia\n\nLogs do deploy:\nssh render cat /etc/render/deploy.log\n\nLogs específicos:\nssh render grep ERROR /app/logs/app.log\n```\n\n4.2 Via Grafana:\n- Queries LogQL\n- Dashboards personalizados\n- Alertas baseados em logs\n- Visualizações temporais\n\n5.1 Logging:\n- Usar logging estruturado (JSON)\n- Incluir trace_id em todas as requisições\n- Evitar informações sensíveis\n- Manter contexto adequado\n\n5.2 Performance:\n- Usar log levels apropriadamente\n- Implementar log buffering\n- Configurar rotação de logs\n- Monitorar espaço em disco\n\n5.3 Segurança:\n- Sanitizar dados sensíveis\n- Implementar rate limiting\n- Proteger arquivos de log\n- Manter backups seguros\n\n6.1 Comandos Úteis:\n```bash\n\nBuscar erros recentes:\nssh render grep -r \"ERROR\" /app/logs/\n\nContar ocorrências:\nssh render awk '/ERROR/ {print $0}' /app/logs/app.log | wc -l\n\nAnálise temporal:\nssh render sed -n '/2024-01-01/,/2024-01-02/p' /app/logs/app.log\n\nLogs específicos:\nssh render find /app/logs/ -name \"*.log\" -mtime -7\n```\n\n6.2 Análise de Problemas:\n- Verificar logs em ordem cronológica\n- Correlacionar eventos entre serviços\n- Identificar padrões de erro\n- Documentar soluções encontradas\n\n7.1 Alertas:\n- Erros críticos\n- Falhas de autenticação\n- Problemas de performance\n- Espaço em disco baixo\n\n7.2 Métricas:\n- Taxa de erros\n- Latência de requisições\n- Uso de recursos\n- Contagem de eventos",
+    "metadata": {
+      "type": "regra",
+      "title": "REGRAS_LOGS",
+      "autor": "sistema",
+      "formato_original": "markdown",
+      "tags": [
+        "documentação",
+        "regras",
+        "logs"
+      ],
+      "versao": "1.0"
+    }
+  }
+}

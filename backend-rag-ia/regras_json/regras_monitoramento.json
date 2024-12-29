@@ -1,0 +1,28 @@
+{
+  "metadata_global": {
+    "language": "pt-BR",
+    "tipo": "regra",
+    "fonte": "REGRAS_MONITORAMENTO.md",
+    "data_criacao": "2024-12-29T18:09:22.620723",
+    "categorias": [
+      "regras",
+      "monitoramento"
+    ],
+    "id": "c6e6f35692c6502af8c4c7eda7ae6f11"
+  },
+  "document": {
+    "content": "1.1 Configurações Básicas:\n- Configurar notificações de status\n- Habilitar alertas de falha\n- Definir thresholds de performance\n- Configurar webhooks para Slack\n\n1.2 Métricas Importantes:\n- CPU e Memória\n- Tempo de resposta\n- Taxa de erros\n- Número de requisições\n- Status do healthcheck\n\n2.1 Render Logs:\n- Acessar via dashboard\n- Filtrar por severidade\n- Buscar por palavras-chave\n- Exportar logs para análise\n\n2.2 Logs via SSH:\n```bash\n\nLogs em tempo real:\nssh render tail -f /var/log/render/*.log\n\nLogs do deploy:\nssh render cat /etc/render/deploy.log\n\nLogs do serviço:\nssh render journalctl -u backend-rag-ia\n```\n\n3.1 Configuração Local:\n```yaml\n\n/monitoring/docker-compose.yml:\nservices:\nloki:\nimage: grafana/loki:latest\nports:\n- \"3100:3100\"\ngrafana:\nimage: grafana/grafana:latest\nports:\n- \"3000:3000\"\n```\n\n3.2 Dashboards:\n- Overview do sistema\n- Métricas de API\n- Logs consolidados\n- Alertas personalizados\n\n4.1 Endpoint:\n- Rota: `/api/v1/health`\n- Método: GET\n- Intervalo: 10 segundos\n- Timeout: 30 segundos\n\n4.2 Resposta:\n```json\n{\n\"status\": \"healthy\",\n\"version\": \"1.0.0\",\n\"uptime\": \"10d 2h 30m\",\n\"documents_count\": 1000\n}\n```\n\n5.1 Configuração:\n- Slack para notificações\n- Email para alertas críticos\n- Webhook para integrações\n- SMS para emergências\n\n5.2 Tipos de Alerta:\n- Falha no healthcheck\n- Alto uso de CPU/memória\n- Erros 5xx frequentes\n- Deploy falhou\n- Reinício do serviço\n\n6.1 Configuração:\n```bash\n\n~/.ssh/config:\nHost render\nHostName ssh.oregon.render.com\nUser srv-ctmtqra3esus739sknb0\nIdentityFile ~/.ssh/id_ed25519\nStrictHostKeyChecking no\nUserKnownHostsFile /dev/null\n```\n\n6.2 Comandos de Monitoramento:\n```bash\n\nStatus do serviço:\nssh render systemctl status backend-rag-ia\n\nUso de recursos:\nssh render top\nssh render free -h\nssh render df -h\n\nProcessos Python:\nssh render ps aux | grep python\n\nVerificações:\nssh render ls -la /app/\nssh render ls -la /opt/venv/\nssh render env | grep SUPABASE\n```\n\n7.1 Logs:\n- Usar níveis apropriados (INFO, ERROR, etc)\n- Incluir contexto suficiente\n- Rotacionar logs grandes\n- Manter histórico adequado\n\n7.2 Alertas:\n- Evitar falsos positivos\n- Definir severidades claras\n- Documentar procedimentos\n- Manter contatos atualizados\n\n7.3 Monitoramento:\n- Verificar regularmente\n- Manter thresholds calibrados\n- Documentar incidentes\n- Fazer análise post-mortem",
+    "metadata": {
+      "type": "regra",
+      "title": "REGRAS_MONITORAMENTO",
+      "autor": "sistema",
+      "formato_original": "markdown",
+      "tags": [
+        "documentação",
+        "regras",
+        "monitoramento"
+      ],
+      "versao": "1.0"
+    }
+  }
+}

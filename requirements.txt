@@ -25,4 +25,8 @@ cachetools==5.3.2
 
 # Testes
 pytest==8.0.0
-pytest-asyncio==0.23.5 
+pytest-asyncio==0.23.5
+
+# CLI
+click==8.1.7
+rich==13.7.0 
