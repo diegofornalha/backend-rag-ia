@@ -17,26 +17,26 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Instala dependências Python em camadas para melhor cache
 COPY requirements.txt .
-RUN pip install --no-cache-dir -U pip setuptools wheel
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir -U pip setuptools wheel
 
 # Instala primeiro as dependências base
-RUN pip install --no-cache-dir \
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
     fastapi==0.104.1 \
     uvicorn==0.24.0 \
     python-dotenv==1.0.0 \
     gunicorn>=22.0.0 \
     pydantic==2.5.2 \
-    httpx>=0.24.0,<0.26.0
+    "httpx>=0.24.0,<0.26.0"
 
 # Depois instala as dependências ML que são mais pesadas
-RUN pip install --no-cache-dir \
-    torch==2.1.0 \
-    transformers==4.35.0 \
-    sentence-transformers==2.2.2 \
-    faiss-cpu==1.7.4
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
+    "torch==2.1.0" \
+    "transformers==4.35.0" \
+    "sentence-transformers==2.2.2" \
+    "faiss-cpu==1.7.4"
 
 # Por fim, instala o resto das dependências
-RUN pip install --no-cache-dir -r requirements.txt
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
 
 # Estágio final
 FROM python:3.12-slim
