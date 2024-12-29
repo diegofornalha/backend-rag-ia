@@ -1,5 +1,14 @@
 # Regras para Verificação de Compatibilidade de Dependências
 
+## Informações do Projeto
+
+### Servidor de Produção
+
+- **Plataforma**: Render.com
+- **SSH**: `srv-ctmtqra3esus739sknb0@ssh.oregon.render.com`
+- **Região**: Oregon (US West)
+- **Tipo**: Web Service
+
 ## 1. Análise Inicial
 
 1. Primeiro, liste todas as dependências em grupos funcionais:
