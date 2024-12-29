@@ -6,6 +6,12 @@
 - Não criar Dockerfiles duplicados em subdiretórios
 - O Render usa por padrão o Dockerfile da raiz
 
+### 1.1 Organização de Arquivos Docker
+
+- **Dockerfile** → Raiz do projeto (para deploy no Render)
+- **docker-compose.yml** → Dentro da pasta específica do serviço (ex: `/monitoring`)
+- **Arquivos de configuração** → Junto com o docker-compose.yml do serviço (ex: `loki-config.yaml`)
+
 ## 2. Configurações Padrão
 
 ### Multi-stage Build
