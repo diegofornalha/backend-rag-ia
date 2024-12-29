@@ -1,154 +1,20 @@
 # Deploy no Render
 
-Este documento descreve o processo de deploy da aplicação no Render.
+Este documento descreve o processo de deploy da aplicação Flask no Render.
 
 ## Pré-requisitos
 
-1. Ter o Render CLI instalado:
-
-```bash
-# Para MacOS
-brew update
-brew install render
-
-# Para Linux
-curl -L https://github.com/render-oss/cli/releases/download/v1.1.0/cli_1.1.0_linux_amd64.zip -o render.zip
-unzip render.zip
-sudo mv cli_v1.1.0 /usr/local/bin/render
-```
-
-2. Ter uma conta no Render (dashboard.render.com)
-
-## CI/CD com GitHub Actions
-
-O projeto já possui integração contínua configurada através do GitHub Actions (`.github/workflows/docker-publish.yml`):
-
-1. **Triggers**:
-
-   - Push na branch `main`
-   - Pull Requests para `main`
-
-2. **Ações Automatizadas**:
-
-   - Build da imagem Docker
-   - Push para GitHub Container Registry
-   - Tags automáticas baseadas em:
-     - Branch
-     - Pull Request
-     - Versão semântica
-     - SHA do commit
-
-3. **Workflow**:
-
-```yaml
-name: Docker Build and Push
-on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-```
+- Conta no Render (https://render.com)
+- Git instalado localmente
+- Render CLI instalado (`brew install render`)
 
 ## Configuração Inicial
 
-1. **Login no Render CLI**:
+1. Faça login no Render Dashboard
+2. Crie um novo serviço estático
+3. Conecte seu repositório GitHub
 
-```bash
-render login
-```
-
-Siga as instruções no navegador para autorizar o CLI.
-
-2. **Configurar o Workspace**:
-
-```bash
-# Liste os workspaces disponíveis
-render workspace list
-
-# Configure o workspace (substitua WORKSPACE_ID pelo seu ID)
-render workspace set WORKSPACE_ID
-```
-
-Nosso Workspace ID: `tea-ctm6tfdumphs73ddibgg`
-
-## Deploy Automatizado
-
-1. **Obter o SERVICE_ID**:
-
-```bash
-render services --output json
-```
-
-Nosso SERVICE_ID: `srv-ctocnotds78s73cbfuhg`
-
-2. **Configurar Variável de Ambiente**:
-
-```bash
-export RENDER_SERVICE_ID=srv-ctocnotds78s73cbfuhg
-```
-
-3. **Executar o Deploy**:
-
-```bash
-./deploy.sh
-```
-
-O script `deploy.sh` automatiza:
-
-- Commit das alterações
-- Push para o GitHub
-- Deploy no Render
-
-## Fluxo de Deploy
-
-1. **Desenvolvimento Local**:
-
-   - Faça suas alterações
-   - Teste localmente
-   - Commit e push
-
-2. **CI/CD Automático**:
-
-   - GitHub Actions constrói a imagem Docker
-   - Push para o Container Registry
-   - Render detecta a nova imagem
-
-3. **Deploy no Render**:
-   - Manual via CLI: `./deploy.sh`
-   - Automático após CI: Configurado no `render.yaml`
-
-## Monitoramento
-
-1. **Ver Status do Deploy**:
-
-```bash
-render deploys list $RENDER_SERVICE_ID --output json
-```
-
-2. **Logs em Tempo Real**:
-
-```bash
-render logs $RENDER_SERVICE_ID
-```
-
-3. **Status do Serviço**:
-
-```bash
-render service get $RENDER_SERVICE_ID --output json
-```
-
-## Configuração do Serviço
-
-O arquivo `render.yaml` define a configuração do serviço:
+## Estrutura do render.yaml
 
 ```yaml
 services:
@@ -159,204 +25,134 @@ services:
     staticPublishPath: frontend/static_build
     pullRequestPreviewsEnabled: true
     autoDeploy: false
+    noHealthcheck: true
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
 ```
 
+## Deploy Automatizado
+
+O deploy é acionado automaticamente quando:
+
+1. Há um push para a branch principal
+2. Manualmente através do Dashboard
+3. Via Render CLI
+
+## Monitoramento
+
+### Via Dashboard
+
+1. Acesse o Render Dashboard
+2. Selecione seu serviço
+3. Vá para a aba "Logs"
+4. Monitore o progresso do build e deploy
+
+### Via CLI
+
+```bash
+# Instalar CLI
+brew install render
+
+# Login
+render login
+
+# Listar serviços
+render list
+
+# Ver logs
+render logs <service-name>
+```
+
+## Configuração do Serviço
+
+- **Build Command**: Comando para construir os arquivos estáticos
+- **Publish Directory**: Diretório onde os arquivos estáticos são gerados
+- **Auto-Deploy**: Desativado para maior controle
+- **Health Checks**: Desativados para ambiente de teste
+
 ## Comandos Úteis
 
-1. **Criar Novo Deploy**:
-
 ```bash
-render deploys create $RENDER_SERVICE_ID --output json --confirm
-```
+# Trigger manual deploy
+render deploy <service-id>
 
-2. **Listar Todos os Serviços**:
+# Ver status do serviço
+render status <service-name>
 
-```bash
-render services --output json
-```
-
-3. **Verificar Logs de um Deploy Específico**:
-
-```bash
-render deploys logs $DEPLOY_ID
+# Ver variáveis de ambiente
+render env list <service-name>
 ```
 
 ## Troubleshooting
 
-1. **Erro de Autenticação**:
+### Problemas Comuns
 
-```bash
-render login  # Faça login novamente
-```
+1. **Build Falhou**
 
-2. **Workspace não Configurado**:
+   - Verifique os logs do build
+   - Confirme se todas as dependências estão no requirements.txt
+   - Verifique se o buildCommand está correto
 
-```bash
-render workspace set tea-ctm6tfdumphs73ddibgg
-```
+2. **Deploy Falhou**
 
-3. **Deploy Falhou**:
+   - Verifique se o staticPublishPath está correto
+   - Confirme se os arquivos estáticos foram gerados corretamente
 
-```bash
-render deploys logs $(render deploys list $RENDER_SERVICE_ID --output json | jq -r '.[0].id')
-```
+3. **Erro 404**
+   - Verifique se as rotas estão configuradas corretamente
+   - Confirme se o index.html existe no diretório de build
 
-4. **Problemas com CI/CD**:
-   - Verifique as Actions no GitHub
-   - Confirme as permissões do token
-   - Verifique os logs do Container Registry
+## API Keys e Autenticação
 
-## Links Úteis
+### Gerando API Key
 
-- [Dashboard do Render](https://dashboard.render.com)
-- [Documentação do Render CLI](https://render.com/docs/cli)
-- [Configuração do render.yaml](https://render.com/docs/yaml-spec)
-- [GitHub Actions](https://github.com/features/actions)
-- [Container Registry](https://github.com/features/packages)
+1. Acesse o Render Dashboard
+2. Vá para Account Settings > API Keys
+3. Clique em "New API Key"
+4. Copie e armazene a chave com segurança
 
-## Autenticação com API Key
-
-⚠️ **IMPORTANTE: Nunca compartilhe ou exponha sua API Key!**
-
-1. **Gerar API Key**:
-
-   - Acesse [Account Settings no Render Dashboard](https://dashboard.render.com/account/settings)
-   - Procure a seção "API Keys"
-   - Clique em "Create API Key"
-
-2. **Configurar API Key**:
+### Usando API Key
 
 ```bash
 # Configurar como variável de ambiente
-export RENDER_API_KEY=rnd_YOUR_API_KEY_HERE
+export RENDER_API_KEY='seu_api_key'
 
-# Ou adicionar ao .env (não commitar este arquivo!)
-echo "RENDER_API_KEY=rnd_YOUR_API_KEY_HERE" >> .env
+# Testar autenticação
+curl -H "Authorization: Bearer $RENDER_API_KEY" \
+     https://api.render.com/v1/services
 ```
 
-3. **Testar API Key**:
+### Segurança
 
-```bash
-# Teste básico com curl
-curl --request GET \
-     --url 'https://api.render.com/v1/services?limit=3' \
-     --header 'Accept: application/json' \
-     --header 'Authorization: Bearer $RENDER_API_KEY'
-
-# Ou usando o Render CLI
-render services --output json
-```
-
-4. **Segurança**:
-   - Nunca compartilhe sua API Key
-   - Não commite no controle de versão
-   - Revogue imediatamente se comprometida
-   - Use variáveis de ambiente em CI/CD
+- Nunca compartilhe sua API Key
+- Armazene em variáveis de ambiente
+- Revogue imediatamente se comprometida
 
 ## One-Off Jobs
 
-One-Off Jobs são úteis para executar tarefas pontuais usando a mesma configuração do seu serviço.
-
-### Casos de Uso
-
-- Migrações de banco de dados
-- Recompilação de assets
-- Scripts de manutenção
-- Tarefas em lote
-
-### Criar um Job
-
-1. **Via API**:
+### Criando Jobs
 
 ```bash
-curl --request POST \
-     --url "https://api.render.com/v1/services/$RENDER_SERVICE_ID/jobs" \
-     --header "Authorization: Bearer $RENDER_API_KEY" \
-     --header 'Content-Type: application/json' \
-     --data-raw '{
-         "startCommand": "python manage.py migrate"
-     }'
+# Via API
+curl -X POST \
+  -H "Authorization: Bearer $RENDER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"startCommand": "python manage.py migrate"}' \
+  https://api.render.com/v1/services/{service-id}/jobs
 ```
 
-2. **Monitorar Status**:
+### Monitorando Jobs
 
-```bash
-curl --request GET \
-     --url "https://api.render.com/v1/services/$RENDER_SERVICE_ID/jobs/$JOB_ID" \
-     --header "Authorization: Bearer $RENDER_API_KEY"
-```
+1. Dashboard > Jobs
+2. Ver status e logs
+3. Histórico de execuções
 
-### Tipos de Instância
+## Suporte
 
-1. **Web Services/Private Services/Background Workers**:
+Para problemas ou dúvidas:
 
-   - Starter: 512 MB RAM, 0.5 CPU ($7/mês)
-   - Standard: 2 GB RAM, 1 CPU ($25/mês)
-   - Pro: 4 GB RAM, 2 CPU ($85/mês)
-   - Pro Plus: 8 GB RAM, 4 CPU ($175/mês)
-   - Pro Max: 16 GB RAM, 4 CPU ($225/mês)
-   - Pro Ultra: 32 GB RAM, 8 CPU ($450/mês)
-
-2. **Cron Jobs**:
-   - Starter: 512 MB RAM, 0.5 CPU (0.016¢/minuto)
-   - Standard: 2 GB RAM, 1 CPU (0.058¢/minuto)
-   - Pro: 4 GB RAM, 2 CPU (0.197¢/minuto)
-   - Pro Plus: 8 GB RAM, 4 CPU (0.405¢/minuto)
-
-### Exemplo de Script para Jobs
-
-```bash
-#!/bin/bash
-# job_runner.sh
-
-JOB_COMMAND="$1"
-if [ -z "$JOB_COMMAND" ]; then
-    echo "Erro: Comando não especificado"
-    exit 1
-fi
-
-# Criar job
-RESPONSE=$(curl --request POST \
-     --url "https://api.render.com/v1/services/$RENDER_SERVICE_ID/jobs" \
-     --header "Authorization: Bearer $RENDER_API_KEY" \
-     --header 'Content-Type: application/json' \
-     --data-raw "{
-         \"startCommand\": \"$JOB_COMMAND\"
-     }")
-
-JOB_ID=$(echo $RESPONSE | jq -r '.id')
-
-echo "Job criado com ID: $JOB_ID"
-
-# Monitorar status
-while true; do
-    STATUS=$(curl --silent \
-         --url "https://api.render.com/v1/services/$RENDER_SERVICE_ID/jobs/$JOB_ID" \
-         --header "Authorization: Bearer $RENDER_API_KEY" \
-         | jq -r '.status')
-
-    echo "Status: $STATUS"
-
-    if [ "$STATUS" = "succeeded" ]; then
-        echo "Job completado com sucesso!"
-        break
-    elif [ "$STATUS" = "failed" ]; then
-        echo "Job falhou!"
-        exit 1
-    fi
-
-    sleep 10
-done
-```
-
-### Limitações e Notas
-
-- Timeout após 30 dias se o comando não completar
-- Jobs em execução não são interrompidos por novos deploys
-- Não tem acesso ao disco persistente do serviço base
-- Usa o último build bem-sucedido do serviço
-- Herda variáveis de ambiente do serviço no momento da criação
+1. Consulte a [documentação oficial do Render](https://render.com/docs)
+2. Abra um ticket de suporte no Dashboard
+3. Consulte os logs detalhados do serviço
