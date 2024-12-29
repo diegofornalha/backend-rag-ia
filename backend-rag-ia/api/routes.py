@@ -181,4 +181,23 @@ async def get_statistics():
         return stats
     except Exception as e:
         logger.error(f"Erro ao buscar estatísticas: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/documents/count")
+async def count_documents():
+    """
+    Retorna o número total de documentos no sistema.
+    
+    Returns:
+        Contagem total de documentos armazenados.
+    """
+    try:
+        vector_store = VectorStore()
+        count = await vector_store.count_documents()
+        return {
+            "total": count,
+            "timestamp": datetime.now()
+        }
+    except Exception as e:
+        logger.error(f"Erro ao contar documentos: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
