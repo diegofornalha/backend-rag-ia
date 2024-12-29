@@ -41,7 +41,7 @@ async def root():
     """Redireciona para a documentação da API."""
     return RedirectResponse(url="/docs")
 
-@app.get("/health")
+@app.get("/api/v1/health")
 async def health_check():
     """Verifica o status da API."""
     try:
