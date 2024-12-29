@@ -189,3 +189,46 @@ python -c "import langchain; print(langchain.__version__)"
    - Começar com verificações básicas (logs, processos)
    - Escalar gradualmente a complexidade dos testes
    - Manter registro de todas as ações tomadas
+
+## 11. Log Streaming no Render
+
+### Configuração do Log Endpoint
+
+Para configurar o streaming de logs no Render:
+
+1. Log Endpoint:
+
+   - Formato: `logs.papertrailapp.com:XXXXX`
+   - Exemplo: `logs.papertrailapp.com:34302`
+   - Substitua XXXXX pelo número da porta fornecido pelo seu provedor de logs
+
+2. Provedores Suportados:
+
+   - Papertrail
+   - Datadog
+   - LogDNA
+   - Outros serviços compatíveis com syslog
+
+3. Configuração:
+
+   ```bash
+   # Formato do endpoint
+   [provedor].com:[porta]
+
+   # Exemplo Papertrail
+   logs.papertrailapp.com:34302
+
+   # Exemplo LogDNA
+   syslog-a.logdna.com:6514
+   ```
+
+4. Token (Opcional):
+
+   - Alguns provedores requerem token de autenticação
+   - Consulte a documentação específica do provedor
+   - Mantenha o token seguro e nunca o compartilhe
+
+5. Boas Práticas:
+   - Configure filtros apropriados no provedor de logs
+   - Defina retenção adequada dos logs
+   - Monitore o uso de armazenamento de logs
