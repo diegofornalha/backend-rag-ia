@@ -1,33 +1,26 @@
 # Exported from Render on 2024-12-27T10:09:24Z
 services:
   - type: web
-    name: backend-rag-ia
-    runtime: docker
-    repo: https://github.com/diegofornalha/backend-rag-ia
-    plan: free
+    name: oraculo-back-api
+    env: python
+    buildCommand: |
+      python -m pip install --upgrade pip
+      pip install -r clusters_back_API/oraculo_back_API/requirements.txt
+    startCommand: cd clusters_back_API/oraculo_back_API && uvicorn main:app --host 0.0.0.0 --port $PORT
+    pullRequestPreviewsEnabled: true
+    autoDeploy: false
+    plan: starter
+    region: oregon
     healthCheckPath: /api/v1/health
     envVars:
-      - key: NEXT_PUBLIC_API_URL
-        sync: false
+      - key: PORT
+        value: 10000
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
         sync: false
-      - key: GITHUB_TOKEN
-        sync: false
-      - key: LANGCHAIN_CACHE_DIR
-        sync: false
-      - key: LANGCHAIN_PROJECT
-        sync: false
-      - key: LANGCHAIN_API_KEY
-        sync: false
-      - key: LANGCHAIN_ENDPOINT
-        sync: false
-      - key: LANGCHAIN_TRACING_V2
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-    region: oregon
-    dockerContext: .
-    dockerfilePath: ./Dockerfile
 version: "1"
