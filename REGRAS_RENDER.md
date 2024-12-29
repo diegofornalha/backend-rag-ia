@@ -169,3 +169,66 @@ cd /var/log && cat *.log
 # Verificar ambiente Python
 python3 -V && pip list
 ```
+
+## Meta-Regras de Documentação
+
+### 1. Atualizações Automáticas
+
+- Toda nova solução deve ser documentada imediatamente
+- Ao resolver um problema, adicionar à seção apropriada
+- Incluir exemplos práticos sempre que possível
+- Manter padrão de formatação markdown
+
+### 2. Organização do Conhecimento
+
+1. Identificação:
+
+   - Observar padrões de problemas
+   - Identificar soluções reutilizáveis
+   - Capturar comandos úteis
+
+2. Documentação:
+
+   - Adicionar à seção apropriada
+   - Incluir contexto do problema
+   - Documentar passos da solução
+   - Adicionar exemplos de código
+
+3. Manutenção:
+   - Revisar periodicamente
+   - Atualizar soluções obsoletas
+   - Remover informações duplicadas
+   - Manter exemplos atualizados
+
+### 3. Formato de Documentação
+
+````markdown
+### Nome do Problema
+
+1. Contexto:
+
+   - Descrição do problema
+   - Sintomas comuns
+   - Impacto no sistema
+
+2. Solução:
+
+   - Passos para resolver
+   - Comandos necessários
+   - Configurações importantes
+
+3. Exemplo:
+   ```bash
+   # Comando exemplo
+   comando --flag valor
+   ```
+````
+
+4. Notas:
+   - Observações importantes
+   - Casos especiais
+   - Limitações conhecidas
+
+```
+
+```
