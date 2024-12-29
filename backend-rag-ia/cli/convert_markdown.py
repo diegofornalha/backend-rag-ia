@@ -1,122 +1,81 @@
 #!/usr/bin/env python3
 
-import json
 import os
+import sys
+import json
 from pathlib import Path
-from services.md_converter import MarkdownConverter
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
-import asyncio
-from supabase import create_client, Client
 from dotenv import load_dotenv
+
+# Adiciona o diretório raiz ao PYTHONPATH
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+from services.md_converter import MarkdownConverter
 
 console = Console()
 load_dotenv()
 
-class MarkdownProcessor:
-    def __init__(self):
-        self.converter = MarkdownConverter()
-        self.supabase = self._get_supabase_client()
-    
-    def _get_supabase_client(self) -> Client:
-        """Inicializa cliente Supabase."""
-        url = os.getenv('SUPABASE_URL')
-        key = os.getenv('SUPABASE_KEY')
+def convert_markdown_files():
+    """Converte todos os arquivos markdown para JSON."""
+    try:
+        # Diretórios
+        md_dir = project_root / "regras_md"
+        json_dir = project_root / "regras_json"
         
-        if not url or not key:
-            raise ValueError("SUPABASE_URL e SUPABASE_KEY devem ser configurados!")
+        # Verifica se os diretórios existem
+        if not md_dir.exists():
+            console.print(f"❌ Diretório {md_dir} não encontrado!")
+            return
+            
+        # Cria diretório JSON se não existir
+        json_dir.mkdir(exist_ok=True)
         
-        return create_client(url, key)
-    
-    async def process_single_file(self, md_file: Path, output_dir: Path = None):
-        """Processa um único arquivo markdown."""
-        try:
-            # Lê o conteúdo do arquivo
-            with open(md_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-            
-            # Prepara os metadados
-            rule_type = md_file.stem.replace('REGRAS_', '').replace('_RULES', '')
-            metadata = {
-                "title": md_file.stem,
-                "tipo": "regra",
-                "autor": "sistema",
-                "filename": md_file.name,
-                "categorias": ["regras", rule_type.lower()],
-                "tags": ["documentação", "regras", rule_type.lower()],
-                "versao": "1.0"
-            }
-            
-            # Converte para JSON
-            result = self.converter.convert_md_to_json(
-                md_content=content,
-                metadata=metadata
-            )
-            
-            # Se especificado, salva em arquivo
-            if output_dir:
-                output_dir = Path(output_dir)
-                output_dir.mkdir(parents=True, exist_ok=True)
-                json_file = output_dir / f"{md_file.stem.lower()}.json"
+        # Lista todos os arquivos markdown
+        md_files = list(md_dir.glob("*.md"))
+        console.print(f"\n📝 Encontrados {len(md_files)} arquivos markdown para conversão.")
+        
+        # Converte cada arquivo
+        converter = MarkdownConverter()
+        for md_file in md_files:
+            try:
+                # Nome do arquivo JSON correspondente
+                json_file = json_dir / f"{md_file.stem.lower()}.json"
                 
+                console.print(f"\n🔄 Convertendo {md_file.name}...")
+                
+                # Lê o conteúdo do arquivo markdown
+                with open(md_file, 'r', encoding='utf-8') as f:
+                    markdown_content = f.read()
+                
+                # Converte para o formato JSON
+                result = converter.convert_md_to_json(
+                    md_content=markdown_content,
+                    metadata={
+                        "title": md_file.stem,
+                        "tipo": "regra",
+                        "autor": "sistema",
+                        "filename": md_file.name,
+                        "categorias": ["regras"],
+                        "tags": ["documentação", "regras"],
+                        "versao": "1.0"
+                    }
+                )
+                
+                # Salva o resultado
                 with open(json_file, 'w', encoding='utf-8') as f:
                     json.dump(result, f, ensure_ascii=False, indent=2)
-                console.print(f"[green]✓ JSON gerado: {json_file.name}")
-            
-            # Envia para o Supabase
-            response = await self.supabase.table("documents").insert(result).execute()
-            
-            if response.data:
-                console.print(f"[green]✓ Enviado para Supabase: {md_file.name}")
-                return True
-            return False
-            
-        except Exception as e:
-            console.print(f"[red]Erro ao processar {md_file.name}: {str(e)}")
-            return False
-    
-    async def process_directory(self, input_dir: Path, output_dir: Path = None):
-        """Processa todos os arquivos markdown de um diretório."""
-        md_files = list(input_dir.glob('*.md'))
-        total_files = len(md_files)
+                    
+                console.print(f"✅ Arquivo {json_file.name} criado com sucesso!")
+                
+            except Exception as e:
+                console.print(f"❌ Erro ao converter {md_file.name}: {e}")
+                continue
         
-        console.print(f"\n[bold cyan]Encontrados {total_files} arquivos markdown.")
-        
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
-        ) as progress:
-            task = progress.add_task("Processando...", total=total_files)
-            
-            for md_file in md_files:
-                progress.update(task, description=f"Processando {md_file.name}")
-                await self.process_single_file(md_file, output_dir)
-                progress.advance(task)
-
-async def main():
-    # Define diretórios
-    base_dir = Path(__file__).parent.parent
-    input_dir = base_dir / 'regras_md'
-    output_dir = base_dir / 'regras_json'
-    
-    if not input_dir.exists():
-        console.print("[red]Diretório regras_md não encontrado!")
-        return
-    
-    console.print("[bold]Iniciando processamento dos arquivos markdown...")
-    console.print(f"Diretório de entrada: {input_dir}")
-    if output_dir:
-        console.print(f"Diretório de saída: {output_dir}\n")
-    
-    processor = MarkdownProcessor()
-    
-    try:
-        await processor.process_directory(input_dir, output_dir)
-        console.print("\n[bold green]Processamento concluído!")
+        console.print("\n✨ Conversão concluída!")
         
     except Exception as e:
-        console.print(f"[bold red]Erro durante o processamento: {str(e)}")
+        console.print(f"❌ Erro durante a conversão: {e}")
 
-if __name__ == '__main__':
-    asyncio.run(main()) 
+if __name__ == "__main__":
+    convert_markdown_files() 

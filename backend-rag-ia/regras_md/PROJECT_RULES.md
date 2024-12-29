@@ -71,6 +71,29 @@
 - Alertas configurados
 - Dashboards documentados
 
+## 4. Regras de Upload para Supabase
+
+4.1 Formato de Upload:
+
+- **APENAS** arquivos `.json` devem ser enviados ao Supabase
+- Arquivos `.md` são usados somente para edição/criação
+- Sempre converter `.md` para `.json` antes do upload
+
+  4.2 Fluxo de Trabalho:
+
+```bash
+1. Criar/Editar regras em formato .md
+2. Converter .md para .json usando o script de conversão
+3. Fazer upload APENAS dos arquivos .json para o Supabase
+```
+
+4.3 Justificativa:
+
+- Evita duplicidade de dados no Supabase
+- Mantém consistência no formato dos documentos
+- Garante estrutura padronizada dos dados
+- Previne inconsistências entre versões
+
 ## 5. Segurança
 
 ### 5.1 Código
