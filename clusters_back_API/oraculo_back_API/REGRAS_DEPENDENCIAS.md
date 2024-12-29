@@ -9,18 +9,25 @@
 - **Região**: Oregon (US West)
 - **Tipo**: Web Service
 
+### Regiões Disponíveis no Render
+
+- Frankfurt (EU Central)
+- Ohio (US East)
+- Singapore (Southeast Asia)
+- Virginia (US East)
+
 ### Recomendação de Região
 
 Para melhor performance no Brasil, é recomendado usar:
 
-- **Região**: São Paulo (sa1)
-- **Provedor**: AWS South America (São Paulo)
+- **Região**: Virginia (US East) ou Ohio (US East)
+- **Motivo**: São as regiões mais próximas ao Brasil entre as disponíveis
 - **Benefícios**:
-  - Menor latência para usuários brasileiros
-  - Melhor tempo de resposta
-  - Conformidade com LGPD (Lei Geral de Proteção de Dados)
+  - Menor latência comparada a outras regiões disponíveis
+  - Boa conectividade com a América do Sul
+  - Infraestrutura robusta da AWS
 
-> **Nota**: Considerar migração do servidor de Oregon para São Paulo para otimizar a performance para usuários brasileiros.
+> **Nota**: Embora não haja uma região na América do Sul, Virginia ou Ohio oferecem a melhor latência para usuários brasileiros entre as opções disponíveis.
 
 ## 1. Análise Inicial
 
