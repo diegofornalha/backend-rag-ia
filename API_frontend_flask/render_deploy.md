@@ -217,3 +217,42 @@ render deploys logs $(render deploys list $RENDER_SERVICE_ID --output json | jq 
 - [Configuração do render.yaml](https://render.com/docs/yaml-spec)
 - [GitHub Actions](https://github.com/features/actions)
 - [Container Registry](https://github.com/features/packages)
+
+## Autenticação com API Key
+
+⚠️ **IMPORTANTE: Nunca compartilhe ou exponha sua API Key!**
+
+1. **Gerar API Key**:
+
+   - Acesse [Account Settings no Render Dashboard](https://dashboard.render.com/account/settings)
+   - Procure a seção "API Keys"
+   - Clique em "Create API Key"
+
+2. **Configurar API Key**:
+
+```bash
+# Configurar como variável de ambiente
+export RENDER_API_KEY=rnd_YOUR_API_KEY_HERE
+
+# Ou adicionar ao .env (não commitar este arquivo!)
+echo "RENDER_API_KEY=rnd_YOUR_API_KEY_HERE" >> .env
+```
+
+3. **Testar API Key**:
+
+```bash
+# Teste básico com curl
+curl --request GET \
+     --url 'https://api.render.com/v1/services?limit=3' \
+     --header 'Accept: application/json' \
+     --header 'Authorization: Bearer $RENDER_API_KEY'
+
+# Ou usando o Render CLI
+render services --output json
+```
+
+4. **Segurança**:
+   - Nunca compartilhe sua API Key
+   - Não commite no controle de versão
+   - Revogue imediatamente se comprometida
+   - Use variáveis de ambiente em CI/CD
