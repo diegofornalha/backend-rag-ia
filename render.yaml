@@ -3,24 +3,43 @@ services:
   - type: web
     name: backend-rag-ia
     env: docker
-    dockerfilePath: Dockerfile
-    dockerContext: .
-    pullRequestPreviewsEnabled: true
-    autoDeploy: false
-    plan: starter
     region: oregon
+    plan: starter
     healthCheckPath: /api/v1/health
+    dockerfilePath: ./Dockerfile
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: PORT
+        value: 8000
       - key: HOST
         value: 0.0.0.0
-      - key: PORT
-        value: 10000
-      - key: ENVIRONMENT
-        value: production
+      - key: ENV
+        value: prod
+      - key: WORKERS
+        value: 4
       - key: DEBUG
-        value: false
+        value: "false"
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: RENDER_DEPLOY_HOOK
+        sync: false
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+      - key: LANGCHAIN_ENDPOINT
+        value: https://api.smith.langchain.com
+      - key: LANGCHAIN_PROJECT
+        value: keepai
+      - key: LANGCHAIN_CACHE_DIR
+        value: /app/cache/langchain
+      - key: CORS_ORIGINS
+        value: '["http://localhost:3000","http://localhost:5173","https://oraculo-asimov.vercel.app"]'
+      - key: LOG_LEVEL
+        value: INFO
 version: "1"

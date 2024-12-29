@@ -15,10 +15,28 @@ RUN apt-get update \
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copia e instala requisitos
+# Instala dependências Python em camadas para melhor cache
 COPY requirements.txt .
-RUN pip install --no-cache-dir -U pip setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -U pip setuptools wheel
+
+# Instala primeiro as dependências base
+RUN pip install --no-cache-dir \
+    fastapi==0.104.1 \
+    uvicorn==0.24.0 \
+    python-dotenv==1.0.0 \
+    gunicorn>=22.0.0 \
+    pydantic==2.5.2 \
+    httpx>=0.24.0,<0.26.0
+
+# Depois instala as dependências ML que são mais pesadas
+RUN pip install --no-cache-dir \
+    torch==2.1.0 \
+    transformers==4.35.0 \
+    sentence-transformers==2.2.2 \
+    faiss-cpu==1.7.4
+
+# Por fim, instala o resto das dependências
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Estágio final
 FROM python:3.12-slim
@@ -41,7 +59,7 @@ COPY . .
 
 # Configuração do servidor
 ENV HOST=0.0.0.0
-ENV PORT=10000
+ENV PORT=8000
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
@@ -51,10 +69,10 @@ RUN mkdir -p /app/logs /app/cache \
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:10000/api/v1/health || exit 1
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
 # Expõe a porta
-EXPOSE 10000
+EXPOSE 8000
 
 # Script de inicialização
 COPY ./scripts/start.sh /app/start.sh
