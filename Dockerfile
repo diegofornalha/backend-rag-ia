@@ -30,7 +30,7 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
 
 # Depois instala as dependências ML que são mais pesadas
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
-    "torch==2.1.0" \
+    "torch>=2.2.0" \
     "transformers==4.35.0" \
     "sentence-transformers==2.2.2" \
     "faiss-cpu==1.7.4"

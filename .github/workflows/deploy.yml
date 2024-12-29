@@ -1,0 +1,99 @@
+name: Deploy to Render
+
+on:
+  workflow_run:
+    workflows: ["Docker Build and Push"]
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Render credentials
+        run: |
+          if [ -z "${{ secrets.RENDER_API_KEY }}" ]; then
+            echo "Error: RENDER_API_KEY não está configurada"
+            exit 1
+          fi
+          if [ -z "${{ secrets.RENDER_SERVICE_ID }}" ]; then
+            echo "Error: RENDER_SERVICE_ID não está configurada"
+            exit 1
+          fi
+
+      - name: Deploy to Render
+        id: deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          echo "Iniciando deploy no Render..."
+
+          # Função para verificar status do serviço
+          check_service_status() {
+            curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
+              "https://api.render.com/v1/services/$SERVICE_ID" | \
+              grep -q '"status":"live"'
+            return $?
+          }
+
+          # Tenta o deploy
+          DEPLOY_RESPONSE=$(curl -s -X POST \
+            "https://api.render.com/v1/services/$SERVICE_ID/deploys" \
+            -H "accept: application/json" \
+            -H "authorization: Bearer $RENDER_API_KEY")
+
+          echo "Resposta do deploy: $DEPLOY_RESPONSE"
+
+          # Verifica se o deploy iniciou com sucesso
+          if echo "$DEPLOY_RESPONSE" | grep -q "error"; then
+            echo "Erro ao iniciar deploy"
+            exit 1
+          fi
+
+          # Aguarda até 5 minutos pelo deploy
+          echo "Aguardando deploy completar..."
+          for i in {1..30}; do
+            if check_service_status; then
+              echo "Deploy completado com sucesso!"
+              exit 0
+            fi
+            echo "Aguardando... Tentativa $i/30"
+            sleep 10
+          done
+
+          echo "Timeout: Deploy não completou em 5 minutos"
+          exit 1
+
+      - name: Verify deployment
+        if: success()
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          # Verifica se o serviço está respondendo
+          SERVICE_URL=$(curl -s -H "Authorization: Bearer $RENDER_API_KEY" \
+            "https://api.render.com/v1/services/$SERVICE_ID" | \
+            grep -o '"serviceDetails":{"url":"[^"]*' | \
+            cut -d'"' -f4)
+
+          if [ -n "$SERVICE_URL" ]; then
+            echo "Verificando serviço em: $SERVICE_URL"
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$SERVICE_URL")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Serviço está respondendo corretamente!"
+            else
+              echo "Serviço retornou código HTTP: $HTTP_CODE"
+              exit 1
+            fi
+          else
+            echo "Não foi possível obter URL do serviço"
+            exit 1
+          fi
