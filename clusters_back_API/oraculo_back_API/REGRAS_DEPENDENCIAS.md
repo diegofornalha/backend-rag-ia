@@ -192,6 +192,47 @@ python -c "import langchain; print(langchain.__version__)"
 
 ## 11. Log Streaming no Render
 
+### Provedores de Log Gratuitos
+
+1. Logtail (Recomendado):
+
+   - Plano gratuito: 50GB/mês
+   - Retenção: 14 dias
+   - Interface moderna e intuitiva
+   - Endpoint: `logtail.com:[porta]`
+   - Bom suporte a busca e filtros
+
+2. LogDNA/Mezmo:
+
+   - Plano gratuito: 50MB/dia
+   - Retenção: 7 dias
+   - Boa integração com Render
+   - Endpoint: `syslog-a.logdna.com:6514`
+   - Interface amigável
+
+3. Grafana Loki:
+
+   - Open Source e totalmente gratuito
+   - Auto-hospedado (requer configuração)
+   - Integração com Grafana
+   - Excelente para visualizações
+   - Boa escalabilidade
+
+4. Logz.io:
+
+   - Plano gratuito: 1GB/dia
+   - Retenção: 3 dias
+   - Baseado em ELK Stack
+   - Interface poderosa
+   - Boas ferramentas de análise
+
+5. Sematext:
+   - Plano gratuito: 500MB/dia
+   - Retenção: 7 dias
+   - Monitoramento integrado
+   - Interface limpa
+   - Bom suporte
+
 ### Configuração do Log Endpoint
 
 Para configurar o streaming de logs no Render:
