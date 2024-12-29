@@ -1,9 +1,9 @@
 # Exported from Render on 2024-12-27T10:09:24Z
 services:
   - type: web
-    name: oraculo-back-api
+    name: backend-rag-ia
     env: docker
-    dockerfilePath: ./clusters_back_API/oraculo_back_API/Dockerfile
+    dockerfilePath: Dockerfile
     dockerContext: .
     pullRequestPreviewsEnabled: true
     autoDeploy: false
@@ -11,6 +11,8 @@ services:
     region: oregon
     healthCheckPath: /api/v1/health
     envVars:
+      - key: HOST
+        value: 0.0.0.0
       - key: PORT
         value: 10000
       - key: ENVIRONMENT

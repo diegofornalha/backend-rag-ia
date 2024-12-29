@@ -1,6 +1,0 @@
-flask==3.0.0
-flask-cors==4.0.2
-python-dotenv==1.0.0
-requests==2.32.2
-flask-swagger-ui==4.11.1
-google-generativeai==0.8.3 
