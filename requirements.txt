@@ -21,7 +21,7 @@ numpy>=1.24.0
 sentence-transformers==2.2.2
 huggingface-hub>=0.21.0
 torch==2.2.0
-transformers==4.35.0
+transformers==4.38.0
 
 # Banco de Dados
 supabase>=2.3.4
