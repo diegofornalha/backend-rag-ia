@@ -29,6 +29,24 @@ async def add_document(document: Document):
         logger.error(f"Erro ao adicionar documento: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.delete("/documents/{doc_id}")
+async def delete_document(doc_id: str):
+    """Remove um documento do índice pelo ID."""
+    try:
+        vector_store = VectorStore()
+        success = await vector_store.delete_document(doc_id)
+        if not success:
+            raise HTTPException(status_code=404, detail="Documento não encontrado")
+        return {
+            "message": "Documento removido com sucesso",
+            "document_id": doc_id
+        }
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Erro ao remover documento: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/search")
 async def search_documents(query: SearchQuery):
     """Realiza busca semântica nos documentos."""
