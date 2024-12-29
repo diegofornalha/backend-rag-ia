@@ -73,3 +73,25 @@
 - Usar nomes descritivos para as chaves
 - Revogar acesso de chaves não utilizadas
 - Monitorar tentativas de acesso suspeitas
+
+## 7. Informações do Serviço
+
+### 7.1 Configurações Gerais
+
+- Nome: coflow
+- URL: api.coflow.com.br
+- Tipo: Docker (Standard)
+- Branch: main
+- Região: Oregon
+- Porta: 8000
+- Health Check: /api/v1/health
+- Repositório: diegofornalha/backend-rag-ia
+
+### 7.2 Configurações Técnicas
+
+- Blueprint managed
+- Internal Address: backend-rag-ia:8000
+- Protocolo: HTTP
+- Auto Deploy: Habilitado para branch main
+
+**IMPORTANTE**: Este é o único serviço em produção até o momento. Não criar serviços adicionais sem autorização expressa.
