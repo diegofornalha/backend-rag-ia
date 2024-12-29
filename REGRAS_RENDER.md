@@ -69,3 +69,103 @@ cat /var/log/apt/history.log
 # Buscar arquivos específicos
 find / -type f -name "app.py" 2>/dev/null
 ```
+
+## Problemas Comuns e Soluções
+
+### 1. Erros de Instalação de Dependências
+
+- Sempre use aspas em versões com operadores: `"httpx>=0.24.0,<0.26.0"`
+- Ative o ambiente virtual antes do pip install: `. /opt/venv/bin/activate`
+- Mantenha dependências em camadas no Dockerfile para melhor cache
+- Verifique compatibilidade entre versões no PyPI
+
+### 2. Problemas de Build
+
+- Monitore builds via API do Render:
+  ```bash
+  curl -H "Authorization: Bearer $RENDER_API_KEY" "https://api.render.com/v1/services/$SERVICE_ID/deploys"
+  ```
+- Use multi-stage builds no Dockerfile
+- Limpe caches e arquivos temporários
+- Mantenha logs organizados por seção
+
+### 3. Ambiente e Configuração
+
+- Configure todas as variáveis de ambiente no dashboard
+- Use .env apenas para desenvolvimento local
+- Mantenha versões de Python compatíveis
+- Configure PYTHONUNBUFFERED=1 para logs adequados
+
+### 4. Monitoramento e Logs
+
+1. Via Dashboard:
+
+   - Logs completos de build e runtime
+   - Histórico de deploys
+   - Métricas de performance
+
+2. Via API:
+
+   - Status de deploys em tempo real
+   - Logs de build
+   - Eventos do serviço
+
+3. Via SSH (Limitado):
+   - Verificações básicas
+   - Testes de conectividade
+   - Diagnósticos simples
+
+### 5. Boas Práticas
+
+1. Build:
+
+   - Use multi-stage builds
+   - Minimize camadas do Docker
+   - Mantenha dependências atualizadas
+   - Documente mudanças importantes
+
+2. Deploy:
+
+   - Configure healthchecks
+   - Use zero-downtime deploys
+   - Monitore logs constantemente
+   - Mantenha backups de configurações
+
+3. Manutenção:
+   - Atualize dependências regularmente
+   - Monitore uso de recursos
+   - Mantenha documentação atualizada
+   - Faça rollbacks quando necessário
+
+### 6. Healthchecks
+
+1. Configuração:
+
+   ```dockerfile
+   HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+       CMD curl -f http://localhost:8000/api/v1/health || exit 1
+   ```
+
+2. Endpoint:
+   ```python
+   @app.get("/api/v1/health")
+   def health_check():
+       return {"status": "healthy"}
+   ```
+
+### 7. Comandos Úteis para Troubleshooting
+
+```bash
+# Verificar status do deploy
+curl -H "Authorization: Bearer $RENDER_API_KEY" \
+    "https://api.render.com/v1/services/$SERVICE_ID/deploys?limit=1"
+
+# Disparar novo deploy
+curl -X POST "https://api.render.com/deploy/$SERVICE_ID?key=$DEPLOY_KEY"
+
+# Verificar logs (via SSH)
+cd /var/log && cat *.log
+
+# Verificar ambiente Python
+python3 -V && pip list
+```
