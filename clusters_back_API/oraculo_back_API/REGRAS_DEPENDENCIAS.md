@@ -194,6 +194,15 @@ python -c "import langchain; print(langchain.__version__)"
 
 ### Provedores de Log Gratuitos
 
+0. Papertrail (Limitado):
+
+   - Plano gratuito: 50MB/mês
+   - Retenção: 48 horas apenas
+   - Limite de 1 usuário
+   - Busca limitada a 1 dia
+   - Endpoint: `logs.papertrailapp.com:[porta]`
+     ⚠️ Não recomendado para produção devido às limitações
+
 1. Logtail (Recomendado):
 
    - Plano gratuito: 50GB/mês
