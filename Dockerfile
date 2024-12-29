@@ -8,6 +8,11 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
+    swig \
+    git \
+    cmake \
+    pkg-config \
+    libopenblas-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -28,12 +33,17 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
     pydantic==2.5.2 \
     "httpx>=0.24.0,<0.26.0"
 
-# Depois instala as dependências ML que são mais pesadas
+# Instala numpy primeiro (necessário para faiss)
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir numpy>=1.17
+
+# Depois instala o faiss-cpu separadamente
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir faiss-cpu==1.7.4
+
+# Instala as dependências ML que são mais pesadas
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
     "torch>=2.2.0" \
     "transformers==4.35.0" \
-    "sentence-transformers==2.2.2" \
-    "faiss-cpu==1.7.4"
+    "sentence-transformers==2.2.2"
 
 # Por fim, instala o resto das dependências
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
@@ -47,36 +57,15 @@ WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Instala apenas o curl para healthcheck
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
 # Copia o código da aplicação
 COPY . .
 
-# Configuração do servidor
-ENV HOST=0.0.0.0
-ENV PORT=8000
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-
-# Cria diretório para logs e cache
-RUN mkdir -p /app/logs /app/cache \
-    && chmod -R 755 /app/logs /app/cache
-
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/api/v1/health || exit 1
-
 # Expõe a porta
-EXPOSE 8000
+EXPOSE 10000
 
-# Script de inicialização
-COPY ./scripts/start.sh /app/start.sh
-RUN chmod +x /app/start.sh
+# Define as variáveis de ambiente
+ENV HOST=0.0.0.0
+ENV PORT=10000
 
 # Comando para iniciar a aplicação
-CMD ["/app/start.sh"] 
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"] 
