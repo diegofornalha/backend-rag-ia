@@ -5,9 +5,7 @@ services:
     buildCommand: pip install -r requirements_frontend.txt && python frontend/build.py
     staticPublishPath: frontend/static_build
     pullRequestPreviewsEnabled: true
-    healthCheckPath: /health
-    healthCheckTimeout: 60
-    healthCheckInterval: 300
+    autoDeploy: false
     routes:
       - type: rewrite
         source: /*
