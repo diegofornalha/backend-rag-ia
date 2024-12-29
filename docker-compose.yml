@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  oraculo-back-api:
+    build:
+      context: .
+      dockerfile: clusters_back_API/oraculo_back_API/Dockerfile
+    ports:
+      - "${PORT:-10000}:${PORT:-10000}"
+    env_file:
+      - ./clusters_back_API/oraculo_back_API/.env
+    volumes:
+      - ./clusters_back_API/oraculo_back_API:/app
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G 

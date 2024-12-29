@@ -10,18 +10,23 @@ RUN apt-get update && \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia os arquivos de requisitos
-COPY requirements.txt .
-COPY .env.example .
+# Copia os arquivos de requisitos e .env
+COPY ./clusters_back_API/oraculo_back_API/requirements.txt .
+COPY ./clusters_back_API/oraculo_back_API/.env .
 
 # Instala as dependências Python
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia o código da aplicação
-COPY . .
+COPY ./clusters_back_API/oraculo_back_API .
 
-# Expõe a porta
-EXPOSE 10000
+# Expõe a porta (usando variável de ambiente do Render)
+ENV PORT=10000
+EXPOSE ${PORT}
 
-# Define o comando para iniciar a aplicação
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"] 
+# Configurações do Uvicorn
+ENV WORKERS=4
+ENV TIMEOUT_KEEP_ALIVE=300
+
+# Define o comando para iniciar a aplicação com mais recursos
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers ${WORKERS} --timeout-keep-alive ${TIMEOUT_KEEP_ALIVE} --limit-concurrency 50"] 
