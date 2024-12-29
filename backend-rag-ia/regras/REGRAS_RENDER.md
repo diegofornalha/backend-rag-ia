@@ -13,7 +13,7 @@
 - Configurar na plataforma do Render
 - Não expor valores sensíveis no código
 - HOST deve ser configurado como "0.0.0.0"
-- PORT deve ser 8000 (porta da aplicação)
+- PORT deve ser 10000 (padrão do Render)
 
 ## 2. Deploy
 
@@ -83,14 +83,14 @@
 - Tipo: Docker (Standard)
 - Branch: main
 - Região: Oregon
-- Porta: 8000
+- Porta: 10000 (padrão do Render)
 - Health Check: /api/v1/health
 - Repositório: diegofornalha/backend-rag-ia
 
 ### 6.2 Configurações Técnicas
 
 - Blueprint managed
-- Internal Address: backend-rag-ia:8000
+- Internal Address: backend-rag-ia:10000
 - Protocolo: HTTP
 - Auto Deploy: Habilitado para branch main
 
