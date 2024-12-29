@@ -1,152 +1,64 @@
-# Regras para Verificação de Compatibilidade de Dependências
-
-## Informações do Projeto
-
-### Servidor de Produção Atual
-
-- **Plataforma**: Render.com
-- **SSH**: `srv-ctmtqra3esus739sknb0@ssh.oregon.render.com`
-- **Região**: Oregon (US West)
-- **Tipo**: Web Service
-
-### Regiões Disponíveis no Render
-
-- Frankfurt (EU Central)
-- Ohio (US East)
-- Singapore (Southeast Asia)
-- Virginia (US East)
-
-### Recomendação de Região
-
-Para melhor performance no Brasil, é recomendado usar:
-
-- **Região**: Virginia (US East) ou Ohio (US East)
-- **Motivo**: São as regiões mais próximas ao Brasil entre as disponíveis
-- **Benefícios**:
-  - Menor latência comparada a outras regiões disponíveis
-  - Boa conectividade com a América do Sul
-  - Infraestrutura robusta da AWS
-
-> **Nota**: Embora não haja uma região na América do Sul, Virginia ou Ohio oferecem a melhor latência para usuários brasileiros entre as opções disponíveis.
+# Regras para Verificar Versões de Dependências
 
 ## 1. Análise Inicial
 
-1. Primeiro, liste todas as dependências em grupos funcionais:
-
-   - Framework principal (ex: FastAPI, Uvicorn)
-   - Bibliotecas de ML/IA
-   - Banco de dados
-   - Utilitários
-   - Cache/Performance
-   - Testes
-
-2. Identifique as dependências críticas que são base para outras:
-   - FastAPI → Starlette, Pydantic
-   - Langchain → Hugging Face, transformers
-   - Supabase → httpx
+- Verificar todas as dependências listadas no `requirements.txt`
+- Identificar versões atuais e últimas versões disponíveis
+- Documentar dependências críticas para o sistema
 
 ## 2. Verificação de Versões
 
-1. Use o comando `pip index versions` para cada dependência crítica:
+- Usar `pip index versions [pacote]` para verificar versões disponíveis
+- Verificar changelogs para mudanças significativas
+- Identificar breaking changes entre versões
 
-   ```bash
-   pip index versions fastapi | grep -A 1 "Available versions:"
-   ```
+## 3. Testes de Compatibilidade
 
-2. Para dependências relacionadas, verifique a compatibilidade em cascata:
-   - Se atualizar FastAPI, verifique Pydantic
-   - Se atualizar Langchain, verifique sentence-transformers
-
-## 3. Teste de Compatibilidade
-
-1. Use `pip install --dry-run` para testar a instalação sem efetivamente instalar:
-
-   ```bash
-   pip install -r requirements.txt --dry-run
-   ```
-
-2. Se houver conflitos, o comando mostrará mensagens como:
-   ```
-   ERROR: Cannot install package1==1.0.0 and package2==2.0.0 because these package versions have conflicting dependencies.
-   ```
+- Realizar testes de instalação com `--dry-run`
+- Verificar conflitos entre dependências
+- Testar em ambiente isolado antes de produção
 
 ## 4. Resolução de Conflitos
 
-1. Para conflitos diretos (ex: httpx e supabase):
-
-   - Identifique a versão comum que satisfaz ambas as dependências
-   - Use ranges de versão quando possível: `package>=1.0.0,<2.0.0`
-
-2. Para conflitos em cascata:
-   - Comece pela dependência mais fundamental
-   - Trabalhe subindo na hierarquia de dependências
+- Documentar conflitos encontrados
+- Ajustar versões para resolver incompatibilidades
+- Manter registro de decisões tomadas
 
 ## 5. Boas Práticas
 
-1. Sempre especifique versões exatas para:
-
-   - Framework principal
-   - Bibliotecas de ML/IA
-   - Banco de dados
-
-2. Use ranges de versão apenas quando necessário para:
-
-   - Utilitários
-   - Bibliotecas de suporte
-
-3. Mantenha um registro de mudanças:
-   ```
-   # Exemplo de atualização:
-   # FastAPI: 0.104.1 → 0.115.6 (compatibilidade com Pydantic 2.x)
-   # Supabase: 1.0.3 → 2.3.4 (requer httpx>=0.24.0,<0.26.0)
-   ```
+- Sempre especificar versões exatas (exceto quando necessário range)
+- Manter arquivo de requirements organizado por categorias
+- Incluir comentários para decisões importantes
 
 ## 6. Processo de Atualização
 
-1. Faça um backup do requirements.txt atual
+- Criar branch específica para atualizações
+- Testar mudanças em ambiente de desenvolvimento
+- Documentar processo de rollback se necessário
 
-2. Atualize as dependências em ordem:
+## 7. Monitoramento de Segurança
 
-   - Framework principal
-   - Bibliotecas críticas
-   - Dependências secundárias
+- Usar `safety check` para verificar vulnerabilidades
+- Manter registro de vulnerabilidades conhecidas
+- Planejar atualizações de segurança
 
-3. Teste a instalação com `--dry-run` antes de commitar
+### Vulnerabilidades Conhecidas
 
-4. Documente todas as mudanças significativas
+1. gunicorn==21.2.0
+   - CVE-2024-1135: Validação inadequada de headers Transfer-Encoding
+   - Impacto: Possível HTTP Request Smuggling (HRS)
+   - Observação: Mantida versão 21.2.0 por ser mais estável. Versão 22.0.0 também apresenta vulnerabilidades similares.
+   - Mitigação: Usar em conjunto com proxy reverso que valida headers adequadamente
 
-## 7. Monitoramento
+## 8. Ferramentas Úteis
 
-1. Configure alertas de segurança no GitHub:
+- pip-tools para gerenciamento de dependências
+- safety para verificação de segurança
+- pip-audit para auditoria de dependências
 
-   - Dependabot
-   - Renovate
+## 9. Informações do Servidor de Produção
 
-2. Revise atualizações de segurança regularmente
-
-3. Mantenha um ambiente de testes para validar atualizações
-
-## 8. Troubleshooting
-
-Se encontrar conflitos:
-
-1. Verifique o log de erro completo
-2. Identifique as dependências em conflito
-3. Consulte a documentação oficial
-4. Use `pip debug` para mais informações
-5. Considere usar ambientes virtuais para testes
-
-## 9. Ferramentas Úteis
-
-- `pip-tools`: Para gerenciar dependências
-- `pipdeptree`: Para visualizar árvore de dependências
-- `safety`: Para verificar vulnerabilidades conhecidas
-
-## 10. Checklist Final
-
-- [ ] Todas as versões são compatíveis
-- [ ] Não há conflitos de dependências
-- [ ] Vulnerabilidades foram verificadas
-- [ ] Mudanças foram documentadas
-- [ ] Testes foram executados
-- [ ] Backup foi realizado
+- Plataforma: Render
+- SSH: ssh srv-ctmtqra3esus739sknb0@ssh.oregon.render.com
+- Região: Oregon (US West)
+- Tipo: Web Service
