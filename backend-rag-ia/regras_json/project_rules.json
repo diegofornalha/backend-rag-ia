@@ -1,0 +1,28 @@
+{
+  "metadata_global": {
+    "language": "pt-BR",
+    "tipo": "regra",
+    "fonte": "PROJECT_RULES.md",
+    "data_criacao": "2024-12-29T18:09:22.203481",
+    "categorias": [
+      "regras",
+      "project"
+    ],
+    "id": "b0c04cf0843f74585bc657095b727c83"
+  },
+  "document": {
+    "content": "1.1 Arquivos na Raiz:\n- **Dockerfile** → Build da aplicação\n- **requirements.txt** → Dependências Python\n- **render.yaml** → Configurações do Render (opcional)\n\n1.2 Organização de Pastas:\n- **/regras** → Documentação e regras do projeto\n- **/monitoring** → Configurações de monitoramento\n- **/api** → Código da API\n- **/services** → Serviços da aplicação\n- **/scripts** → Scripts utilitários\n\n2.1 Python:\n- Usar Python 3.11+\n- Seguir PEP 8\n- Documentar funções e classes\n- Usar type hints\n\n2.2 Docker:\n- Multi-stage builds\n- Imagens slim\n- Limpar caches\n- Healthchecks configurados\n\n2.3 API:\n- Endpoints versionados\n- Documentação Swagger\n- Validação de dados\n- Tratamento de erros\n\n3.1 Dependências:\n- Manter requirements.txt atualizado\n- Usar versões específicas\n- Documentar dependências opcionais\n- Separar dev e prod requirements\n\n3.2 Variáveis de Ambiente:\n- Usar .env para desenvolvimento\n- Nunca commitar .env\n- Documentar todas as variáveis\n- Usar defaults seguros\n\n4.1 Render:\n- HOST = \"0.0.0.0\"\n- PORT = 10000\n- Healthcheck a cada 10s\n- Logs configurados\n\n4.2 Monitoramento:\n- Grafana para métricas\n- Loki para logs\n- Alertas configurados\n- Dashboards documentados\n\n5.1 Código:\n- Não expor secrets\n- Validar inputs\n- Sanitizar outputs\n- Manter dependências seguras\n\n5.2 Infraestrutura:\n- CORS configurado\n- Rate limiting\n- Autenticação/Autorização\n- Backups automáticos",
+    "metadata": {
+      "type": "regra",
+      "title": "PROJECT_RULES",
+      "autor": "sistema",
+      "formato_original": "markdown",
+      "tags": [
+        "documentação",
+        "regras",
+        "project"
+      ],
+      "versao": "1.0"
+    }
+  }
+}

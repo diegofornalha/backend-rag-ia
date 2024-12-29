@@ -4,6 +4,8 @@ from typing import Optional, List, Dict, Any
 import logging
 from services.vector_store import VectorStore
 from datetime import datetime
+from models.markdown import MarkdownUpload
+from services.md_converter import MarkdownConverter
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -200,4 +202,34 @@ async def count_documents():
         }
     except Exception as e:
         logger.error(f"Erro ao contar documentos: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/convert/markdown")
+async def convert_markdown(document: MarkdownUpload):
+    """
+    Converte documento markdown para o formato JSON do Supabase.
+    
+    Args:
+        document: Documento markdown com metadados
+        
+    Returns:
+        Documento JSON no formato esperado pelo Supabase
+    """
+    try:
+        # Converte o documento
+        result = MarkdownConverter.convert_md_to_json(
+            md_content=document.content,
+            metadata=document.metadata.dict()
+        )
+        
+        return {
+            "success": True,
+            "document": result
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro na conversão do markdown: {str(e)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Erro na conversão: {str(e)}"
+        ) 

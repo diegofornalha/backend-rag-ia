@@ -41,7 +41,7 @@ COPY . .
 
 # Configuração do servidor
 ENV HOST=0.0.0.0
-ENV PORT=8000
+ENV PORT=10000
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
@@ -51,13 +51,13 @@ RUN mkdir -p /app/logs /app/cache \
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+    CMD curl -f http://localhost:10000/api/v1/health || exit 1
 
 # Expõe a porta
-EXPOSE 8000
+EXPOSE 10000
 
 # Script de inicialização
-COPY scripts/start.sh /app/start.sh
+COPY ./scripts/start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 # Comando para iniciar a aplicação
