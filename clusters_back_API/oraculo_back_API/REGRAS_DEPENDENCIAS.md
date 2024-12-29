@@ -194,15 +194,6 @@ python -c "import langchain; print(langchain.__version__)"
 
 ### Provedores de Log Gratuitos
 
-0. Papertrail (Limitado):
-
-   - Plano gratuito: 50MB/mês
-   - Retenção: 48 horas apenas
-   - Limite de 1 usuário
-   - Busca limitada a 1 dia
-   - Endpoint: `logs.papertrailapp.com:[porta]`
-     ⚠️ Não recomendado para produção devido às limitações
-
 1. Logtail (Recomendado):
 
    - Plano gratuito: 50GB/mês
@@ -242,49 +233,82 @@ python -c "import langchain; print(langchain.__version__)"
    - Interface limpa
    - Bom suporte
 
-### Análise Comparativa para o Projeto
+### Configuração do Grafana Loki
 
-Considerando as características específicas do projeto (API FastAPI com LangChain e Supabase):
+1. Instalação Local do Grafana Loki:
 
-1. **Logtail (Melhor Opção)**:
-   ✅ Vantagens para o projeto:
+   ```bash
+   # Usando Docker Compose
+   version: "3"
+   services:
+     loki:
+       image: grafana/loki:latest
+       ports:
+         - "3100:3100"
+       command: -config.file=/etc/loki/local-config.yaml
+       volumes:
+         - ./loki-config.yaml:/etc/loki/local-config.yaml
 
-   - 50GB/mês é mais que suficiente para logs de LLM e embeddings
-   - 14 dias de retenção permite debug de problemas históricos
-   - Suporte nativo a JSON facilita análise de respostas da API
-   - Bom para monitorar chamadas à Supabase e LangChain
-   - Interface moderna facilita debug de problemas em produção
+     grafana:
+       image: grafana/grafana:latest
+       ports:
+         - "3000:3000"
+       environment:
+         - GF_AUTH_ANONYMOUS_ENABLED=true
+         - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+       volumes:
+         - grafana-data:/var/lib/grafana
 
-2. **Grafana Loki (Segunda Opção)**:
-   ✅ Benefícios:
+   volumes:
+     grafana-data:
+   ```
 
-   - Visualizações avançadas para métricas de API
-   - Bom para monitorar performance de embeddings
-   - Integração com outras ferramentas de observabilidade
-     ❌ Contras:
-   - Requer mais configuração inicial
-   - Precisa de infraestrutura adicional
+2. Configuração do Promtail (Coletor de Logs):
 
-3. **LogDNA/Mezmo (Terceira Opção)**:
-   ✅ Pontos positivos:
-   - Boa integração com Render
-   - Interface intuitiva
-     ❌ Limitações:
-   - 50MB/dia pode ser pouco para logs de LLM
-   - 7 dias de retenção é curto para análise de padrões
+   ```yaml
+   # promtail-config.yaml
+   server:
+     http_listen_port: 9080
+     grpc_listen_port: 0
 
-Não Recomendados para o Projeto:
+   positions:
+     filename: /tmp/positions.yaml
 
-- Papertrail: 50MB/mês é insuficiente para logs de LLM
-- Logz.io: 3 dias de retenção é muito pouco
-- Sematext: 500MB/dia pode ser limitante
+   clients:
+     - url: http://loki:3100/loki/api/v1/push
 
-**Recomendação Final**: Logtail
+   scrape_configs:
+     - job_name: render_logs
+       static_configs:
+         - targets:
+             - localhost
+           labels:
+             job: render_logs
+             __path__: /var/log/render/*.log
+   ```
 
-- Melhor custo-benefício para o volume de logs do projeto
-- Retenção adequada para análise de problemas
-- Ferramentas de busca e análise adequadas para debug de LLM
-- Interface moderna facilita o trabalho da equipe
+3. Configuração no Render:
+
+   - Log Endpoint: `http://seu-servidor:3100/loki/api/v1/push`
+   - Formato: Loki HTTP Push
+   - Labels personalizados para melhor organização
+
+4. Visualização no Grafana:
+
+   - Acesse: `http://localhost:3000`
+   - Adicione Loki como fonte de dados
+   - Use LogQL para consultas avançadas:
+
+   ```logql
+   {job="render_logs"} |= "error"
+   {job="render_logs"} |= "warning" | json
+   ```
+
+5. Boas Práticas com Loki:
+   - Use labels eficientemente
+   - Evite ter muitas combinações únicas de labels
+   - Configure retenção apropriada
+   - Monitore uso de recursos
 
 ### Configuração do Log Endpoint
 
