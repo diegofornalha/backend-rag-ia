@@ -192,124 +192,6 @@ python -c "import langchain; print(langchain.__version__)"
 
 ## 11. Log Streaming no Render
 
-### Provedores de Log Gratuitos
-
-1. Logtail (Recomendado):
-
-   - Plano gratuito: 50GB/mês
-   - Retenção: 14 dias
-   - Interface moderna e intuitiva
-   - Endpoint: `logtail.com:[porta]`
-   - Bom suporte a busca e filtros
-
-2. LogDNA/Mezmo:
-
-   - Plano gratuito: 50MB/dia
-   - Retenção: 7 dias
-   - Boa integração com Render
-   - Endpoint: `syslog-a.logdna.com:6514`
-   - Interface amigável
-
-3. Grafana Loki:
-
-   - Open Source e totalmente gratuito
-   - Auto-hospedado (requer configuração)
-   - Integração com Grafana
-   - Excelente para visualizações
-   - Boa escalabilidade
-
-4. Logz.io:
-
-   - Plano gratuito: 1GB/dia
-   - Retenção: 3 dias
-   - Baseado em ELK Stack
-   - Interface poderosa
-   - Boas ferramentas de análise
-
-5. Sematext:
-   - Plano gratuito: 500MB/dia
-   - Retenção: 7 dias
-   - Monitoramento integrado
-   - Interface limpa
-   - Bom suporte
-
-### Configuração do Grafana Loki
-
-1. Instalação Local do Grafana Loki:
-
-   ```bash
-   # Usando Docker Compose
-   version: "3"
-   services:
-     loki:
-       image: grafana/loki:latest
-       ports:
-         - "3100:3100"
-       command: -config.file=/etc/loki/local-config.yaml
-       volumes:
-         - ./loki-config.yaml:/etc/loki/local-config.yaml
-
-     grafana:
-       image: grafana/grafana:latest
-       ports:
-         - "3000:3000"
-       environment:
-         - GF_AUTH_ANONYMOUS_ENABLED=true
-         - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
-       volumes:
-         - grafana-data:/var/lib/grafana
-
-   volumes:
-     grafana-data:
-   ```
-
-2. Configuração do Promtail (Coletor de Logs):
-
-   ```yaml
-   # promtail-config.yaml
-   server:
-     http_listen_port: 9080
-     grpc_listen_port: 0
-
-   positions:
-     filename: /tmp/positions.yaml
-
-   clients:
-     - url: http://loki:3100/loki/api/v1/push
-
-   scrape_configs:
-     - job_name: render_logs
-       static_configs:
-         - targets:
-             - localhost
-           labels:
-             job: render_logs
-             __path__: /var/log/render/*.log
-   ```
-
-3. Configuração no Render:
-
-   - Log Endpoint: `http://seu-servidor:3100/loki/api/v1/push`
-   - Formato: Loki HTTP Push
-   - Labels personalizados para melhor organização
-
-4. Visualização no Grafana:
-
-   - Acesse: `http://localhost:3000`
-   - Adicione Loki como fonte de dados
-   - Use LogQL para consultas avançadas:
-
-   ```logql
-   {job="render_logs"} |= "error"
-   {job="render_logs"} |= "warning" | json
-   ```
-
-5. Boas Práticas com Loki:
-   - Use labels eficientemente
-   - Evite ter muitas combinações únicas de labels
-   - Configure retenção apropriada
-   - Monitore uso de recursos
-
 ### Configuração do Log Endpoint
 
 Para configurar o streaming de logs no Render:
@@ -350,3 +232,25 @@ Para configurar o streaming de logs no Render:
    - Configure filtros apropriados no provedor de logs
    - Defina retenção adequada dos logs
    - Monitore o uso de armazenamento de logs
+
+## Serviço de Produção
+
+### Serviço Único no Render
+
+- Nome: coflow
+- URL: api.coflow.com.br
+- Tipo: Docker (Standard)
+- Branch: main
+- Região: Oregon
+- Porta: 8000
+- Health Check: /api/v1/health
+- Repositório: diegofornalha/backend-rag-ia
+
+**IMPORTANTE**: Este é o único serviço em produção até o momento. Não criar serviços adicionais sem autorização expressa.
+
+### Configurações do Serviço
+
+- Blueprint managed
+- Internal Address: backend-rag-ia:8000
+- Protocolo: HTTP
+- Auto Deploy: Habilitado para branch main
