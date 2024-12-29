@@ -3,12 +3,14 @@
 ## 1. Estrutura do Dockerfile
 
 - O Dockerfile deve estar **APENAS** na raiz do projeto
+- O requirements.txt deve estar **APENAS** na raiz do projeto
 - Não criar Dockerfiles duplicados em subdiretórios
-- O Render usa por padrão o Dockerfile da raiz
+- O Render usa por padrão o Dockerfile e requirements.txt da raiz
 
 ### 1.1 Organização de Arquivos Docker
 
 - **Dockerfile** → Raiz do projeto (para deploy no Render)
+- **requirements.txt** → Raiz do projeto (para deploy no Render)
 - **docker-compose.yml** → Dentro da pasta específica do serviço (ex: `/monitoring`)
 - **Arquivos de configuração** → Junto com o docker-compose.yml do serviço (ex: `loki-config.yaml`)
 
