@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import logging
 from services.vector_store import VectorStore
+from datetime import datetime
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -14,6 +15,14 @@ class Document(BaseModel):
 class SearchQuery(BaseModel):
     query: str
     k: Optional[int] = 4
+
+class DocumentChange(BaseModel):
+    operation: str
+    document_id: int
+    previous_count: int
+    new_count: int
+    changed_at: datetime
+    time_since_last_change: Optional[str]
 
 @router.post("/documents")
 async def add_document(document: Document):
@@ -123,4 +132,29 @@ async def update_document(doc_id: str, document: Document):
         raise he
     except Exception as e:
         logger.error(f"Erro ao atualizar documento: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/documents/history/{hours}", response_model=List[DocumentChange])
+async def get_documents_history(hours: int = 24):
+    """
+    Retorna o histórico de alterações nos documentos.
+    
+    Args:
+        hours: Número de horas para buscar o histórico (padrão: 24)
+    
+    Returns:
+        Lista de alterações com:
+        - Operação realizada (INSERT/DELETE)
+        - ID do documento
+        - Contagem anterior
+        - Nova contagem
+        - Data/hora da alteração
+        - Tempo desde a última alteração
+    """
+    try:
+        vector_store = VectorStore()
+        history = await vector_store.get_documents_history(hours)
+        return history
+    except Exception as e:
+        logger.error(f"Erro ao buscar histórico: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
