@@ -1,0 +1,29 @@
+{
+  "metadata_global": {
+    "language": "pt-BR",
+    "pessoas": ["Steve Jobs"],
+    "topics": ["tecnologia", "inovação", "empreendedorismo"]
+  },
+  "document": {
+    "content": "Steve Jobs foi um visionário empreendedor americano, co-fundador da Apple Inc. Nascido em 1955 em São Francisco, foi adotado ainda bebê. Em 1976, junto com Steve Wozniak, fundou a Apple Computer em uma garagem. Revolucionou a indústria da tecnologia com produtos icônicos como o Macintosh, iPod, iPhone e iPad. Também foi CEO da Pixar Animation Studios, transformando-a em líder em animação digital. Após deixar a Apple em 1985, fundou a NeXT Computer, retornando à Apple em 1997 como CEO interino. Sob sua liderança, a Apple se tornou uma das empresas mais valiosas do mundo. Jobs faleceu em 2011 devido a um câncer pancreático, deixando um legado duradouro de inovação e design revolucionário.",
+    "metadata": {
+      "type": "biografia",
+      "empresas": ["Apple Inc.", "Pixar Animation Studios", "NeXT Computer"],
+      "tecnologias": [
+        "Computação Pessoal",
+        "Design de Produtos",
+        "Sistemas Operacionais",
+        "Interface do Usuário"
+      ],
+      "content_types": ["biografia", "história"],
+      "conquistas": [
+        "Co-fundador da Apple",
+        "CEO da Pixar",
+        "iPhone",
+        "iPad",
+        "Macintosh",
+        "iPod"
+      ]
+    }
+  }
+}

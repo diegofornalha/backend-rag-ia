@@ -1,18 +1,3 @@
-# Oracle API Documentation
-
-## Estrutura do Projeto
-
-```
-backend/
-├── api/
-│   └── routes.py         # Rotas da API
-├── models/
-│   └── document.py       # Modelo de documento
-├── services/
-│   └── vector_store.py   # Serviço de gerenciamento de vetores e busca
-└── utils/                # Utilitários
-```
-
 ## Endpoints
 
 ### POST /api/v1/documents/
