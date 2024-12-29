@@ -13,6 +13,8 @@ RUN apt-get update \
     cmake \
     pkg-config \
     libopenblas-dev \
+    g++ \
+    make \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -34,14 +36,21 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
     "httpx>=0.24.0,<0.26.0"
 
 # Instala numpy primeiro (necessário para faiss)
-RUN . /opt/venv/bin/activate && pip install --no-cache-dir numpy>=1.17
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir numpy>=1.24.0
 
-# Depois instala o faiss-cpu separadamente
-RUN . /opt/venv/bin/activate && pip install --no-cache-dir faiss-cpu==1.7.4
+# Clona e compila o FAISS
+RUN git clone https://github.com/facebookresearch/faiss.git && \
+    cd faiss && \
+    git checkout v1.7.4 && \
+    cmake -B build . -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=ON -DFAISS_ENABLE_C_API=ON \
+    -DBUILD_SHARED_LIBS=ON -DFAISS_OPT_LEVEL=generic && \
+    make -C build -j$(nproc) && \
+    cd build/faiss/python && \
+    python setup.py install
 
 # Instala as dependências ML que são mais pesadas
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
-    "torch>=2.2.0" \
+    "torch==2.2.0" \
     "transformers==4.35.0" \
     "sentence-transformers==2.2.2"
 
@@ -52,6 +61,13 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
 FROM python:3.12-slim
 
 WORKDIR /app
+
+# Instala as bibliotecas necessárias para runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    libopenblas-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Copia o ambiente virtual do builder
 COPY --from=builder /opt/venv /opt/venv
