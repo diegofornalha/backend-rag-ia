@@ -2,7 +2,7 @@
 Serviço de armazenamento e busca vetorial usando Supabase.
 """
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict
 from sentence_transformers import SentenceTransformer
 from services.supabase_client import supabase
 from models.database import Document, DocumentCreate, Embedding, EmbeddingCreate
@@ -221,4 +221,29 @@ class VectorStore:
             
         except Exception as e:
             logger.error(f"Erro ao atualizar documento: {e}")
-            return False 
+            return False
+
+    async def get_documents_history(self, hours: int = 24) -> List[Dict]:
+        """
+        Busca o histórico de alterações nos documentos.
+
+        Args:
+            hours: Número de horas para buscar o histórico.
+
+        Returns:
+            List[Dict]: Lista de alterações com detalhes.
+        """
+        try:
+            result = supabase.rpc(
+                'get_document_changes_history',
+                {'last_n_hours': hours}
+            ).execute()
+
+            if not result.data:
+                return []
+
+            return result.data
+
+        except Exception as e:
+            logger.error(f"Erro ao buscar histórico: {e}")
+            return [] 
