@@ -28,6 +28,9 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
     pydantic==2.5.2 \
     "httpx>=0.24.0,<0.26.0"
 
+# Instala huggingface-hub primeiro com versão compatível
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir huggingface-hub==0.17.3
+
 # Instala numpy e faiss-cpu do conda-forge
 RUN apt-get update && \
     apt-get install -y wget && \
