@@ -256,3 +256,107 @@ render services --output json
    - Não commite no controle de versão
    - Revogue imediatamente se comprometida
    - Use variáveis de ambiente em CI/CD
+
+## One-Off Jobs
+
+One-Off Jobs são úteis para executar tarefas pontuais usando a mesma configuração do seu serviço.
+
+### Casos de Uso
+
+- Migrações de banco de dados
+- Recompilação de assets
+- Scripts de manutenção
+- Tarefas em lote
+
+### Criar um Job
+
+1. **Via API**:
+
+```bash
+curl --request POST \
+     --url "https://api.render.com/v1/services/$RENDER_SERVICE_ID/jobs" \
+     --header "Authorization: Bearer $RENDER_API_KEY" \
+     --header 'Content-Type: application/json' \
+     --data-raw '{
+         "startCommand": "python manage.py migrate"
+     }'
+```
+
+2. **Monitorar Status**:
+
+```bash
+curl --request GET \
+     --url "https://api.render.com/v1/services/$RENDER_SERVICE_ID/jobs/$JOB_ID" \
+     --header "Authorization: Bearer $RENDER_API_KEY"
+```
+
+### Tipos de Instância
+
+1. **Web Services/Private Services/Background Workers**:
+
+   - Starter: 512 MB RAM, 0.5 CPU ($7/mês)
+   - Standard: 2 GB RAM, 1 CPU ($25/mês)
+   - Pro: 4 GB RAM, 2 CPU ($85/mês)
+   - Pro Plus: 8 GB RAM, 4 CPU ($175/mês)
+   - Pro Max: 16 GB RAM, 4 CPU ($225/mês)
+   - Pro Ultra: 32 GB RAM, 8 CPU ($450/mês)
+
+2. **Cron Jobs**:
+   - Starter: 512 MB RAM, 0.5 CPU (0.016¢/minuto)
+   - Standard: 2 GB RAM, 1 CPU (0.058¢/minuto)
+   - Pro: 4 GB RAM, 2 CPU (0.197¢/minuto)
+   - Pro Plus: 8 GB RAM, 4 CPU (0.405¢/minuto)
+
+### Exemplo de Script para Jobs
+
+```bash
+#!/bin/bash
+# job_runner.sh
+
+JOB_COMMAND="$1"
+if [ -z "$JOB_COMMAND" ]; then
+    echo "Erro: Comando não especificado"
+    exit 1
+fi
+
+# Criar job
+RESPONSE=$(curl --request POST \
+     --url "https://api.render.com/v1/services/$RENDER_SERVICE_ID/jobs" \
+     --header "Authorization: Bearer $RENDER_API_KEY" \
+     --header 'Content-Type: application/json' \
+     --data-raw "{
+         \"startCommand\": \"$JOB_COMMAND\"
+     }")
+
+JOB_ID=$(echo $RESPONSE | jq -r '.id')
+
+echo "Job criado com ID: $JOB_ID"
+
+# Monitorar status
+while true; do
+    STATUS=$(curl --silent \
+         --url "https://api.render.com/v1/services/$RENDER_SERVICE_ID/jobs/$JOB_ID" \
+         --header "Authorization: Bearer $RENDER_API_KEY" \
+         | jq -r '.status')
+
+    echo "Status: $STATUS"
+
+    if [ "$STATUS" = "succeeded" ]; then
+        echo "Job completado com sucesso!"
+        break
+    elif [ "$STATUS" = "failed" ]; then
+        echo "Job falhou!"
+        exit 1
+    fi
+
+    sleep 10
+done
+```
+
+### Limitações e Notas
+
+- Timeout após 30 dias se o comando não completar
+- Jobs em execução não são interrompidos por novos deploys
+- Não tem acesso ao disco persistente do serviço base
+- Usa o último build bem-sucedido do serviço
+- Herda variáveis de ambiente do serviço no momento da criação
