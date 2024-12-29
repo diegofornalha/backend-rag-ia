@@ -1,0 +1,34 @@
+{
+  "metadata_global": {
+    "language": "pt-BR",
+    "pessoas": ["Elon Musk"],
+    "topics": ["tecnologia", "inovação", "empreendedorismo", "sustentabilidade"]
+  },
+  "document": {
+    "content": "Elon Musk é um empreendedor e visionário sul-africano-canadense-americano, nascido em 1971. É CEO e fundador de várias empresas revolucionárias: Tesla Motors, focada em carros elétricos e energia sustentável; SpaceX, pioneira em exploração espacial comercial; Neuralink, desenvolvendo interfaces cérebro-computador; e The Boring Company, focada em infraestrutura e transporte. Musk ficou conhecido inicialmente como co-fundador do PayPal. Na Tesla, revolucionou a indústria automotiva tornando os carros elétricos desejáveis e viáveis comercialmente. Com a SpaceX, alcançou marcos históricos como o primeiro foguete comercial a reabastecer a Estação Espacial Internacional e desenvolver foguetes reutilizáveis. Em 2022, adquiriu o Twitter (atual X) por US$ 44 bilhões. Conhecido por suas visões ambiciosas, Musk trabalha para acelerar a transição global para energia sustentável e tornar a humanidade uma espécie multiplanetária.",
+    "metadata": {
+      "type": "biografia",
+      "empresas": [
+        "Tesla",
+        "SpaceX",
+        "Neuralink",
+        "The Boring Company",
+        "X (Twitter)",
+        "PayPal"
+      ],
+      "tecnologias": [
+        "Carros Elétricos",
+        "Foguetes Reutilizáveis",
+        "Energia Sustentável",
+        "Interfaces Cérebro-Computador"
+      ],
+      "conquistas": [
+        "Revolução dos carros elétricos",
+        "Foguetes reutilizáveis",
+        "Primeira empresa privada na ISS",
+        "Aquisição do Twitter"
+      ],
+      "cargos": ["CEO", "Fundador", "Empreendedor"]
+    }
+  }
+}
