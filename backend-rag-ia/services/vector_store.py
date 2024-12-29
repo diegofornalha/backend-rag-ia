@@ -98,37 +98,45 @@ class VectorStore:
                 'match_documents',
                 {
                     'query_embedding': query_embedding.tolist(),
-                    'match_threshold': 0.7,
                     'match_count': k
                 }
             ).execute()
             
-            # Converte resultados
-            documents = []
-            for item in results.data:
-                doc = Document.model_validate(item)
-                documents.append(doc)
+            if not results.data:
+                return []
             
-            return documents
+            return [Document.model_validate(doc) for doc in results.data]
             
         except Exception as e:
             logger.error(f"Erro na busca: {e}")
             return []
 
-    async def delete_document(self, doc_id: int) -> bool:
+    async def delete_document(self, doc_id: str) -> bool:
         """
-        Remove um documento do store.
+        Remove um documento e seu embedding.
 
         Args:
             doc_id: ID do documento.
 
         Returns:
-            bool: True se removido com sucesso.
+            bool: True se removido com sucesso, False caso contrário.
         """
         try:
-            # O embedding será removido automaticamente pela foreign key
+            # Busca o documento para obter o embedding_id
+            doc = supabase.table("documents").select("*").eq("id", doc_id).execute()
+            if not doc.data:
+                return False
+            
+            embedding_id = doc.data[0].get("embedding_id")
+            
+            # Remove o embedding se existir
+            if embedding_id:
+                supabase.table("embeddings").delete().eq("id", embedding_id).execute()
+            
+            # Remove o documento
             result = supabase.table("documents").delete().eq("id", doc_id).execute()
             return bool(result.data)
+            
         except Exception as e:
             logger.error(f"Erro ao remover documento: {e}")
             return False 
