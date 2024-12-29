@@ -8,13 +8,6 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
-    swig \
-    git \
-    cmake \
-    pkg-config \
-    libopenblas-dev \
-    g++ \
-    make \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -35,18 +28,17 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
     pydantic==2.5.2 \
     "httpx>=0.24.0,<0.26.0"
 
-# Instala numpy primeiro (necessário para faiss)
-RUN . /opt/venv/bin/activate && pip install --no-cache-dir numpy>=1.24.0
-
-# Clona e compila o FAISS
-RUN git clone https://github.com/facebookresearch/faiss.git && \
-    cd faiss && \
-    git checkout v1.7.4 && \
-    cmake -B build . -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=ON -DFAISS_ENABLE_C_API=ON \
-    -DBUILD_SHARED_LIBS=ON -DFAISS_OPT_LEVEL=generic && \
-    make -C build -j$(nproc) && \
-    cd build/faiss/python && \
-    python setup.py install
+# Instala numpy e faiss-cpu do conda-forge
+RUN apt-get update && \
+    apt-get install -y wget && \
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
+    bash miniconda.sh -b -p /opt/conda && \
+    rm miniconda.sh && \
+    /opt/conda/bin/conda install -y -c conda-forge faiss-cpu=1.7.4 && \
+    cp -r /opt/conda/lib/python3.*/site-packages/faiss* /opt/venv/lib/python3.*/site-packages/ && \
+    apt-get remove -y wget && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /opt/conda
 
 # Instala as dependências ML que são mais pesadas
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
@@ -61,13 +53,6 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
 FROM python:3.12-slim
 
 WORKDIR /app
-
-# Instala as bibliotecas necessárias para runtime
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    libopenblas-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
 
 # Copia o ambiente virtual do builder
 COPY --from=builder /opt/venv /opt/venv
