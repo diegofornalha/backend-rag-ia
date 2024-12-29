@@ -265,4 +265,26 @@ class VectorStore:
             
         except Exception as e:
             logger.error(f"Erro ao buscar estatísticas: {e}")
-            return [] 
+            return []
+
+    async def count_documents(self) -> int:
+        """
+        Conta o total de documentos no sistema.
+
+        Returns:
+            int: Número total de documentos.
+        """
+        try:
+            # Busca o valor atual da estatística
+            result = supabase.table("statistics").select("value").eq("key", "documents_count").execute()
+            
+            if result.data:
+                return result.data[0]["value"]
+            
+            # Se não encontrar na tabela statistics, conta diretamente
+            result = supabase.table("documents").select("count", count="exact").execute()
+            return result.count or 0
+            
+        except Exception as e:
+            logger.error(f"Erro ao contar documentos: {e}")
+            return 0 
