@@ -287,4 +287,19 @@ class VectorStore:
             
         except Exception as e:
             logger.error(f"Erro ao contar documentos: {e}")
-            return 0 
+            return 0
+
+    async def health_check(self) -> bool:
+        """
+        Verifica a saúde do sistema.
+
+        Returns:
+            bool: True se saudável, False caso contrário.
+        """
+        try:
+            # Tenta fazer uma consulta simples
+            result = supabase.table("documents").select("count", count="exact").execute()
+            return True
+        except Exception as e:
+            logger.error(f"Erro no health check: {e}")
+            return False 
