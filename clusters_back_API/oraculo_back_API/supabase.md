@@ -52,19 +52,17 @@
 - Atualizar documentação da API
 - Adicionar validações específicas para Supabase
 
-## 7. Frontend
+## 7. Monitoramento
 
-- Atualizar componentes que consomem dados (referência em `frontend/src/App.tsx`)
-- Implementar loading states
-- Adicionar tratamento de erros específicos
-- Atualizar tipos TypeScript
+- Verificar logs do Supabase
+- Monitorar performance das queries
+- Acompanhar uso de recursos
 
-## 8. Monitoramento e Logs
+## 8. Manutenção
 
-- Implementar telemetria
-- Configurar alertas
-- Criar dashboards de monitoramento
-- Implementar logs estruturados
+- Backup regular dos dados
+- Atualização das dependências
+- Otimização de queries quando necessário
 
 ## 9. Testes
 
