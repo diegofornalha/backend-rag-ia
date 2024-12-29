@@ -1,94 +1,53 @@
-# Deploy no Render
+# Regras do Render
 
-````
+## 1. Estrutura de Arquivos
 
-## ⚠️ Importante
+### 1.1 Arquivos Obrigatórios na Raiz
 
-- O deploy **DEVE** ser feito usando Docker
-- A porta configurada no Render deve ser 10000
-- O serviço usa a URL fornecida pelo Render automaticamente
+- **Dockerfile** → Arquivo principal para build da aplicação
+- **requirements.txt** → Dependências Python do projeto
+- **render.yaml** → Configurações de infraestrutura (opcional)
 
-## Verificando o Deploy
+### 1.2 Variáveis de Ambiente
 
-1. Após o deploy, acesse a URL fornecida pelo Render
-2. Teste o endpoint de saúde: `GET /health`
-3. Verifique os logs no dashboard do Render
+- Configurar na plataforma do Render
+- Não expor valores sensíveis no código
+- HOST deve ser configurado como "0.0.0.0"
+- PORT deve ser 10000 (padrão do Render)
 
-## Troubleshooting
+## 2. Deploy
 
-Se encontrar problemas:
+### 2.1 Detecção Automática
 
-1. Verifique os logs do container no Render
-2. Confirme se todas as variáveis de ambiente estão configuradas
-3. Verifique se o Dockerfile está sendo construído corretamente
-4. Certifique-se de que a porta 10000 está exposta e configurada
+- O Render detecta automaticamente o Dockerfile na raiz
+- Não é necessário configurar comandos de build/start manualmente
+- O healthcheck é importante para o Render monitorar a aplicação
 
-## Estrutura de Arquivos para Deploy
+### 2.2 Healthcheck
 
-### Arquivos Essenciais
+- Endpoint `/api/v1/health` é obrigatório
+- O Render verifica a cada 10 segundos
+- Timeout de 30 segundos para resposta
+- Falhas múltiplas podem causar redeploy
 
-- `requirements.txt`:
-  - **Para deploy**: Deve estar na raiz do projeto para ser detectado pelo Render
-  - **Para ambiente local**: Pode estar em qualquer diretório, desde que você especifique o caminho correto ao rodar `pip install -r path/to/requirements.txt`
-- `Dockerfile` (se estiver usando containers)
-- `.env` para variáveis de ambiente (não commitar)
+## 3. Boas Práticas
 
-### Ambiente Local vs Deploy
-
-#### Ambiente Local
-
-```bash
-# Estando na pasta do projeto
-cd backend-rag-ia
-pip install -r requirements.txt  # ou especifique o caminho completo
-python main.py
-````
-
-#### Deploy no Render
-
-- O Render procura automaticamente pelo requirements.txt na raiz
-- Se estiver usando Docker, o Dockerfile deve copiar o requirements.txt para o local correto
-
-### Configuração do Serviço
-
-- Nome do serviço: coflow
-- Região: Oregon (us-west)
-- Tipo: Web Service
-- Branch: main
-
-### Variáveis de Ambiente
-
-Configurar no dashboard do Render:
-
-- `SUPABASE_URL`
-- `SUPABASE_KEY`
-- Outras variáveis sensíveis
-
-### Comandos de Build
-
-```bash
-pip install -r requirements.txt
-```
-
-### Comandos de Start
-
-```bash
-gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
-```
-
-### Monitoramento
-
-- Verificar logs no dashboard
-- Configurar alertas de erro
-- Monitorar uso de recursos
-
-### Troubleshooting
-
-- Verificar logs de build
-- Verificar logs de runtime
+- Usar multi-stage build no Dockerfile
+- Manter dependências atualizadas no requirements.txt
+- Configurar logs apropriadamente
+- Documentar variáveis de ambiente necessárias
 - Testar localmente antes do deploy
 
-### SSH Access
+## 4. Monitoramento
 
-- Endereço: srv-ctmtqra3esus739sknb0@ssh.oregon.render.com
-- Usar para debugging e manutenção
+- Configurar notificações de status
+- Monitorar logs através do dashboard
+- Verificar métricas de performance
+- Configurar alertas para falhas
+
+## 5. Segurança
+
+- Não commitar arquivos .env
+- Usar variáveis de ambiente do Render
+- Manter secrets seguros
+- Seguir práticas de segurança do Docker
