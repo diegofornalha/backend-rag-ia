@@ -13,7 +13,7 @@
 - Configurar na plataforma do Render
 - Não expor valores sensíveis no código
 - HOST deve ser configurado como "0.0.0.0"
-- PORT deve ser 10000 (padrão do Render)
+- PORT deve ser 8000 (porta da aplicação)
 
 ## 2. Deploy
 
@@ -40,10 +40,32 @@
 
 ## 4. Monitoramento
 
+### 4.1 Dashboard e Alertas
+
 - Configurar notificações de status
 - Monitorar logs através do dashboard
 - Verificar métricas de performance
 - Configurar alertas para falhas
+
+### 4.2 Monitoramento via SSH
+
+- Gerar chave SSH: `ssh-keygen -t ed25519 -C "seu-email@exemplo.com"`
+- Adicionar chave pública no Render (Dashboard → Settings → SSH Keys)
+- Testar conexão: `ssh <service>@ssh.render.com`
+
+### 4.3 Comandos SSH Úteis
+
+- Ver logs em tempo real: `ssh <service>@ssh.render.com tail -f /var/log/render/*.log`
+- Status do serviço: `ssh <service>@ssh.render.com systemctl status <service>`
+- Verificar deploy: `ssh <service>@ssh.render.com cat /etc/render/deploy.log`
+- Monitorar recursos: `ssh <service>@ssh.render.com top`
+
+### 4.4 Boas Práticas SSH
+
+- Manter chaves SSH seguras
+- Usar nomes descritivos para as chaves
+- Revogar acesso de chaves não utilizadas
+- Monitorar tentativas de acesso suspeitas
 
 ## 5. Segurança
 
@@ -52,31 +74,9 @@
 - Manter secrets seguros
 - Seguir práticas de segurança do Docker
 
-## 6. Monitoramento via SSH
+## 6. Informações do Serviço
 
-### 6.1 Configuração do SSH
-
-- Gerar chave SSH: `ssh-keygen -t ed25519 -C "seu-email@exemplo.com"`
-- Adicionar chave pública no Render (Dashboard → Settings → SSH Keys)
-- Testar conexão: `ssh <service>@ssh.render.com`
-
-### 6.2 Comandos Úteis
-
-- Ver logs em tempo real: `ssh <service>@ssh.render.com tail -f /var/log/render/*.log`
-- Status do serviço: `ssh <service>@ssh.render.com systemctl status <service>`
-- Verificar deploy: `ssh <service>@ssh.render.com cat /etc/render/deploy.log`
-- Monitorar recursos: `ssh <service>@ssh.render.com top`
-
-### 6.3 Boas Práticas
-
-- Manter chaves SSH seguras
-- Usar nomes descritivos para as chaves
-- Revogar acesso de chaves não utilizadas
-- Monitorar tentativas de acesso suspeitas
-
-## 7. Informações do Serviço
-
-### 7.1 Configurações Gerais
+### 6.1 Configurações Gerais
 
 - Nome: coflow
 - URL: api.coflow.com.br
@@ -87,7 +87,7 @@
 - Health Check: /api/v1/health
 - Repositório: diegofornalha/backend-rag-ia
 
-### 7.2 Configurações Técnicas
+### 6.2 Configurações Técnicas
 
 - Blueprint managed
 - Internal Address: backend-rag-ia:8000
