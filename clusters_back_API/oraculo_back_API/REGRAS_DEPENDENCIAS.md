@@ -2,12 +2,25 @@
 
 ## Informações do Projeto
 
-### Servidor de Produção
+### Servidor de Produção Atual
 
 - **Plataforma**: Render.com
 - **SSH**: `srv-ctmtqra3esus739sknb0@ssh.oregon.render.com`
 - **Região**: Oregon (US West)
 - **Tipo**: Web Service
+
+### Recomendação de Região
+
+Para melhor performance no Brasil, é recomendado usar:
+
+- **Região**: São Paulo (sa1)
+- **Provedor**: AWS South America (São Paulo)
+- **Benefícios**:
+  - Menor latência para usuários brasileiros
+  - Melhor tempo de resposta
+  - Conformidade com LGPD (Lei Geral de Proteção de Dados)
+
+> **Nota**: Considerar migração do servidor de Oregon para São Paulo para otimizar a performance para usuários brasileiros.
 
 ## 1. Análise Inicial
 
