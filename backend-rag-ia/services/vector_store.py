@@ -246,4 +246,23 @@ class VectorStore:
 
         except Exception as e:
             logger.error(f"Erro ao buscar histórico: {e}")
+            return []
+
+    async def get_statistics(self) -> List[Dict]:
+        """
+        Busca estatísticas do sistema.
+
+        Returns:
+            List[Dict]: Lista de estatísticas com seus valores e timestamps.
+        """
+        try:
+            result = supabase.table("statistics").select("*").execute()
+            
+            if not result.data:
+                return []
+            
+            return result.data
+            
+        except Exception as e:
+            logger.error(f"Erro ao buscar estatísticas: {e}")
             return [] 

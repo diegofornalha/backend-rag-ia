@@ -24,6 +24,11 @@ class DocumentChange(BaseModel):
     changed_at: datetime
     time_since_last_change: Optional[str]
 
+class Statistics(BaseModel):
+    key: str
+    value: int
+    updated_at: datetime
+
 @router.post("/documents")
 async def add_document(document: Document):
     """Adiciona um novo documento ao índice."""
@@ -157,4 +162,23 @@ async def get_documents_history(hours: int = 24):
         return history
     except Exception as e:
         logger.error(f"Erro ao buscar histórico: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/statistics", response_model=List[Statistics])
+async def get_statistics():
+    """
+    Retorna estatísticas do sistema.
+    
+    Returns:
+        Lista de estatísticas com:
+        - Chave (ex: documents_count)
+        - Valor
+        - Data/hora da última atualização
+    """
+    try:
+        vector_store = VectorStore()
+        stats = await vector_store.get_statistics()
+        return stats
+    except Exception as e:
+        logger.error(f"Erro ao buscar estatísticas: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
