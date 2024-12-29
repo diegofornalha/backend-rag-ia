@@ -62,3 +62,94 @@
 - SSH: ssh srv-ctmtqra3esus739sknb0@ssh.oregon.render.com
 - Região: Oregon (US West)
 - Tipo: Web Service
+
+## 10. Troubleshooting via SSH
+
+### Acesso ao Servidor
+
+```bash
+# Conectar ao servidor
+ssh srv-ctmtqra3esus739sknb0@ssh.oregon.render.com
+```
+
+### Comandos Úteis no Servidor
+
+1. Logs e Monitoramento:
+
+```bash
+# Ver logs da aplicação
+tail -f /var/log/app.log
+
+# Monitorar uso de recursos
+top
+htop (se disponível)
+```
+
+2. Verificação de Dependências:
+
+```bash
+# Listar pacotes Python instalados
+pip list
+
+# Verificar versão específica
+pip show [pacote]
+```
+
+3. Diagnóstico de Problemas:
+
+```bash
+# Verificar processos Python
+ps aux | grep python
+
+# Verificar portas em uso
+netstat -tulpn
+
+# Verificar status do serviço
+systemctl status [nome-do-serviço]
+```
+
+4. Arquivos e Configurações:
+
+```bash
+# Verificar variáveis de ambiente
+env | grep SUPABASE
+env | grep HUGGINGFACE
+
+# Verificar configurações
+cat /etc/[nome-do-serviço]/config.yml
+```
+
+5. Testes Rápidos:
+
+```bash
+# Testar conexão com banco
+python -c "from supabase import create_client; print('OK')"
+
+# Verificar imports
+python -c "import langchain; print(langchain.__version__)"
+```
+
+### Boas Práticas SSH
+
+1. Segurança:
+
+   - Nunca deixar sessão SSH aberta sem uso
+   - Não modificar arquivos de configuração diretamente
+   - Evitar alterações permanentes via SSH
+
+2. Debugging:
+
+   - Sempre fazer backup antes de alterações
+   - Documentar comandos executados
+   - Registrar resultados obtidos
+
+3. Monitoramento:
+
+   - Verificar logs antes e depois de mudanças
+   - Monitorar uso de recursos durante testes
+   - Documentar comportamentos anormais
+
+4. Resolução de Problemas:
+   - Começar com verificações básicas (logs, processos)
+   - Escalar gradualmente a complexidade dos testes
+   - Manter registro de todas as ações tomadas
