@@ -51,3 +51,25 @@
 - Usar variáveis de ambiente do Render
 - Manter secrets seguros
 - Seguir práticas de segurança do Docker
+
+## 6. Monitoramento via SSH
+
+### 6.1 Configuração do SSH
+
+- Gerar chave SSH: `ssh-keygen -t ed25519 -C "seu-email@exemplo.com"`
+- Adicionar chave pública no Render (Dashboard → Settings → SSH Keys)
+- Testar conexão: `ssh <service>@ssh.render.com`
+
+### 6.2 Comandos Úteis
+
+- Ver logs em tempo real: `ssh <service>@ssh.render.com tail -f /var/log/render/*.log`
+- Status do serviço: `ssh <service>@ssh.render.com systemctl status <service>`
+- Verificar deploy: `ssh <service>@ssh.render.com cat /etc/render/deploy.log`
+- Monitorar recursos: `ssh <service>@ssh.render.com top`
+
+### 6.3 Boas Práticas
+
+- Manter chaves SSH seguras
+- Usar nomes descritivos para as chaves
+- Revogar acesso de chaves não utilizadas
+- Monitorar tentativas de acesso suspeitas
