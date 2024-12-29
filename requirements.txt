@@ -1,3 +1,13 @@
+# ===========================================
+# Regras de Segurança e Versionamento:
+# ===========================================
+# 1. Sempre use '>=' em vez de '==' para permitir patches de segurança
+# 2. Mantenha cryptography, requests e urllib3 atualizados
+# 3. Atualize langchain e huggingface-hub frequentemente
+# 4. Verifique compatibilidade em: https://pypi.org
+# 5. Rode 'pip list --outdated' regularmente
+# ===========================================
+
 # API Framework
 fastapi>=0.109.0
 uvicorn>=0.27.0
@@ -33,7 +43,7 @@ pytest-asyncio>=0.23.5
 click>=8.1.7
 rich>=13.7.0
 
-# Segurança
-cryptography>=42.0.0
-requests>=2.31.0
-urllib3>=2.1.0 
+# Segurança (Mantenha sempre atualizado)
+cryptography>=42.0.0  # Crítico para segurança
+requests>=2.31.0      # Importante para requisições HTTP
+urllib3>=2.1.0        # Dependência do requests 
