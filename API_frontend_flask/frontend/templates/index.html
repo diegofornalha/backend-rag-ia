@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG IA - Interface</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js via CDN -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen" x-data="{ 
+    query: '',
+    response: '',
+    loading: false,
+    error: null,
+    async askQuestion() {
+        if (!this.query.trim()) return;
+        
+        this.loading = true;
+        this.error = null;
+        
+        try {
+            const response = await fetch('{{ api_url }}/api/v1/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: this.query })
+            });
+            
+            if (!response.ok) throw new Error('Erro ao processar sua pergunta');
+            
+            const data = await response.json();
+            this.response = data.response;
+        } catch (err) {
+            this.error = err.message;
+        } finally {
+            this.loading = false;
+        }
+    }
+}">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-900">RAG IA</h1>
+                <div class="flex items-center space-x-4">
+                    <span class="px-3 py-1 rounded-full text-sm" 
+                          :class="{'bg-green-100 text-green-800': '{{ health_status.status }}' === 'OK',
+                                  'bg-red-100 text-red-800': '{{ health_status.status }}' !== 'OK'}">
+                        Status: {{ health_status.status }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <!-- Input Form -->
+            <form @submit.prevent="askQuestion" class="space-y-4">
+                <div>
+                    <label for="query" class="block text-sm font-medium text-gray-700">
+                        Faça sua pergunta
+                    </label>
+                    <div class="mt-1">
+                        <textarea
+                            id="query"
+                            x-model="query"
+                            rows="3"
+                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Digite sua pergunta aqui..."
+                        ></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button
+                        type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        :disabled="loading || !query.trim()"
+                        :class="{'opacity-50 cursor-not-allowed': loading || !query.trim()}"
+                    >
+                        <span x-show="!loading">Enviar</span>
+                        <span x-show="loading" class="flex items-center">
+                            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Processando...
+                        </span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Error Alert -->
+            <div x-show="error" x-cloak class="mt-4 p-4 rounded-md bg-red-50">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800" x-text="error"></h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response -->
+            <div x-show="response" x-cloak class="mt-6">
+                <h3 class="text-lg font-medium text-gray-900">Resposta:</h3>
+                <div class="mt-2 prose prose-indigo">
+                    <p x-text="response" class="text-gray-700"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white mt-8 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-sm text-gray-500">
+                Powered by RAG IA - Versão 1.0
+            </p>
+        </div>
+    </footer>
+</body>
+</html> 
