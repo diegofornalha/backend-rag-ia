@@ -1,0 +1,14 @@
+services:
+  - type: static
+    name: flask-frontend-static
+    env: static
+    buildCommand: pip install -r requirements_frontend.txt && python frontend/build.py
+    staticPublishPath: frontend/static_build
+    pullRequestPreviewsEnabled: true
+    healthCheckPath: /health
+    healthCheckTimeout: 60
+    healthCheckInterval: 300
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
