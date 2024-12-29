@@ -139,4 +139,86 @@ class VectorStore:
             
         except Exception as e:
             logger.error(f"Erro ao remover documento: {e}")
+            return False
+
+    async def list_documents(self, skip: int = 0, limit: int = 10) -> List[Document]:
+        """
+        Lista documentos com paginação.
+
+        Args:
+            skip: Número de documentos para pular.
+            limit: Número máximo de documentos para retornar.
+
+        Returns:
+            List[Document]: Lista de documentos.
+        """
+        try:
+            result = supabase.table("documents").select("*").range(skip, skip + limit - 1).execute()
+            if not result.data:
+                return []
+            return [Document.model_validate(doc) for doc in result.data]
+        except Exception as e:
+            logger.error(f"Erro ao listar documentos: {e}")
+            return []
+
+    async def get_document(self, doc_id: str) -> Optional[Document]:
+        """
+        Busca um documento pelo ID.
+
+        Args:
+            doc_id: ID do documento.
+
+        Returns:
+            Optional[Document]: Documento encontrado ou None.
+        """
+        try:
+            result = supabase.table("documents").select("*").eq("id", doc_id).execute()
+            if not result.data:
+                return None
+            return Document.model_validate(result.data[0])
+        except Exception as e:
+            logger.error(f"Erro ao buscar documento: {e}")
+            return None
+
+    async def update_document(self, doc_id: str, content: str, metadata: dict = None) -> bool:
+        """
+        Atualiza um documento existente.
+
+        Args:
+            doc_id: ID do documento.
+            content: Novo conteúdo.
+            metadata: Novos metadados.
+
+        Returns:
+            bool: True se atualizado com sucesso.
+        """
+        try:
+            # Verifica se o documento existe
+            doc = await self.get_document(doc_id)
+            if not doc:
+                return False
+
+            # Atualiza o documento
+            doc_data = {
+                "content": content,
+                "metadata": metadata or {}
+            }
+            
+            # Gera novo embedding
+            embedding = self.embedding_model.encode(content)
+            
+            # Atualiza embedding existente
+            embedding_result = supabase.table("embeddings").update({
+                "embedding": embedding.tolist()
+            }).eq("document_id", doc_id).execute()
+            
+            if not embedding_result.data:
+                raise ValueError("Erro ao atualizar embedding")
+            
+            # Atualiza documento
+            result = supabase.table("documents").update(doc_data).eq("id", doc_id).execute()
+            return bool(result.data)
+            
+        except Exception as e:
+            logger.error(f"Erro ao atualizar documento: {e}")
             return False 
