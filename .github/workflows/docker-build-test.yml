@@ -1,50 +1,36 @@
-name: Docker Build Test
+name: Build Test
 
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "Dockerfile"
-      - "requirements.txt"
-      - ".github/workflows/docker-build-test.yml"
-      - "**.py"
+  push:
+    branches: [main]
 
 jobs:
-  docker-build-test:
+  test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - run: |
+          pip install -r requirements.txt
+          python -m pytest tests/
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v5
         with:
           context: .
           push: false
           load: true
-          platforms: linux/amd64
           tags: app:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Test Docker image
-        timeout-minutes: 5
-        run: |
-          docker run --rm app:test /bin/bash -c "
-            python -c 'import torch; import transformers; import sentence_transformers; import pgvector' && 
-            pip list && 
-            curl --version
-          "
-
-      - name: Check image size
-        run: docker images app:test
-
-      - name: Analyze image layers
-        run: docker history app:test
