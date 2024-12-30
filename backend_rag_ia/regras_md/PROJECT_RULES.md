@@ -66,6 +66,19 @@
 - Scripts de formatação e linting
 - Scripts de inicialização geral
 
+#### Nomenclatura dos Scripts na Raiz
+
+- Nomes devem ser curtos e descritivos
+- Usar snake_case para Python e kebab-case para Shell
+- Seguir padrões comuns de ferramentas similares
+- Exemplos:
+  - `fmt.py` → Formatação de código
+  - `docker_monitor.py` → Monitoramento Docker
+  - `prod_check.py` → Verificação de produção
+  - `render_ctl.py` → Controle do Render
+  - `ssh_ctl.sh` → Controle SSH
+  - `init.sh` → Inicialização
+
 **Não permitido na raiz:**
 
 - Scripts específicos do projeto (devem estar em `backend_rag_ia/scripts/`)
