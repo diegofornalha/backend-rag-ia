@@ -68,20 +68,20 @@
 
 #### Nomenclatura dos Scripts na Raiz
 
-- Nomes devem ser curtos e descritivos
-- Usar snake_case para Python e kebab-case para Shell
-- Seguir padrões comuns de ferramentas similares
+- Nomes devem ser curtos e autoexplicativos
+- Usar snake_case para arquivos Python e kebab-case para Shell
+- Seguir convenções de ferramentas similares
 - Exemplos:
-  - `fmt.py` → Formatação de código
-  - `docker_monitor.py` → Monitoramento Docker
-  - `prod_check.py` → Verificação de produção
-  - `render_ctl.py` → Controle do Render
-  - `ssh_ctl.sh` → Controle SSH
-  - `init.sh` → Inicialização
+  - `fmt.py` → Formatador de código
+  - `docker_monitor.py` → Monitoramento de build Docker
+  - `prod_check.py` → Verificador de produção
+  - `render_ctl.py` → Controlador do Render
+  - `ssh_ctl.sh` → Controlador de SSH
+  - `init.sh` → Inicializador do ambiente
 
 **Não permitido na raiz:**
 
-- Scripts específicos do projeto (devem estar em `backend_rag_ia/scripts/`)
+- Scripts específicos do projeto (devem ficar em `backend_rag_ia/scripts/`)
 - Scripts de processamento de dados
 - Scripts de regras de negócio
 
