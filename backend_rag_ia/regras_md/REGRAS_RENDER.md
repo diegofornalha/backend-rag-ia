@@ -30,33 +30,36 @@
 - Timeout de 30 segundos para resposta
 - Falhas múltiplas podem causar redeploy
 
-## 3. Boas Práticas
+## 3. Monitoramento no Render
 
-- Usar multi-stage build no Dockerfile
-- Manter dependências atualizadas no requirements.txt
-- Configurar logs apropriadamente
-- Documentar variáveis de ambiente necessárias
-- Testar localmente antes do deploy
-
-## 4. Monitoramento
-
-### 4.1 Dashboard e Alertas
+### 3.1 Dashboard
 
 - Configurar notificações de status
-- Monitorar logs através do dashboard
-- Verificar métricas de performance
-- Configurar alertas para falhas
+- Habilitar alertas de falha
+- Definir thresholds de performance
+- Configurar webhooks para Slack
 
-### 4.2 Monitoramento via SSH
+### 3.2 Métricas
 
-- Gerar chave SSH: `ssh-keygen -t ed25519 -C "seu-email@exemplo.com"`
-- Adicionar chave pública no Render (Dashboard → Settings → SSH Keys)
-- Testar conexão: `ssh srv-ctmtqra3esus739sknb0@ssh.oregon.render.com`
+- CPU e Memória
+- Tempo de resposta
+- Taxa de erros
+- Número de requisições
+- Status do healthcheck
 
-### 4.3 Configuração SSH Local
+### 3.3 Logs do Render
+
+- Acessar via dashboard
+- Filtrar por severidade
+- Buscar por palavras-chave
+- Exportar logs para análise
+
+## 4. Acesso SSH
+
+### 4.1 Configuração SSH
 
 ```bash
-# Adicionar ao ~/.ssh/config
+# ~/.ssh/config
 Host render
     HostName ssh.oregon.render.com
     User srv-ctmtqra3esus739sknb0
@@ -65,17 +68,29 @@ Host render
     UserKnownHostsFile /dev/null
 ```
 
-### 4.4 Comandos SSH Úteis
+### 4.2 Comandos SSH Úteis
 
-- Ver logs em tempo real: `ssh render tail -f /var/log/render/*.log`
-- Status do serviço: `ssh render systemctl status backend-rag-ia`
-- Verificar deploy: `ssh render cat /etc/render/deploy.log`
-- Monitorar recursos: `ssh render top`
-- Verificar arquivos: `ssh render ls -la /app/`
-- Verificar ambiente virtual: `ssh render ls -la /opt/venv/`
-- Verificar variáveis: `ssh render env | grep SUPABASE`
+```bash
+# Logs em tempo real
+ssh render tail -f /var/log/render/*.log
 
-### 4.5 Boas Práticas SSH
+# Status do serviço
+ssh render systemctl status backend-rag-ia
+
+# Logs do deploy
+ssh render cat /etc/render/deploy.log
+
+# Verificar recursos
+ssh render top
+ssh render free -h
+ssh render df -h
+
+# Verificar arquivos
+ssh render ls -la /app/
+ssh render ls -la /opt/venv/
+```
+
+### 4.3 Boas Práticas SSH
 
 - Manter chaves SSH seguras
 - Usar nomes descritivos para as chaves
@@ -98,7 +113,7 @@ Host render
 - Tipo: Docker (Standard)
 - Branch: main
 - Região: Oregon
-- Porta: 10000 (padrão do Render)
+- Porta: 10000
 - Health Check: /api/v1/health
 - Repositório: diegofornalha/backend-rag-ia
 
@@ -110,109 +125,3 @@ Host render
 - Auto Deploy: Habilitado para branch main
 
 **IMPORTANTE**: Este é o único serviço em produção até o momento. Não criar serviços adicionais sem autorização expressa.
-
-# Regras Render
-
-## Estrutura do Projeto para Render
-
-### Organização dos Arquivos
-
-1. **Módulo Principal** (`backend_rag_ia/`):
-
-   - `app.py`: Aplicação FastAPI principal
-   - `__init__.py`: Define o módulo e expõe a API pública
-   - Demais arquivos da aplicação organizados em subpastas
-
-2. **Raiz do Projeto**:
-   - `main.py`: Ponto de entrada para o uvicorn
-   - `render.yaml`: Configuração do Render
-   - Arquivos de configuração
-
-### Configuração do Render
-
-1. **No `render.yaml`**:
-
-   ```yaml
-   services:
-     - type: web
-       name: backend-rag-ia
-       env: docker
-       region: oregon
-       plan: starter
-       healthCheckPath: /api/v1/health
-       envVars:
-         - key: PYTHONPATH
-           value: /app
-       dockerCommand: uvicorn main:app --host 0.0.0.0 --port 10000
-   ```
-
-2. **Variáveis de Ambiente**:
-   - PYTHONPATH deve ser `/app`
-   - Porta deve ser 10000
-   - Demais variáveis configuradas no dashboard do Render
-
-### Estrutura de Importações
-
-1. **No `backend_rag_ia/__init__.py`**:
-
-   ```python
-   from .app import app
-   __all__ = ['app']
-   ```
-
-2. **No `main.py` da raiz**:
-   ```python
-   from backend_rag_ia import app
-   __all__ = ['app']
-   ```
-
-### Boas Práticas
-
-1. **Isolamento**:
-
-   - Manter aplicação isolada em seu próprio módulo
-   - Usar `__init__.py` para definir API pública
-   - Separar código da aplicação de configurações
-
-2. **Organização**:
-
-   - Manter raiz do projeto limpa
-   - Usar estrutura modular
-   - Seguir convenções Python (underscore vs hífen)
-
-3. **Compatibilidade**:
-   - Garantir que importações funcionem no ambiente Render
-   - Manter PYTHONPATH consistente
-   - Usar Docker para garantir ambiente consistente
-
-### Verificação de Deploy
-
-1. **Antes do Deploy**:
-
-   - Confirmar que imagem Docker está atualizada
-   - Verificar configurações no `render.yaml`
-   - Testar localmente com mesma estrutura
-
-2. **Durante Deploy**:
-
-   - Monitorar logs do build
-   - Verificar se importações estão corretas
-   - Confirmar que variáveis de ambiente estão definidas
-
-3. **Após Deploy**:
-   - Testar endpoint de health check
-   - Verificar logs da aplicação
-   - Confirmar que estrutura de arquivos está correta
-
-### Troubleshooting
-
-1. **Erros Comuns**:
-
-   - Problemas de importação: verificar PYTHONPATH e estrutura de arquivos
-   - Falha no build: verificar Dockerfile e dependências
-   - Erro de porta: confirmar que está usando porta 10000
-
-2. **Soluções**:
-   - Usar `__init__.py` para garantir que módulo é reconhecido
-   - Manter estrutura consistente entre ambientes
-   - Seguir convenções de nomeação Python

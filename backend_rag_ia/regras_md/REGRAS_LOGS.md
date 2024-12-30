@@ -32,14 +32,7 @@
 - Retenção: 30 dias
 - Formato: JSON
 
-### 2.2 Logs do Render
-
-- Dashboard do Render
-- Logs do deploy
-- Logs do sistema
-- Métricas de performance
-
-### 2.3 Logs do Sistema
+### 2.2 Logs do Sistema
 
 - Logs do Python/Uvicorn
 - Logs do Docker
@@ -72,23 +65,7 @@ schema_config:
 
 ## 4. Consulta de Logs
 
-### 4.1 Via SSH
-
-```bash
-# Logs da aplicação
-ssh render tail -f /app/logs/app.log
-
-# Logs do sistema
-ssh render journalctl -u backend-rag-ia
-
-# Logs do deploy
-ssh render cat /etc/render/deploy.log
-
-# Logs específicos
-ssh render grep ERROR /app/logs/app.log
-```
-
-### 4.2 Via Grafana
+### 4.1 Via Grafana
 
 - Queries LogQL
 - Dashboards personalizados
@@ -120,23 +97,7 @@ ssh render grep ERROR /app/logs/app.log
 
 ## 6. Troubleshooting
 
-### 6.1 Comandos Úteis
-
-```bash
-# Buscar erros recentes
-ssh render grep -r "ERROR" /app/logs/
-
-# Contar ocorrências
-ssh render awk '/ERROR/ {print $0}' /app/logs/app.log | wc -l
-
-# Análise temporal
-ssh render sed -n '/2024-01-01/,/2024-01-02/p' /app/logs/app.log
-
-# Logs específicos
-ssh render find /app/logs/ -name "*.log" -mtime -7
-```
-
-### 6.2 Análise de Problemas
+### 6.1 Análise de Problemas
 
 - Verificar logs em ordem cronológica
 - Correlacionar eventos entre serviços
