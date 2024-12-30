@@ -1,0 +1,26 @@
+{
+  "metadata_global": {
+    "language": "pt-BR",
+    "tipo": "regra",
+    "fonte": "REGRAS_ARQUIVOS_CRITICOS.md",
+    "data_criacao": "2024-12-29T18:58:04.957026",
+    "categorias": [
+      "regras"
+    ],
+    "id": "663fcd4dfa0a04ad702f2133bc3aab91"
+  },
+  "document": {
+    "content": "🚨 Definição:\nArquivos críticos são componentes essenciais do sistema que requerem atenção especial devido ao seu impacto direto no funcionamento da aplicação.\n\n1. `app_server.py`:\n- **Função**: Configuração e inicialização do servidor FastAPI\n- **Impacto**: Afeta toda a aplicação\n- **Localização**: `/backend-rag-ia/cli/`\n- **Cuidados Especiais**:\n- Alterações devem ser testadas em ambiente de desenvolvimento\n- Requer revisão de código por pelo menos dois desenvolvedores\n- Mudanças devem ser documentadas detalhadamente\n- Backup obrigatório antes de modificações\n\n1. Modificações:\n- Criar branch específica para alterações\n- Realizar testes completos antes do merge\n- Documentar todas as mudanças\n- Notificar equipe sobre alterações\n\n2. Revisão:\n- Code review obrigatório\n- Testes de integração necessários\n- Validação em ambiente de staging\n\n3. Backup:\n- Manter versão de backup antes de alterações\n- Documentar procedimento de rollback\n- Testar processo de restauração\n\n4. Monitoramento:\n- Logs detalhados de alterações\n- Monitoramento de performance\n- Alertas para erros críticos\n\n5. Documentação:\n- Manter documentação atualizada\n- Registrar todas as dependências\n- Documentar configurações necessárias\n\n🔄 Processo de Atualização da Lista:\n1. Identificar arquivos críticos novos\n2. Avaliar impacto no sistema\n3. Documentar responsabilidades\n4. Atualizar esta documentação\n\n📝 Observações:\n- Esta lista deve ser revisada mensalmente\n- Novos arquivos críticos devem ser adicionados conforme identificados\n- Manter histórico de alterações em arquivos críticos\n\nFormato Obrigatório:\n1. **Identificação do Arquivo**:\n```markdown\n### N. `nome_do_arquivo.ext`\n```\n2. **Metadados Obrigatórios**:\n```markdown\n- **Função**: Descrição clara da responsabilidade\n- **Impacto**: Áreas/componentes afetados\n- **Localização**: Caminho completo no projeto\n```\n3. **Cuidados Especiais**:\n```markdown\n- **Cuidados Especiais**:\n- Lista de cuidados específicos\n- Requisitos de segurança\n- Procedimentos especiais\n```\n\nExemplo de Nova Regra::\n```markdown\n\n2. `config.py`:\n- **Função**: Gerenciamento de configurações globais\n- **Impacto**: Sistema completo\n- **Localização**: `/backend-rag-ia/config/`\n- **Cuidados Especiais**:\n- Validar todas as variáveis de ambiente\n- Testar em todos os ambientes\n- Documentar cada configuração\n```",
+    "metadata": {
+      "type": "regra",
+      "title": "REGRAS_ARQUIVOS_CRITICOS",
+      "autor": "sistema",
+      "formato_original": "markdown",
+      "tags": [
+        "documentação",
+        "regras"
+      ],
+      "versao": "1.0"
+    }
+  }
+}

@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 # Copia os arquivos do projeto
 COPY requirements.txt .
 COPY main.py .
-COPY backend-rag-ia ./backend-rag-ia
+COPY backend_rag_ia ./backend_rag_ia
 
 # Instala dependências Python
 RUN pip install --no-cache-dir -r requirements.txt
