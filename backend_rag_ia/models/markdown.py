@@ -1,5 +1,5 @@
+
 from pydantic import BaseModel, Field
-from typing import List, Optional
 
 
 class MarkdownMetadata(BaseModel):
@@ -8,12 +8,12 @@ class MarkdownMetadata(BaseModel):
     title: str = Field(..., description="Título do documento")
     tipo: str = Field(..., description="Tipo do documento")
     autor: str = Field(..., description="Autor do documento")
-    filename: Optional[str] = Field(None, description="Nome do arquivo original")
-    categorias: Optional[List[str]] = Field(
+    filename: str | None = Field(None, description="Nome do arquivo original")
+    categorias: list[str] | None = Field(
         default=["documentacao"], description="Categorias do documento"
     )
-    tags: Optional[List[str]] = Field(default=[], description="Tags do documento")
-    versao: Optional[str] = Field(default="1.0", description="Versão do documento")
+    tags: list[str] | None = Field(default=[], description="Tags do documento")
+    versao: str | None = Field(default="1.0", description="Versão do documento")
 
 
 class MarkdownUpload(BaseModel):

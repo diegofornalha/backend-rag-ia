@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import json
-import os
 from pathlib import Path
 
 
@@ -52,7 +51,7 @@ def extract_content_from_md(md_content):
 
 def convert_md_to_json(md_file, output_dir):
     """Converte arquivo markdown em documento JSON."""
-    with open(md_file, "r", encoding="utf-8") as f:
+    with open(md_file, encoding="utf-8") as f:
         content = f.read()
 
     # Extrai o tipo da regra do nome do arquivo

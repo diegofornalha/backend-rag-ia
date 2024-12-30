@@ -4,8 +4,9 @@ Módulo para gerenciar a conexão com o Supabase.
 
 import os
 from typing import Optional
-from supabase import create_client, Client
+
 from dotenv import load_dotenv
+from supabase import Client, create_client
 
 load_dotenv()
 
@@ -14,7 +15,7 @@ class SupabaseManager:
     """Gerencia a conexão com o Supabase."""
 
     _instance: Optional["SupabaseManager"] = None
-    _client: Optional[Client] = None
+    _client: Client | None = None
 
     def __new__(cls) -> "SupabaseManager":
         """Implementa o padrão Singleton."""

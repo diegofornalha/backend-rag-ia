@@ -3,11 +3,11 @@
     "language": "pt-BR",
     "tipo": "regra",
     "fonte": "REGRAS_DEPENDENCIAS.md",
-    "data_criacao": "2024-12-29T18:58:04.959499",
+    "data_criacao": "2024-12-30T16:03:01.502068",
     "categorias": [
       "regras"
     ],
-    "id": "64deeb178c3c41a2efb1ef7821db7e6a"
+    "id": "d4386689cc492790e5d07c0843e6fc51"
   },
   "document": {
     "content": "1. Análise Inicial:\n- Verificar todas as dependências listadas no `requirements.txt`\n- Identificar versões atuais e últimas versões disponíveis\n- Documentar dependências críticas para o sistema\n\n2. Verificação de Versões:\n- Usar `pip index versions [pacote]` para verificar versões disponíveis\n- Verificar changelogs para mudanças significativas\n- Identificar breaking changes entre versões\n\n3. Testes de Compatibilidade:\n- Realizar testes de instalação com `--dry-run`\n- Verificar conflitos entre dependências\n- Testar em ambiente isolado antes de produção\n\n4. Resolução de Conflitos:\n- Documentar conflitos encontrados\n- Ajustar versões para resolver incompatibilidades\n- Manter registro de decisões tomadas\n\n5. Boas Práticas:\n- Sempre especificar versões exatas (exceto quando necessário range)\n- Manter arquivo de requirements organizado por categorias\n- Incluir comentários para decisões importantes\n\n6. Processo de Atualização:\n- Criar branch específica para atualizações\n- Testar mudanças em ambiente de desenvolvimento\n- Documentar processo de rollback se necessário\n\n7. Monitoramento de Segurança:\n- Usar `safety check` para verificar vulnerabilidades\n- Manter registro de vulnerabilidades conhecidas\n- Planejar atualizações de segurança\n\nVulnerabilidades Conhecidas:\n1. gunicorn==21.2.0\n- CVE-2024-1135: Validação inadequada de headers Transfer-Encoding\n- Impacto: Possível HTTP Request Smuggling (HRS)\n- Observação: Mantida versão 21.2.0 por ser mais estável. Versão 22.0.0 também apresenta vulnerabilidades similares.\n- Mitigação: Usar em conjunto com proxy reverso que valida headers adequadamente\n\n8. Ferramentas Úteis:\n- pip-tools para gerenciamento de dependências\n- safety para verificação de segurança\n- pip-audit para auditoria de dependências",

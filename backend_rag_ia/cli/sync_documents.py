@@ -1,12 +1,12 @@
+import hashlib
+import json
 import os
-from supabase import create_client, Client
+
+from dotenv import load_dotenv
 from rich import print
 from rich.console import Console
 from rich.table import Table
-import hashlib
-import json
-from datetime import datetime
-from dotenv import load_dotenv
+from supabase import Client, create_client
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -59,7 +59,7 @@ def remove_duplicate(duplicate_info):
         supabase.table("documents").delete().eq("id", duplicate_id).execute()
         return True
     except Exception as e:
-        print(f"❌ Erro ao remover duplicata {duplicate_id}: {str(e)}")
+        print(f"❌ Erro ao remover duplicata {duplicate_id}: {e!s}")
         return False
 
 
@@ -101,8 +101,8 @@ def main():
             removed += 1
             console.print(f"✅ Removida duplicata {dup['duplicate']['id']}")
 
-    console.print(f"\n✨ Sincronização concluída!")
-    console.print(f"📊 Estatísticas finais:")
+    console.print("\n✨ Sincronização concluída!")
+    console.print("📊 Estatísticas finais:")
     console.print(f"   - Total de documentos originais: {len(documents)}")
     console.print(f"   - Duplicatas encontradas: {len(duplicates)}")
     console.print(f"   - Duplicatas removidas: {removed}")

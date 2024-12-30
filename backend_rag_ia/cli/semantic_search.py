@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import os
+import sys
+from typing import Any
+
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.table import Table
-from typing import Dict, Any, List
-from dotenv import load_dotenv
-from supabase import create_client, Client
 from sentence_transformers import SentenceTransformer
-import sys
+from supabase import Client, create_client
 
 load_dotenv()
 
@@ -36,7 +37,7 @@ def check_supabase_connection() -> tuple[bool, Client]:
         return False, None
 
 
-def create_embedding(content: str) -> List[float]:
+def create_embedding(content: str) -> list[float]:
     """Cria embedding para o conteúdo usando o modelo."""
     try:
         embedding = model.encode(content)
@@ -48,7 +49,7 @@ def create_embedding(content: str) -> List[float]:
 
 def search_documents(
     supabase: Client, query: str, limit: int = 3
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Busca documentos similares à query."""
     try:
         # Gera embedding para a query
@@ -71,7 +72,7 @@ def search_documents(
         return []
 
 
-def display_results(documents: List[Dict[str, Any]], query: str):
+def display_results(documents: list[dict[str, Any]], query: str):
     """Exibe os resultados da busca."""
     console.print(f"\n🔍 Resultados para: '{query}'")
 

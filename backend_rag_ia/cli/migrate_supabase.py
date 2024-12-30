@@ -2,18 +2,18 @@
 Script para migrar dados dos JSONs para o Supabase.
 """
 
-import os
-import json
 import asyncio
-from typing import List, Dict, Any
+import json
+import os
+from typing import Any
+
 from dotenv import load_dotenv
 from services.vector_store import VectorStore
-from models.database import Document
 
 load_dotenv()
 
 
-async def load_json_documents(directory: str = "documents") -> List[Dict[str, Any]]:
+async def load_json_documents(directory: str = "documents") -> list[dict[str, Any]]:
     """
     Carrega documentos dos arquivos JSON.
 
@@ -26,7 +26,7 @@ async def load_json_documents(directory: str = "documents") -> List[Dict[str, An
     documents = []
     for filename in os.listdir(directory):
         if filename.endswith(".json"):
-            with open(os.path.join(directory, filename), "r") as f:
+            with open(os.path.join(directory, filename)) as f:
                 data = json.load(f)
                 if isinstance(data, list):
                     documents.extend(data)

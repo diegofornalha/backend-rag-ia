@@ -3,7 +3,8 @@ Modelos Pydantic para o banco de dados.
 """
 
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -11,21 +12,20 @@ class DocumentBase(BaseModel):
     """Modelo base para documentos."""
 
     content: str
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    document_hash: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    document_hash: str | None = None
 
 
 class DocumentCreate(DocumentBase):
     """Modelo para criação de documentos."""
 
-    pass
 
 
 class Document(DocumentBase):
     """Modelo completo de documento."""
 
     id: int
-    embedding_id: Optional[int] = None
+    embedding_id: int | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -39,13 +39,12 @@ class EmbeddingBase(BaseModel):
     """Modelo base para embeddings."""
 
     document_id: int
-    embedding: List[float]
+    embedding: list[float]
 
 
 class EmbeddingCreate(EmbeddingBase):
     """Modelo para criação de embeddings."""
 
-    pass
 
 
 class Embedding(EmbeddingBase):

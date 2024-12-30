@@ -323,7 +323,7 @@ Verifica o status da sincronização de embeddings.
 
 ### Busca Avançada
 
-- Busca semântica com FAISS
+- Busca semântica com Supabase+pgvector
 - Filtragem por metadados
 - Combinação de múltiplos critérios
 - Ordenação por relevância
@@ -348,7 +348,7 @@ docs = vector_store.filter_by_metadata({
 
 1. **Indexação**:
 
-   - Uso de FAISS para busca semântica
+   - Uso de pgvector para busca semântica
    - Índice invertido para metadados
    - Batch processing para melhor performance
 
@@ -361,7 +361,7 @@ docs = vector_store.filter_by_metadata({
 
 3. **Persistência**:
 
-   - Salvamento automático de índices
+   - Salvamento automático no Supabase
    - Backup de metadados
    - Formato JSON otimizado
 

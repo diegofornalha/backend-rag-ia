@@ -105,6 +105,34 @@
 - **/services** → Serviços da aplicação
 - **/scripts** → Scripts utilitários
 
+### 1.4 Mudanças em Diretórios
+
+#### Regras de Refatoração de Diretórios
+
+1. **Mudança de Nome ou Localização**:
+
+   - Ao renomear ou mover um diretório, todos os arquivos que o referenciam devem ser atualizados
+   - Scripts devem verificar e alertar sobre referências quebradas
+   - Exemplo: Se `backend-rag-ia` → `backend_rag_ia`, todos os imports devem ser atualizados
+
+2. **Verificações Obrigatórias**:
+
+   - Antes de commitar mudanças em diretórios:
+     - Rodar verificador de imports quebrados
+     - Atualizar paths em scripts de configuração
+     - Verificar referências em arquivos de build (Dockerfile, etc)
+
+3. **Documentação**:
+   - Registrar mudanças significativas no CHANGELOG.md
+   - Atualizar documentação que referencia os diretórios
+   - Comunicar mudanças para a equipe
+
+**Não permitido:**
+
+- Mover/renomear diretórios sem atualizar referências
+- Deixar imports quebrados no código
+- Ignorar alertas de paths inválidos
+
 ## 2. Padrões de Código
 
 ### 2.1 Python
@@ -127,6 +155,37 @@
 - Documentação Swagger
 - Validação de dados
 - Tratamento de erros
+
+### 2.4 Linting para ML/IA
+
+#### Configuração do Flake8
+
+1. **Regras Específicas para ML**:
+
+   - Permite linhas mais longas em arquivos de modelo
+   - Mais flexível com complexidade em código de treino
+   - Permite variáveis não utilizadas (útil para tensores)
+   - Ignora imports fora de ordem em notebooks
+
+2. **Diretórios Especiais**:
+
+   - `/models/`: Regras flexíveis para definições de modelo
+   - `/transformers/`: Permite nomes curtos de variáveis
+   - `/preprocessing/`: Mais permissivo com complexidade
+   - `/notebooks/`: Ignora maioria das regras de estilo
+
+3. **Docstrings**:
+
+   - Formato Google obrigatório
+   - Documentação de parâmetros ML clara
+   - Exemplos de uso quando relevante
+   - Descrição de shapes de tensores
+
+4. **Exceções Permitidas**:
+   - Variáveis não utilizadas em callbacks
+   - Imports condicionais para otimização
+   - Linhas longas em definição de arquitetura
+   - Complexidade alta em loops de treino
 
 ## 3. Ambiente de Desenvolvimento
 

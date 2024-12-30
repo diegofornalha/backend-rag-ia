@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import os
-import sys
 import json
+import sys
 from pathlib import Path
-from rich.console import Console
+
 from dotenv import load_dotenv
+from rich.console import Console
 
 # Adiciona o diretório raiz ao PYTHONPATH
 project_root = Path(__file__).parent.parent
@@ -48,7 +48,7 @@ def convert_markdown_files():
                 console.print(f"\n🔄 Convertendo {md_file.name}...")
 
                 # Lê o conteúdo do arquivo markdown
-                with open(md_file, "r", encoding="utf-8") as f:
+                with open(md_file, encoding="utf-8") as f:
                     markdown_content = f.read()
 
                 # Converte para o formato JSON

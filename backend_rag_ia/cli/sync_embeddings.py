@@ -2,13 +2,12 @@
 
 import os
 import time
-from pathlib import Path
-from typing import Dict, Any, List
-from rich.console import Console
+from typing import Any
+
 from dotenv import load_dotenv
-from supabase import create_client, Client
-import numpy as np
+from rich.console import Console
 from sentence_transformers import SentenceTransformer
+from supabase import Client, create_client
 
 load_dotenv()
 
@@ -37,7 +36,7 @@ def check_supabase_connection() -> tuple[bool, Client]:
         return False, None
 
 
-def get_documents_without_embeddings(supabase: Client) -> List[Dict[str, Any]]:
+def get_documents_without_embeddings(supabase: Client) -> list[dict[str, Any]]:
     """Obtém documentos que não possuem embeddings."""
     try:
         # Busca documentos sem embeddings
@@ -58,7 +57,7 @@ def get_documents_without_embeddings(supabase: Client) -> List[Dict[str, Any]]:
         return []
 
 
-def create_embedding(content: str) -> List[float]:
+def create_embedding(content: str) -> list[float]:
     """Cria embedding para o conteúdo usando o modelo."""
     try:
         embedding = model.encode(content)
@@ -68,7 +67,7 @@ def create_embedding(content: str) -> List[float]:
         return []
 
 
-def sync_document_embedding(supabase: Client, document: Dict[str, Any]) -> bool:
+def sync_document_embedding(supabase: Client, document: dict[str, Any]) -> bool:
     """Sincroniza o embedding de um documento."""
     try:
         doc_id = document["id"]
@@ -86,10 +85,10 @@ def sync_document_embedding(supabase: Client, document: Dict[str, Any]) -> bool:
         result = supabase.table("embeddings").insert(data).execute()
 
         if result.data:
-            console.print(f"✅ Embedding sincronizado com sucesso!")
+            console.print("✅ Embedding sincronizado com sucesso!")
             return True
 
-        console.print(f"❌ Erro ao sincronizar embedding")
+        console.print("❌ Erro ao sincronizar embedding")
         if hasattr(result, "error"):
             console.print(f"📝 Erro: {result.error}")
         return False

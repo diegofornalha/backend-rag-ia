@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+import json
 import os
+from typing import Any
+
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.table import Table
-from typing import Dict, Any
-import json
-from dotenv import load_dotenv
-from supabase import create_client, Client
+from supabase import Client, create_client
 
 load_dotenv()
 
@@ -34,7 +35,7 @@ def check_supabase_connection() -> tuple[bool, Client]:
         return False, None
 
 
-def get_documents_count(supabase: Client) -> Dict[str, Any]:
+def get_documents_count(supabase: Client) -> dict[str, Any]:
     """Obtém a contagem e lista de documentos."""
     try:
         # Busca documentos na tabela documents

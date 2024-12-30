@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-import os
-import requests
 import json
+import os
+import subprocess
+import time
+
+import requests
 from rich.console import Console
 from rich.panel import Panel
-from rich.table import Table
 from rich.progress import Progress
-import time
-import subprocess
+from rich.table import Table
 
 console = Console()
 
@@ -121,7 +122,7 @@ class RenderManager:
                             "[green]✅ Servidor reiniciado com sucesso![/green]"
                         )
                         break
-                    elif status in ["failed", "canceled"]:
+                    if status in ["failed", "canceled"]:
                         console.print("[red]❌ Falha na reinicialização[/red]")
                         console.print("\nVerificando logs do deploy...")
                         self.mostrar_logs_deploy(deploy_id)
@@ -163,7 +164,7 @@ class RenderManager:
         console.print("\n[bold blue]🔄 Reiniciando servidor via SSH...[/bold blue]")
 
         # Comando para reiniciar o container via SSH
-        comando = f"""ssh render@ssh.render.com << 'ENDSSH'
+        comando = """ssh render@ssh.render.com << 'ENDSSH'
 cd /opt/render/project/src
 docker pull fornalha/backend:latest
 docker stop $(docker ps -q)
@@ -176,7 +177,7 @@ ENDSSH"""
             console.print(resultado)
             return True
         except subprocess.CalledProcessError as e:
-            console.print(f"[red]❌ Erro ao executar SSH: {str(e)}[/red]")
+            console.print(f"[red]❌ Erro ao executar SSH: {e!s}[/red]")
             if "Permission denied" in str(e):
                 console.print("\n[yellow]⚠️ Configure sua chave SSH no Render:[/yellow]")
                 console.print(

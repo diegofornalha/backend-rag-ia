@@ -1,0 +1,108 @@
+[tool.ruff]
+# Configurações Gerais
+line-length = 100
+target-version = "py39"
+fix = true
+unsafe-fixes = true
+
+# Regras Selecionadas (substitui Black, Flake8, isort, pyupgrade, etc)
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "A",    # flake8-builtins
+    "C4",   # flake8-comprehensions
+    "PT",   # flake8-pytest-style
+    "RET",  # flake8-return
+    "SIM",  # flake8-simplify
+    "ERA",  # eradicate
+    "ICN",  # flake8-import-conventions
+    "D",    # pydocstyle
+    "PL",   # pylint
+    "TRY",  # tryceratops
+    "NPY",  # NumPy-specific rules
+    "RUF",  # Ruff-specific rules
+]
+
+# Regras Ignoradas
+ignore = [
+    "E402",  # Module level import not at top of file
+    "E501",  # Line too long (tratado por line-length)
+    "B008",  # Do not perform function calls in argument defaults
+    "N803",  # Argument name should be lowercase
+    "N806",  # Variable in function should be lowercase
+    "N812",  # Lowercase imported as non lowercase
+    "UP006", # Use `list` instead of `List` for type annotations
+    "UP007", # Use `X | Y` for type annotations
+    "D100",  # Missing docstring in public module
+    "D104",  # Missing docstring in public package
+    "D107",  # Missing docstring in __init__
+    "D202",  # No blank lines allowed after function docstring
+    "D205",  # 1 blank line required between summary line and description
+    "D400",  # First line should end with a period
+    "D401",  # First line should be in imperative mood
+    "D415",  # First line should end with a period, question mark, or exclamation point
+]
+
+# Configurações de Formatação
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# Configurações de Docstring
+[tool.ruff.pydocstyle]
+convention = "google"
+
+# Configurações de Importação
+[tool.ruff.isort]
+known-first-party = ["backend_rag_ia"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+combine-as-imports = true
+split-on-trailing-comma = true
+lines-between-types = 1
+
+# Convenções de Importação para ML
+[tool.ruff.flake8-import-conventions.aliases]
+numpy = "np"
+pandas = "pd"
+matplotlib = "plt"
+seaborn = "sns"
+tensorflow = "tf"
+torch = "torch"
+sklearn = "sk"
+
+# Configurações por Tipo de Arquivo
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401", "D104"]
+"tests/**/*.py" = ["D100", "D103", "S101"]
+"examples/**/*.py" = ["D100", "D103"]
+"scripts/**/*.py" = ["D100", "D103"]
+
+# Configurações para ML/AI
+[tool.ruff.flake8-bugbear]
+extend-immutable-calls = [
+    "torch.tensor",
+    "torch.nn.Parameter",
+    "numpy.array",
+]
+
+[tool.ruff.mccabe]
+max-complexity = 15
+
+[tool.ruff.pylint]
+max-args = 10
+max-statements = 50
+
+# Configurações Específicas para Notebooks
+[tool.ruff.extend-per-file-ignores]
+"*.ipynb" = [
+    "E402",  # Module level import not at top of file
+    "D100",  # Missing docstring in public module
+    "B018",  # Found useless expression
+] 

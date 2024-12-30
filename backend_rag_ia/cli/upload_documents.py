@@ -1,8 +1,8 @@
-import json
 import hashlib
-import requests
+import json
 import time
-from pathlib import Path
+
+import requests
 
 # URL da API
 API_URL = "http://localhost:8000/api/v1"
@@ -29,7 +29,7 @@ def upload_document(file_path: str) -> bool:
     """Faz upload de um documento para a API."""
     try:
         # Carrega o documento
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             data = json.load(f)
 
         # Extrai conteúdo e metadados
@@ -101,7 +101,7 @@ def main():
             falhas += 1
         time.sleep(1)  # Espera 1 segundo entre uploads
 
-    print(f"\n✨ Processo finalizado!")
+    print("\n✨ Processo finalizado!")
     print(f"✅ {sucessos} documentos enviados com sucesso")
     if falhas > 0:
         print(f"❌ {falhas} documentos falharam")

@@ -1,10 +1,10 @@
 # backend-rag-ia
 
-API para busca semântica e processamento de documentos usando FastAPI, FAISS e Sentence Transformers.
+API para busca semântica e processamento de documentos usando FastAPI, Supabase+pgvector e Sentence Transformers.
 
 ## Características
 
-- Busca semântica em documentos usando FAISS
+- Busca semântica em documentos usando Supabase+pgvector
 - Embeddings com Sentence Transformers
 - Armazenamento de documentos e embeddings no Supabase
 - API RESTful com FastAPI

@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
-import os
-import json
-import time
 import hashlib
+import json
+import os
+import time
 from pathlib import Path
-from typing import Dict, Any
-from rich.console import Console
+from typing import Any
+
 from dotenv import load_dotenv
-from supabase import create_client, Client
+from rich.console import Console
 from sentence_transformers import SentenceTransformer
+from supabase import Client, create_client
 
 load_dotenv()
 
@@ -38,7 +39,7 @@ def check_supabase_connection() -> tuple[bool, Client]:
         return False, None
 
 
-def convert_document_format(data: Dict[str, Any]) -> Dict[str, Any]:
+def convert_document_format(data: dict[str, Any]) -> dict[str, Any]:
     """Converte o formato do documento para o formato esperado pela API."""
     # Combina os metadados globais com os metadados específicos do documento
     metadata = {**data["metadata_global"], **data["document"]["metadata"]}
@@ -57,7 +58,7 @@ def create_embedding(content: str) -> list[float]:
         return []
 
 
-def calculate_document_hash(content: str, metadata: Dict[str, Any]) -> str:
+def calculate_document_hash(content: str, metadata: dict[str, Any]) -> str:
     """Calcula o hash do documento baseado no conteúdo e metadados essenciais."""
     # Seleciona apenas os metadados essenciais que identificam unicamente o documento
     essential_metadata = {
@@ -99,7 +100,7 @@ def upload_document(supabase: Client, file_path: str) -> tuple[bool, str]:
     """Faz upload de um documento para o Supabase. Retorna (sucesso, status)."""
     try:
         # Carrega o documento
-        with open(file_path, "r") as f:
+        with open(file_path) as f:
             data = json.load(f)
 
         # Converte para o formato esperado
@@ -153,9 +154,8 @@ def upload_document(supabase: Client, file_path: str) -> tuple[bool, str]:
             if update_result.data:
                 console.print(f"✅ Documento {file_path} enviado com sucesso!")
                 return True, "sucesso"
-            else:
-                console.print(f"⚠️ Documento enviado mas falha ao vincular embedding_id")
-                return True, "sucesso_parcial"
+            console.print("⚠️ Documento enviado mas falha ao vincular embedding_id")
+            return True, "sucesso_parcial"
 
         console.print(f"❌ Erro ao criar embedding para {file_path}")
         if hasattr(embedding_result, "error"):

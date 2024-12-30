@@ -15,7 +15,7 @@ Backend para processamento de IA usando RAG (Retrieval Augmented Generation).
 2. **Stack Tecnológica Moderna**:
 
    - FastAPI para alta performance e documentação automática
-   - FAISS para busca semântica eficiente
+   - Supabase+pgvector para busca semântica eficiente
    - Sentence Transformers para embeddings de alta qualidade
    - Hugging Face Transformers para processamento de linguagem natural
 
@@ -23,7 +23,7 @@ Backend para processamento de IA usando RAG (Retrieval Augmented Generation).
 
    - Cache inteligente de embeddings
    - Processamento assíncrono com FastAPI
-   - Otimização de memória com FAISS
+   - Otimização de memória com pgvector
    - Compilação nativa de dependências críticas
 
 4. **Segurança e Robustez**:
@@ -43,7 +43,7 @@ Backend para processamento de IA usando RAG (Retrieval Augmented Generation).
 2. **Processamento**:
 
    - Geração de embeddings otimizada
-   - Busca semântica com FAISS
+   - Busca semântica com Supabase+pgvector
    - Ranqueamento inteligente de resultados
    - Contextualização automática
 
@@ -111,7 +111,7 @@ O funcionamento correto do Docker localmente é crucial pois:
 
 2. **Compatibilidade de Arquitetura**:
 
-   - Garante que as dependências compiladas (como faiss-cpu) funcionem em diferentes arquiteturas
+   - Garante que as dependências funcionem em diferentes arquiteturas
    - Essencial para Mac M1/M2 (ARM64) vs servidores (x86_64)
 
 3. **Reprodutibilidade**:
@@ -149,8 +149,8 @@ docker build -t backend:local .
 O processo de build pode demorar alguns minutos na primeira vez pois precisa:
 
 - Baixar todas as dependências
-- Compilar o faiss do código fonte (otimizado para sua arquitetura)
 - Instalar todas as bibliotecas Python
+- Configurar o ambiente
 
 ### Rodando a aplicação
 
@@ -197,7 +197,6 @@ O Dockerfile usa multi-stage build para otimizar o tamanho final da imagem:
    - Instala dependências de sistema necessárias
    - Cria ambiente virtual Python
    - Instala dependências Python em camadas para melhor cache
-   - Compila o faiss do código fonte com otimizações para a arquitetura
 
 2. Estágio final:
    - Usa Python 3.11 slim como base
@@ -413,3 +412,43 @@ Para acessar e gerenciar o servidor diretamente via SSH:
    # Entrar no container
    docker exec -it $(docker ps -q) /bin/bash
    ```
+
+## Desenvolvimento
+
+1. Instale as dependências de desenvolvimento:
+
+```bash
+pip install -r requirements.txt
+```
+
+2. Configure os hooks de git:
+
+```bash
+python scripts_apenas_raiz/instalar_hooks.py
+```
+
+3. Execute os testes:
+
+```bash
+pytest
+```
+
+4. Verifique a qualidade do código:
+
+```bash
+python scripts_apenas_raiz/verificar_codigo.py
+```
+
+> **Nota**: A verificação de código é executada automaticamente antes de cada commit e durante o CI/CD.
+
+### Padrões de Código
+
+Este projeto usa o Ruff para garantir a qualidade do código. As verificações incluem:
+
+- Formatação de código (PEP 8)
+- Organização de imports
+- Detecção de código não utilizado
+- Verificações de segurança
+- Otimizações de performance
+
+Para mais detalhes, consulte a configuração em `pyproject.toml`.
