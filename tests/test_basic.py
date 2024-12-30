@@ -1,5 +1,6 @@
 import pytest
 
+
 def test_environment():
     """Teste básico para verificar se o ambiente está funcionando"""
     try:
@@ -7,6 +8,7 @@ def test_environment():
         import transformers
         import sentence_transformers
         import faiss
+
         assert True
     except ImportError as e:
-        pytest.fail(f"Falha ao importar dependências: {str(e)}") 
+        pytest.fail(f"Falha ao importar dependências: {str(e)}")
