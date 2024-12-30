@@ -8,6 +8,11 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
+    swig \
+    git \
+    cmake \
+    pkg-config \
+    libopenblas-dev \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -31,17 +36,11 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
 # Instala huggingface-hub primeiro com versão compatível
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir huggingface-hub==0.17.3
 
-# Instala numpy e faiss-cpu do conda-forge
-RUN apt-get update && \
-    apt-get install -y wget && \
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
-    bash miniconda.sh -b -p /opt/conda && \
-    rm miniconda.sh && \
-    /opt/conda/bin/conda install -y -c conda-forge faiss-cpu=1.7.4 && \
-    cp -r /opt/conda/lib/python3.*/site-packages/faiss* /opt/venv/lib/python3.*/site-packages/ && \
-    apt-get remove -y wget && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /opt/conda
+# Instala numpy primeiro
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir numpy
+
+# Instala faiss-cpu
+RUN . /opt/venv/bin/activate && pip install --no-cache-dir faiss-cpu==1.7.4
 
 # Instala as dependências ML que são mais pesadas
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
