@@ -57,7 +57,34 @@
 - **requirements.txt** → Dependências Python
 - **render.yaml** → Configurações do Render (opcional)
 
-### 1.2 Organização de Pastas
+### 1.2 Scripts e Testes na Raiz
+
+#### Scripts Permitidos na Raiz (`/scripts_apenas_raiz/`)
+
+- Scripts de infraestrutura (Docker, Render, SSH)
+- Scripts de monitoramento de produção
+- Scripts de formatação e linting
+- Scripts de inicialização geral
+
+**Não permitido na raiz:**
+
+- Scripts específicos do projeto (devem estar em `backend_rag_ia/scripts/`)
+- Scripts de processamento de dados
+- Scripts de regras de negócio
+
+#### Testes na Raiz (`/tests_apenas_raiz/`)
+
+- Testes de infraestrutura
+- Testes de deploy
+- Testes de configuração
+
+**Não permitido na raiz:**
+
+- Testes unitários do projeto (devem estar em `backend_rag_ia/tests/`)
+- Testes de regras de negócio
+- Testes de API específicos
+
+### 1.3 Organização de Pastas
 
 - **/regras_md** → Documentação e regras do projeto
 - **/monitoring** → Configurações de monitoramento
