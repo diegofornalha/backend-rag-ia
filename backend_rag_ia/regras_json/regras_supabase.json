@@ -1,0 +1,26 @@
+{
+  "metadata_global": {
+    "language": "pt-BR",
+    "tipo": "regra",
+    "fonte": "REGRAS_SUPABASE.md",
+    "data_criacao": "2024-12-29T18:58:04.961868",
+    "categorias": [
+      "regras"
+    ],
+    "id": "e12dd8d52a03d1bf7b32014718264d26"
+  },
+  "document": {
+    "content": "1. Pontos Críticos de Atenção:\n- Sempre verificar se o `.env` está configurado antes de rodar scripts\n- Nunca exceder limite de RLS (Row Level Security)\n- Manter backup dos embeddings\n- Verificar hash antes de cada upload para evitar duplicatas\n\n2. Processo de Upload:\n- Sempre gerar embeddings junto com o upload\n- Verificar se documento foi vinculado corretamente ao embedding\n- Aguardar confirmação de sucesso antes de prosseguir\n- Manter logs de falhas de upload\n\n3. Buscas e Consultas:\n- Usar match threshold adequado nas buscas semânticas\n- Implementar fallback para buscas que não retornam resultados\n- Limitar número de resultados para otimizar performance\n- Cachear resultados frequentes\n\n4. Manutenção:\n- Monitorar uso de storage\n- Verificar integridade dos embeddings periodicamente\n- Limpar documentos órfãos (sem embedding)\n- Manter índices otimizados\n\n5. Segurança:\n- Nunca expor chaves de API\n- Usar apenas conexões seguras\n- Manter políticas RLS atualizadas\n- Rotacionar credenciais periodicamente",
+    "metadata": {
+      "type": "regra",
+      "title": "REGRAS_SUPABASE",
+      "autor": "sistema",
+      "formato_original": "markdown",
+      "tags": [
+        "documentação",
+        "regras"
+      ],
+      "versao": "1.0"
+    }
+  }
+}
