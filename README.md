@@ -164,3 +164,56 @@ docker push fornalha/backend:latest
 - O build pode ser mais lento na primeira vez devido à compilação do faiss
 - Builds subsequentes serão mais rápidos devido ao cache do Docker
 - O tamanho final da imagem é aproximadamente 4.25 GB devido às dependências de ML
+
+## Multi-plataforma Docker
+
+### Importância do Suporte Multi-plataforma
+
+Este projeto utiliza uma configuração Docker multi-plataforma para garantir compatibilidade entre diferentes arquiteturas:
+
+- **Desenvolvimento Local**: Principalmente em Macs com Apple Silicon (ARM64)
+- **Produção/CI**: Servidores e GitHub Actions (AMD64)
+
+A falta de suporte multi-plataforma pode causar vários problemas:
+
+- ❌ Falhas no CI/CD
+- ❌ Incompatibilidade entre desenvolvimento e produção
+- ❌ Erros de compilação de dependências nativas (como faiss-cpu)
+
+### Como Construir para Múltiplas Plataformas
+
+```bash
+# Configurar builder multi-plataforma
+docker buildx create --use --name multiarch-builder
+
+# Construir e publicar para múltiplas plataformas
+docker buildx build --platform linux/amd64,linux/arm64 -t fornalha/backend:latest --push .
+```
+
+### Verificar Suporte Multi-plataforma
+
+```bash
+# Verificar plataformas suportadas pela imagem
+docker manifest inspect fornalha/backend:latest
+
+# Pull específico para sua plataforma
+docker pull --platform linux/amd64 fornalha/backend:latest  # Para AMD64
+docker pull --platform linux/arm64 fornalha/backend:latest  # Para ARM64
+```
+
+### Dicas Importantes
+
+1. **Desenvolvimento Local**:
+
+   - Em Macs com M1/M2, você está usando ARM64
+   - Use `--platform` se precisar testar outras arquiteturas
+
+2. **CI/CD**:
+
+   - GitHub Actions usa AMD64 por padrão
+   - Render e maioria dos serviços cloud usam AMD64
+
+3. **Dependências Nativas**:
+   - Algumas dependências Python precisam ser compiladas
+   - Importante testar em todas as plataformas suportadas
+   - Usar `--platform=$BUILDPLATFORM` e `--platform=$TARGETPLATFORM` no Dockerfile
