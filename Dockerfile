@@ -3,9 +3,8 @@ FROM python:3.11-slim as builder
 
 WORKDIR /app
 
-# Instala dependências essenciais
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Instala dependências essenciais para compilação
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
     swig \
@@ -13,6 +12,7 @@ RUN apt-get update \
     cmake \
     pkg-config \
     libopenblas-dev \
+    gfortran \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -39,8 +39,15 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir huggingface-hub==0.17
 # Instala numpy primeiro
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir numpy
 
-# Instala faiss-cpu
-RUN . /opt/venv/bin/activate && pip install --no-cache-dir faiss-cpu==1.7.4
+# Clona e compila o faiss para ARM64
+RUN git clone https://github.com/facebookresearch/faiss.git && \
+    cd faiss && \
+    cmake -B build . -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=ON \
+    -DFAISS_OPT_LEVEL=generic -DBUILD_TESTING=OFF \
+    -DPython_EXECUTABLE=$(which python) && \
+    make -C build -j$(nproc) && \
+    cd build/faiss/python && \
+    python setup.py install
 
 # Instala as dependências ML que são mais pesadas
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
