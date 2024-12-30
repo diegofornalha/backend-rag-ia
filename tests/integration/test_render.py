@@ -167,4 +167,4 @@ if __name__ == "__main__":
             log("\n✨ Deploy verificado e funcionando!", "success")
             break
     else:
-        log("\n❌ Deploy com problemas após todas as tentativas.", "error")
+        log("\n❌ Deploy com problemas após todas as tentativas.", "error") 

@@ -11,4 +11,4 @@ def test_environment():
 
         assert True
     except ImportError as e:
-        pytest.fail(f"Falha ao importar dependências: {e!s}")
+        pytest.fail(f"Falha ao importar dependências: {e!s}") 
