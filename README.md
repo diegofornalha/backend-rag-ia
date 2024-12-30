@@ -141,6 +141,23 @@ O Dockerfile usa multi-stage build para otimizar o tamanho final da imagem:
    docker exec -it <CONTAINER_ID> /bin/bash
    ```
 
+### Docker Hub
+
+Para publicar a imagem no Docker Hub:
+
+```bash
+# Login no Docker Hub (username: fornalha)
+docker login
+
+# Taguear a imagem para o Docker Hub
+docker tag backend:local fornalha/backend:latest
+
+# Enviar para o Docker Hub
+docker push fornalha/backend:latest
+```
+
+> Nota: Embora seja possível publicar no Docker Hub, não é necessário para o deploy no Render, que já faz o build automaticamente a partir do GitHub.
+
 ### Notas importantes
 
 - A imagem é otimizada para sua arquitetura local (ARM64 para Mac M1/M2)
