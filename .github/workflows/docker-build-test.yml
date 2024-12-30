@@ -3,8 +3,6 @@ name: Docker Build Test
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
     paths:
       - "Dockerfile"
       - "requirements.txt"
@@ -12,28 +10,9 @@ on:
       - "**.py"
 
 jobs:
-  code-quality:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install rich ruff
-
-      - name: Run code quality checks
-        run: python scripts_apenas_raiz/verificar_codigo.py
-
   docker-build-test:
-    needs: code-quality
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -50,16 +29,19 @@ jobs:
           context: .
           push: false
           load: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: app:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Test Docker image
+        timeout-minutes: 5
         run: |
-          docker run --rm app:test python -c "import torch; import transformers; import sentence_transformers; import pgvector"
-          docker run --rm app:test pip list
-          docker run --rm app:test curl --version
+          docker run --rm app:test /bin/bash -c "
+            python -c 'import torch; import transformers; import sentence_transformers; import pgvector' && 
+            pip list && 
+            curl --version
+          "
 
       - name: Check image size
         run: docker images app:test

@@ -19,17 +19,6 @@
      - Criar novo arquivo `.md` dentro de `regras_md/`
      - Seguir padrão de nomenclatura: `REGRAS_NOVO_TEMA.md`
 
-3. **Estrutura de Arquivos**:
-   ```
-   backend_rag_ia/
-   └── regras_md/
-       ├── PROJECT_RULES.md
-       ├── REGRAS_API.md
-       ├── REGRAS_DOCKER.md
-       ├── REGRAS_RENDER.md
-       └── ... (outros arquivos de regras)
-   ```
-
 ### Boas Práticas
 
 1. **Manutenção**:
