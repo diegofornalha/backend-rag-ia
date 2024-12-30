@@ -59,7 +59,7 @@
 
 ### 1.2 Organização de Pastas
 
-- **/regras** → Documentação e regras do projeto
+- **/regras_md** → Documentação e regras do projeto
 - **/monitoring** → Configurações de monitoramento
 - **/api** → Código da API
 - **/services** → Serviços da aplicação
@@ -99,60 +99,22 @@
 
 ### 3.2 Variáveis de Ambiente
 
+- Sempre verificar se o `.env` está configurado antes de rodar scripts
 - Usar .env para desenvolvimento
 - Nunca commitar .env
 - Documentar todas as variáveis
 - Usar defaults seguros
 
-## 4. Deploy e Monitoramento
+## 4. Segurança
 
-### 4.1 Render
-
-- HOST = "0.0.0.0"
-- PORT = 10000
-- Healthcheck a cada 10s
-- Logs configurados
-
-### 4.2 Monitoramento
-
-- Grafana para métricas
-- Loki para logs
-- Alertas configurados
-- Dashboards documentados
-
-## 4. Regras de Upload para Supabase
-
-4.1 Formato de Upload:
-
-- **APENAS** arquivos `.json` devem ser enviados ao Supabase
-- Arquivos `.md` são usados somente para edição/criação
-- Sempre converter `.md` para `.json` antes do upload
-
-  4.2 Fluxo de Trabalho:
-
-```bash
-1. Criar/Editar regras em formato .md
-2. Converter .md para .json usando o script de conversão
-3. Fazer upload APENAS dos arquivos .json para o Supabase
-```
-
-4.3 Justificativa:
-
-- Evita duplicidade de dados no Supabase
-- Mantém consistência no formato dos documentos
-- Garante estrutura padronizada dos dados
-- Previne inconsistências entre versões
-
-## 5. Segurança
-
-### 5.1 Código
+### 4.1 Código
 
 - Não expor secrets
 - Validar inputs
 - Sanitizar outputs
 - Manter dependências seguras
 
-### 5.2 Infraestrutura
+### 4.2 Infraestrutura
 
 - CORS configurado
 - Rate limiting
