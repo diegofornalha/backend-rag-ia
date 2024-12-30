@@ -2,6 +2,79 @@
 
 Backend para processamento de IA usando RAG (Retrieval Augmented Generation).
 
+## Diferenciais do Sistema RAG
+
+### 🚀 Características Principais
+
+1. **Arquitetura Otimizada**:
+
+   - Multi-stage Docker para build eficiente
+   - Suporte nativo a múltiplas arquiteturas (ARM64/AMD64)
+   - Integração contínua automatizada (GitHub Actions + Render)
+
+2. **Stack Tecnológica Moderna**:
+
+   - FastAPI para alta performance e documentação automática
+   - FAISS para busca semântica eficiente
+   - Sentence Transformers para embeddings de alta qualidade
+   - Hugging Face Transformers para processamento de linguagem natural
+
+3. **Escalabilidade e Performance**:
+
+   - Cache inteligente de embeddings
+   - Processamento assíncrono com FastAPI
+   - Otimização de memória com FAISS
+   - Compilação nativa de dependências críticas
+
+4. **Segurança e Robustez**:
+   - Testes automatizados de dependências
+   - Verificação de vulnerabilidades no CI/CD
+   - Monitoramento de deploys em tempo real
+   - Rollback automático em caso de falhas
+
+### 🔄 Pipeline de Processamento
+
+1. **Entrada**:
+
+   - Recebe textos em formato livre
+   - Suporta múltiplos formatos de entrada
+   - Processamento de lotes (batch) eficiente
+
+2. **Processamento**:
+
+   - Geração de embeddings otimizada
+   - Busca semântica com FAISS
+   - Ranqueamento inteligente de resultados
+   - Contextualização automática
+
+3. **Saída**:
+   - Respostas estruturadas em JSON
+   - Métricas de confiança
+   - Rastreabilidade das fontes
+   - Cache de resultados frequentes
+
+### 🛠️ Facilidade de Uso
+
+1. **Deploy Simplificado**:
+
+   - Um comando para build multi-plataforma
+   - Deploy automático no Render
+   - Monitoramento integrado
+   - Logs estruturados
+
+2. **Documentação Clara**:
+
+   - API auto-documentada com Swagger
+   - Exemplos práticos de uso
+   - Guias de troubleshooting
+   - Boas práticas documentadas
+
+3. **Manutenibilidade**:
+   - Código modular e bem organizado
+   - Dependências versionadas
+   - Atualizações automáticas via Dependabot
+   - Testes automatizados
+
 ## Deploy Status
 
 O deploy é feito automaticamente no Render através de GitHub Actions quando há push na branch main.
