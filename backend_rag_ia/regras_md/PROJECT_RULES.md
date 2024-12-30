@@ -70,14 +70,14 @@
 
 - Nomes devem ser curtos e autoexplicativos
 - Usar snake_case para arquivos Python e kebab-case para Shell
-- Seguir convenções de ferramentas similares
+- Usar verbos no infinitivo para indicar ação
 - Exemplos:
-  - `fmt.py` → Formatador de código
-  - `docker_monitor.py` → Monitoramento de build Docker
-  - `prod_check.py` → Verificador de produção
-  - `render_ctl.py` → Controlador do Render
-  - `ssh_ctl.sh` → Controlador de SSH
-  - `init.sh` → Inicializador do ambiente
+  - `formatar.py` → Formatador de código
+  - `monitorar_docker.py` → Monitoramento de build Docker
+  - `verificar_prod.py` → Verificador de produção
+  - `controlar_render.py` → Controlador do Render
+  - `controlar_ssh.sh` → Controlador de SSH
+  - `iniciar.sh` → Inicializador do ambiente
 
 **Não permitido na raiz:**
 
