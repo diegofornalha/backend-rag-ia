@@ -10,6 +10,39 @@ Serviço: https://backend-rag-ia-r7gn.onrender.com
 
 ## Ambiente Docker
 
+### ⚠️ Importante: Docker Local e CI/CD
+
+O funcionamento correto do Docker localmente é crucial pois:
+
+1. **Validação de Builds**:
+
+   - Permite testar se o build funcionará no GitHub Actions e Render
+   - Evita commits que quebrariam a pipeline de CI/CD
+   - Economiza tempo detectando problemas antes do deploy
+
+2. **Compatibilidade de Arquitetura**:
+
+   - Garante que as dependências compiladas (como faiss-cpu) funcionem em diferentes arquiteturas
+   - Essencial para Mac M1/M2 (ARM64) vs servidores (x86_64)
+
+3. **Reprodutibilidade**:
+   - Ambiente idêntico em desenvolvimento e produção
+   - Evita o clássico "funciona na minha máquina"
+
+### Comando Correto para Rodar
+
+O comando que resolve os problemas de módulos não encontrados é:
+
+```bash
+docker run -p 10000:10000 -e PYTHONPATH=/app/backend-rag-ia backend:local uvicorn backend-rag-ia.main:app --host 0.0.0.0 --port 10000
+```
+
+Este comando é importante pois:
+
+- Define o PYTHONPATH corretamente
+- Aponta para o diretório correto do módulo main
+- Configura o host e porta adequadamente
+
 ### Pré-requisitos
 
 - Docker instalado
