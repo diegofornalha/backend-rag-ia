@@ -152,3 +152,47 @@ docker history fornalha/backend:latest
 ✅ Tamanho otimizado
 ✅ Metadata completo
 ✅ Pronta para produção
+
+### Quando Reconstruir a Imagem Docker
+
+1. Mudanças em Dependências:
+
+   - Quando adicionar ou remover pacotes no `requirements.txt`
+   - Se atualizar versões de bibliotecas
+   - Ao adicionar novas dependências do sistema no Dockerfile
+
+2. Mudanças na Estrutura do Projeto:
+
+   - Alterações na estrutura de diretórios que afetam o PYTHONPATH
+   - Mudanças nos caminhos de importação
+   - Adição de novos diretórios que precisam ser copiados para o container
+
+3. Mudanças no Dockerfile:
+
+   - Alterações nas configurações do container
+   - Mudanças nos comandos de build
+   - Atualizações na imagem base
+
+4. Mudanças em Arquivos Estáticos:
+
+   - Adição de novos assets
+   - Atualização de arquivos de configuração
+   - Mudanças em arquivos que são copiados para o container
+
+5. Mudanças de Ambiente:
+   - Alterações nas variáveis de ambiente padrão
+   - Mudanças nas configurações de runtime
+
+### Comando para Reconstruir
+
+```bash
+docker buildx build --platform linux/amd64,linux/arm64 -t fornalha/backend:latest . --push
+```
+
+### Verificação de Imagem
+
+Para verificar se a imagem foi publicada e atualizada corretamente:
+
+1. Verificar no Docker Hub: https://hub.docker.com/r/fornalha/backend
+2. Confirmar que a tag `latest` foi atualizada
+3. Verificar se os manifestos para ambas arquiteturas (amd64 e arm64) estão presentes
