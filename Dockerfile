@@ -1,5 +1,5 @@
 # Estágio de construção
-FROM python:3.12-slim as builder
+FROM python:3.11-slim as builder
 
 WORKDIR /app
 
@@ -53,7 +53,7 @@ RUN . /opt/venv/bin/activate && pip install --no-cache-dir \
 RUN . /opt/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
 
 # Estágio final
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
