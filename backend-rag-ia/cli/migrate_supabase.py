@@ -1,6 +1,7 @@
 """
 Script para migrar dados dos JSONs para o Supabase.
 """
+
 import os
 import json
 import asyncio
@@ -11,13 +12,14 @@ from models.database import Document
 
 load_dotenv()
 
+
 async def load_json_documents(directory: str = "documents") -> List[Dict[str, Any]]:
     """
     Carrega documentos dos arquivos JSON.
-    
+
     Args:
         directory: Diretório com os arquivos JSON.
-    
+
     Returns:
         List[Dict[str, Any]]: Lista de documentos.
     """
@@ -32,33 +34,35 @@ async def load_json_documents(directory: str = "documents") -> List[Dict[str, An
                     documents.append(data)
     return documents
 
+
 async def migrate_documents():
     """Migra documentos dos JSONs para o Supabase."""
     try:
         print("Iniciando migração para o Supabase...")
-        
+
         # Carrega documentos
         documents = await load_json_documents()
         print(f"Carregados {len(documents)} documentos dos JSONs")
-        
+
         # Inicializa VectorStore
         vector_store = VectorStore()
-        
+
         # Migra cada documento
         for i, doc in enumerate(documents, 1):
             content = doc.get("content", "")
             metadata = {k: v for k, v in doc.items() if k != "content"}
-            
+
             result = await vector_store.add_document(content, metadata)
             if result:
                 print(f"Migrado documento {i}/{len(documents)}")
             else:
                 print(f"Erro ao migrar documento {i}/{len(documents)}")
-        
+
         print("Migração concluída!")
-        
+
     except Exception as e:
         print(f"Erro durante a migração: {e}")
 
+
 if __name__ == "__main__":
-    asyncio.run(migrate_documents()) 
+    asyncio.run(migrate_documents())

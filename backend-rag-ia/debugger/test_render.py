@@ -7,16 +7,13 @@ from typing import Dict, Any
 
 console = Console()
 
+
 def log(message, level="info"):
     """Log colorido e formatado."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    colors = {
-        "info": "white",
-        "success": "green",
-        "error": "red",
-        "warning": "yellow"
-    }
+    colors = {"info": "white", "success": "green", "error": "red", "warning": "yellow"}
     console.print(f"[{colors[level]}][{timestamp}] {message}")
+
 
 def check_connection(url: str) -> Dict[str, Any]:
     """Verifica conectividade básica com a URL."""
@@ -25,23 +22,21 @@ def check_connection(url: str) -> Dict[str, Any]:
         return {
             "success": True,
             "status_code": response.status_code,
-            "latency": response.elapsed.total_seconds()
+            "latency": response.elapsed.total_seconds(),
         }
     except requests.exceptions.ConnectionError:
         return {
             "success": False,
-            "error": "Erro de conexão - Verifique se o serviço está online"
+            "error": "Erro de conexão - Verifique se o serviço está online",
         }
     except requests.exceptions.Timeout:
         return {
             "success": False,
-            "error": "Timeout - Serviço muito lento ou não responde"
+            "error": "Timeout - Serviço muito lento ou não responde",
         }
     except Exception as e:
-        return {
-            "success": False,
-            "error": f"Erro inesperado: {str(e)}"
-        }
+        return {"success": False, "error": f"Erro inesperado: {str(e)}"}
+
 
 def diagnose_problem(test_results: Dict[str, Any]) -> str:
     """Analisa resultados e sugere soluções."""
@@ -57,7 +52,7 @@ def diagnose_problem(test_results: Dict[str, Any]) -> str:
 1. Aguarde alguns minutos para o cold start
 2. Verifique os logs do Render
 3. Confirme as configurações no render.yaml"""
-        
+
         return """
 🔍 Possíveis problemas:
 1. Deploy ainda não concluído
@@ -68,7 +63,7 @@ def diagnose_problem(test_results: Dict[str, Any]) -> str:
 1. Verifique o status do deploy no dashboard do Render
 2. Confira os logs de build
 3. Verifique se as variáveis de ambiente estão configuradas"""
-    
+
     if test_results.get("health", {}).get("status_code") != 200:
         return """
 🔍 Possíveis problemas:
@@ -80,8 +75,9 @@ def diagnose_problem(test_results: Dict[str, Any]) -> str:
 1. Verifique os logs da aplicação
 2. Confirme se todas as dependências estão no requirements.txt
 3. Verifique a configuração do FastAPI e Gunicorn"""
-    
+
     return "✅ Serviço está funcionando corretamente!"
+
 
 def test_render_api():
     """Testa e diagnostica a API no Render."""
@@ -89,22 +85,25 @@ def test_render_api():
     results = {
         "connection": {"success": False},
         "health": {"success": False},
-        "endpoints": {"success": False}
+        "endpoints": {"success": False},
     }
-    
+
     # Teste de Conexão
     log("Testando conexão com o serviço...", "info")
     results["connection"] = check_connection(BASE_URL)
-    
+
     if not results["connection"]["success"]:
         log(f"❌ Falha na conexão: {results['connection'].get('error')}", "error")
         diagnosis = diagnose_problem(results)
         log("\nDiagnóstico:", "warning")
         console.print(diagnosis)
         return results
-    
-    log(f"✅ Conexão estabelecida (latência: {results['connection']['latency']:.2f}s)", "success")
-    
+
+    log(
+        f"✅ Conexão estabelecida (latência: {results['connection']['latency']:.2f}s)",
+        "success",
+    )
+
     # Health Check
     log("\nTestando Health Check...", "info")
     try:
@@ -112,9 +111,9 @@ def test_render_api():
         results["health"] = {
             "success": response.status_code == 200,
             "status_code": response.status_code,
-            "response": response.json() if response.status_code == 200 else None
+            "response": response.json() if response.status_code == 200 else None,
         }
-        
+
         if results["health"]["success"]:
             log("✅ Health Check OK", "success")
         else:
@@ -122,37 +121,38 @@ def test_render_api():
     except Exception as e:
         results["health"] = {"success": False, "error": str(e)}
         log(f"❌ Erro no Health Check: {str(e)}", "error")
-    
+
     # Diagnóstico Final
     log("\nDiagnóstico Final:", "warning")
     diagnosis = diagnose_problem(results)
     console.print(diagnosis)
-    
+
     # Sumário
     table = Table(title="Sumário dos Testes")
     table.add_column("Teste", style="cyan")
     table.add_column("Status", style="magenta")
     table.add_column("Detalhes", style="green")
-    
+
     table.add_row(
         "Conexão",
         "✅" if results["connection"]["success"] else "❌",
-        f"Latência: {results['connection'].get('latency', 'N/A')}s"
+        f"Latência: {results['connection'].get('latency', 'N/A')}s",
     )
-    
+
     table.add_row(
         "Health Check",
         "✅" if results["health"]["success"] else "❌",
-        f"Status: {results['health'].get('status_code', 'N/A')}"
+        f"Status: {results['health'].get('status_code', 'N/A')}",
     )
-    
+
     console.print("\n", table)
-    
+
     return results
+
 
 if __name__ == "__main__":
     log("🚀 Iniciando diagnóstico do deploy no Render...", "info")
-    
+
     max_retries = 3
     for attempt in range(max_retries):
         if attempt > 0:
@@ -160,10 +160,10 @@ if __name__ == "__main__":
             log(f"\nTentativa {attempt + 1} de {max_retries}...", "warning")
             log(f"Aguardando {wait_time} segundos para o cold start...", "info")
             time.sleep(wait_time)
-        
+
         results = test_render_api()
         if results["connection"]["success"] and results["health"]["success"]:
             log("\n✨ Deploy verificado e funcionando!", "success")
             break
     else:
-        log("\n❌ Deploy com problemas após todas as tentativas.", "error") 
+        log("\n❌ Deploy com problemas após todas as tentativas.", "error")

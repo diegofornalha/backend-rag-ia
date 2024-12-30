@@ -306,3 +306,110 @@ docker pull --platform linux/arm64 fornalha/backend:latest  # Para ARM64
    - Algumas dependências Python precisam ser compiladas
    - Importante testar em todas as plataformas suportadas
    - Usar `--platform=$BUILDPLATFORM` e `--platform=$TARGETPLATFORM` no Dockerfile
+
+## Acesso SSH ao Render
+
+### Configuração do SSH
+
+Para acessar e gerenciar o servidor diretamente via SSH:
+
+1. **Gerar chave SSH**:
+
+   ```bash
+   ssh-keygen -t ed25519 -C "seu@email.com"
+   ```
+
+2. **Copiar chave pública**:
+
+   ```bash
+   cat ~/.ssh/id_ed25519.pub
+   ```
+
+3. **Adicionar no Render**:
+   - Acesse: https://dashboard.render.com/ssh-keys
+   - Cole sua chave pública
+
+### Comandos SSH Úteis
+
+1. **Conectar ao servidor**:
+
+   ```bash
+   ssh render@ssh.render.com
+   ```
+
+2. **Reiniciar servidor sem usar builds**:
+
+   ```bash
+   # Acessar diretório do projeto
+   cd /opt/render/project/src
+
+   # Atualizar imagem Docker
+   docker pull fornalha/backend:latest
+
+   # Parar containers em execução
+   docker stop $(docker ps -q)
+
+   # Iniciar novo container
+   docker run -d -p 10000:10000 fornalha/backend:latest
+   ```
+
+3. **Verificar logs**:
+
+   ```bash
+   # Ver logs do container
+   docker logs $(docker ps -q)
+
+   # Seguir logs em tempo real
+   docker logs -f $(docker ps -q)
+   ```
+
+### Vantagens do SSH
+
+1. **Contorna limites do Render**:
+
+   - Evita o limite de builds
+   - Permite reiniciar sem consumir créditos
+   - Mais rápido que rebuild completo
+
+2. **Acesso direto**:
+
+   - Debug em tempo real
+   - Verificação de logs
+   - Gerenciamento de containers
+
+3. **Flexibilidade**:
+   - Comandos Docker diretos
+   - Verificação de sistema
+   - Troubleshooting avançado
+
+### Troubleshooting via SSH
+
+1. **Problemas de memória**:
+
+   ```bash
+   # Verificar uso de memória
+   docker stats
+
+   # Limpar containers não utilizados
+   docker system prune -f
+   ```
+
+2. **Problemas de rede**:
+
+   ```bash
+   # Verificar portas em uso
+   netstat -tulpn
+
+   # Testar conexão interna
+   curl localhost:10000
+   ```
+
+3. **Logs e Debug**:
+
+   ```bash
+   # Ver logs detalhados
+   docker logs --tail 100 $(docker ps -q)
+
+   # Entrar no container
+   docker exec -it $(docker ps -q) /bin/bash
+   ```
