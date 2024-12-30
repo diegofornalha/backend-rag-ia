@@ -290,3 +290,38 @@ docker pull --platform linux/arm64 fornalha/backend:latest  # Para ARM64
    - Algumas dependências Python precisam ser compiladas
    - Importante testar em todas as plataformas suportadas
    - Usar `--platform=$BUILDPLATFORM` e `--platform=$TARGETPLATFORM` no Dockerfile
+
+## 🚀 Configuração do Render
+
+### Variáveis de Ambiente
+
+Para gerenciar o servidor no Render, configure as seguintes variáveis de ambiente:
+
+```bash
+# Chave API do Render (encontrada em https://dashboard.render.com/account/api-keys)
+export RENDER_API_KEY='sua_chave_api'
+
+# ID do Serviço (encontrado na URL do seu serviço: https://dashboard.render.com/web/srv-XXXXX)
+export RENDER_SERVICE_ID='seu_service_id'
+```
+
+### Gerenciamento do Servidor
+
+O projeto inclui um script para gerenciar o servidor no Render:
+
+```bash
+python scripts/gerenciar_render.py
+```
+
+Este script permite:
+
+- Verificar o status do servidor
+- Reiniciar o servidor usando a imagem Docker correta
+- Monitorar logs de deploy
+
+### Arquitetura Docker
+
+O servidor no Render usa a arquitetura `linux/amd64`. A imagem Docker `fornalha/backend:latest` é multi-plataforma e suporta:
+
+- `linux/amd64` (usado no Render)
+- `linux/arm64` (para desenvolvimento em M1/M2)
