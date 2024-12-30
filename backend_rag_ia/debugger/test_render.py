@@ -1,9 +1,10 @@
-import requests
 import time
 from datetime import datetime
+from typing import Any
+
+import requests
 from rich.console import Console
 from rich.table import Table
-from typing import Dict, Any
 
 console = Console()
 
@@ -15,7 +16,7 @@ def log(message, level="info"):
     console.print(f"[{colors[level]}][{timestamp}] {message}")
 
 
-def check_connection(url: str) -> Dict[str, Any]:
+def check_connection(url: str) -> dict[str, Any]:
     """Verifica conectividade básica com a URL."""
     try:
         response = requests.get(url, timeout=10)
@@ -35,10 +36,10 @@ def check_connection(url: str) -> Dict[str, Any]:
             "error": "Timeout - Serviço muito lento ou não responde",
         }
     except Exception as e:
-        return {"success": False, "error": f"Erro inesperado: {str(e)}"}
+        return {"success": False, "error": f"Erro inesperado: {e!s}"}
 
 
-def diagnose_problem(test_results: Dict[str, Any]) -> str:
+def diagnose_problem(test_results: dict[str, Any]) -> str:
     """Analisa resultados e sugere soluções."""
     if not test_results["connection"]["success"]:
         if "Timeout" in test_results["connection"].get("error", ""):
@@ -120,7 +121,7 @@ def test_render_api():
             log(f"❌ Health Check falhou (status: {response.status_code})", "error")
     except Exception as e:
         results["health"] = {"success": False, "error": str(e)}
-        log(f"❌ Erro no Health Check: {str(e)}", "error")
+        log(f"❌ Erro no Health Check: {e!s}", "error")
 
     # Diagnóstico Final
     log("\nDiagnóstico Final:", "warning")

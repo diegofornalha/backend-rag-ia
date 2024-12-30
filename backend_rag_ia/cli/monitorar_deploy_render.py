@@ -1,10 +1,11 @@
 import os
 import time
+from datetime import datetime
+
 import requests
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress
-from datetime import datetime
 
 console = Console()
 
@@ -27,7 +28,7 @@ def obter_status_deploy(service_id, api_key):
                 "commit_message": deploy.get("commit", {}).get("message", "N/A"),
             }
     except Exception as e:
-        console.print(f"[red]Erro ao verificar status: {str(e)}[/red]")
+        console.print(f"[red]Erro ao verificar status: {e!s}[/red]")
     return None
 
 
@@ -80,7 +81,7 @@ def monitorar_deploy():
                 )
                 break
 
-            elif status in ["failed", "canceled"]:
+            if status in ["failed", "canceled"]:
                 console.print(
                     f"\n[red]❌ Deploy falhou ou foi cancelado. Status: {status}[/red]"
                 )

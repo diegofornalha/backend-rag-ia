@@ -1,11 +1,12 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
 import logging
-from services.vector_store import VectorStore
 from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, HTTPException
 from models.markdown import MarkdownUpload
+from pydantic import BaseModel
 from services.md_converter import MarkdownConverter
+from services.vector_store import VectorStore
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -13,12 +14,12 @@ logger = logging.getLogger(__name__)
 
 class Document(BaseModel):
     content: str
-    metadata: Dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
 
 
 class SearchQuery(BaseModel):
     query: str
-    k: Optional[int] = 4
+    k: int | None = 4
 
 
 class DocumentChange(BaseModel):
@@ -27,7 +28,7 @@ class DocumentChange(BaseModel):
     previous_count: int
     new_count: int
     changed_at: datetime
-    time_since_last_change: Optional[str]
+    time_since_last_change: str | None
 
 
 class Statistics(BaseModel):
@@ -44,7 +45,7 @@ async def add_document(document: Document):
         result = await vector_store.add_document(document)
         return {"message": "Documento adicionado com sucesso", "document_id": result}
     except Exception as e:
-        logger.error(f"Erro ao adicionar documento: {str(e)}")
+        logger.error(f"Erro ao adicionar documento: {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -60,7 +61,7 @@ async def delete_document(doc_id: str):
     except HTTPException as he:
         raise he
     except Exception as e:
-        logger.error(f"Erro ao remover documento: {str(e)}")
+        logger.error(f"Erro ao remover documento: {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -72,7 +73,7 @@ async def search_documents(query: SearchQuery):
         results = await vector_store.search(query.query, k=query.k)
         return {"results": results, "count": len(results)}
     except Exception as e:
-        logger.error(f"Erro na busca: {str(e)}")
+        logger.error(f"Erro na busca: {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -87,7 +88,7 @@ async def health_check():
             "message": "API está funcionando normalmente",
         }
     except Exception as e:
-        logger.error(f"Erro no health check: {str(e)}")
+        logger.error(f"Erro no health check: {e!s}")
         return {"status": "unhealthy", "message": str(e)}
 
 
@@ -99,7 +100,7 @@ async def list_documents(skip: int = 0, limit: int = 10):
         documents = await vector_store.list_documents(skip=skip, limit=limit)
         return {"documents": documents, "count": len(documents)}
     except Exception as e:
-        logger.error(f"Erro ao listar documentos: {str(e)}")
+        logger.error(f"Erro ao listar documentos: {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -115,7 +116,7 @@ async def get_document(doc_id: str):
     except HTTPException as he:
         raise he
     except Exception as e:
-        logger.error(f"Erro ao buscar documento: {str(e)}")
+        logger.error(f"Erro ao buscar documento: {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -133,11 +134,11 @@ async def update_document(doc_id: str, document: Document):
     except HTTPException as he:
         raise he
     except Exception as e:
-        logger.error(f"Erro ao atualizar documento: {str(e)}")
+        logger.error(f"Erro ao atualizar documento: {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/documents/history/{hours}", response_model=List[DocumentChange])
+@router.get("/documents/history/{hours}", response_model=list[DocumentChange])
 async def get_documents_history(hours: int = 24):
     """
     Retorna o histórico de alterações nos documentos.
@@ -159,11 +160,11 @@ async def get_documents_history(hours: int = 24):
         history = await vector_store.get_documents_history(hours)
         return history
     except Exception as e:
-        logger.error(f"Erro ao buscar histórico: {str(e)}")
+        logger.error(f"Erro ao buscar histórico: {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/statistics", response_model=List[Statistics])
+@router.get("/statistics", response_model=list[Statistics])
 async def get_statistics():
     """
     Retorna estatísticas do sistema.
@@ -179,7 +180,7 @@ async def get_statistics():
         stats = await vector_store.get_statistics()
         return stats
     except Exception as e:
-        logger.error(f"Erro ao buscar estatísticas: {str(e)}")
+        logger.error(f"Erro ao buscar estatísticas: {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -196,7 +197,7 @@ async def count_documents():
         count = await vector_store.count_documents()
         return {"total": count, "timestamp": datetime.now()}
     except Exception as e:
-        logger.error(f"Erro ao contar documentos: {str(e)}")
+        logger.error(f"Erro ao contar documentos: {e!s}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -220,5 +221,5 @@ async def convert_markdown(document: MarkdownUpload):
         return {"success": True, "document": result}
 
     except Exception as e:
-        logger.error(f"Erro na conversão do markdown: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Erro na conversão: {str(e)}")
+        logger.error(f"Erro na conversão do markdown: {e!s}")
+        raise HTTPException(status_code=400, detail=f"Erro na conversão: {e!s}")

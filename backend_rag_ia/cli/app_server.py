@@ -2,15 +2,13 @@
 Aplicação principal do Oráculo.
 """
 
-import os
 import logging
-from typing import Dict
-from fastapi import FastAPI, HTTPException
+import os
+
+from api.routes import router
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from api.routes import router
-from services.vector_store import VectorStore
-from services.supabase_client import SupabaseManager
 
 # Configuração de logs
 logging.basicConfig(
@@ -41,7 +39,7 @@ app.add_middleware(
 
 # Rota de health check
 @app.get("/api/v1/health")
-async def health_check() -> Dict[str, str]:
+async def health_check() -> dict[str, str]:
     """Verifica a saúde da aplicação."""
     return {"status": "healthy", "message": "API está funcionando normalmente"}
 

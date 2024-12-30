@@ -1,6 +1,7 @@
 import os
+
 from dotenv import load_dotenv
-from supabase import create_client, Client
+from supabase import Client, create_client
 
 load_dotenv()
 
@@ -34,7 +35,7 @@ def test_connection():
         return True
 
     except Exception as e:
-        print(f"\nErro ao testar conexão: {str(e)}")
+        print(f"\nErro ao testar conexão: {e!s}")
         return False
 
 

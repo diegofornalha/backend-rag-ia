@@ -1,9 +1,10 @@
 import os
-from supabase import create_client
+
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.table import Table
 from sentence_transformers import SentenceTransformer
-from dotenv import load_dotenv
+from supabase import create_client
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -74,7 +75,7 @@ def buscar_documentos(
         console.print(f"\n✨ Encontrados {len(documentos)} documentos similares!")
 
     except Exception as e:
-        console.print(f"\n❌ Erro durante a busca: {str(e)}")
+        console.print(f"\n❌ Erro durante a busca: {e!s}")
 
 
 def main():

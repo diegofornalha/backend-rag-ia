@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Any
 
 
 @dataclass
@@ -7,5 +7,5 @@ class Document:
     """Classe para representar um documento com seu conteúdo e metadados"""
 
     content: str
-    metadata: Dict[str, Any]
-    embedding_id: Optional[int] = None  # ID no índice FAISS
+    metadata: dict[str, Any]
+    embedding_id: int | None = None  # ID do embedding no Supabase

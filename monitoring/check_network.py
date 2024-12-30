@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-import os
 import json
+import os
 import socket
-from datetime import datetime
-import urllib.request
 import urllib.error
+import urllib.request
+from datetime import datetime
 
 
 def check_langchain():
@@ -38,7 +38,7 @@ def check_langchain():
             "headers": dict(response.headers),
             "ok": True,
         }
-    except urllib.error.HTTPError as e:
+    except urllib.error.HTTPError:
         # Se o health check falhar, tenta o endpoint principal
         try:
             req = urllib.request.Request(

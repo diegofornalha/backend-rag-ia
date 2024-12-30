@@ -1,14 +1,14 @@
 import json
-from typing import List
-from datetime import datetime
-from models.document import Document
 import os
+from datetime import datetime
+
+from models.document import Document
 
 
 def load_document_file(file_path: str) -> Document:
     """Carrega um documento individual de um arquivo JSON"""
     try:
-        with open(file_path, "r", encoding="utf-8") as file:
+        with open(file_path, encoding="utf-8") as file:
             data = json.load(file)
 
         metadata_global = {
@@ -23,7 +23,7 @@ def load_document_file(file_path: str) -> Document:
         )
         return document
     except Exception as e:
-        print(f"Erro ao carregar {file_path}: {str(e)}")
+        print(f"Erro ao carregar {file_path}: {e!s}")
         return None
 
 
@@ -39,7 +39,7 @@ def load_knowledge_base(vector_store):
                 print(f"Carregando {filename}...")
                 file_path = os.path.join(documents_dir, filename)
 
-                with open(file_path, "r", encoding="utf-8") as f:
+                with open(file_path, encoding="utf-8") as f:
                     data = json.load(f)
 
                     # Processa o formato específico do documento

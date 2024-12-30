@@ -1,10 +1,10 @@
-from fastapi import FastAPI, HTTPException
+import logging
+
+from api.routes import router as rag_router
+from dotenv import load_dotenv
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from api.routes import router as rag_router
-import logging
-import os
-from dotenv import load_dotenv
 
 # Configuração de logging
 logging.basicConfig(
@@ -60,5 +60,5 @@ async def health_check():
     try:
         return {"status": "healthy", "message": "API está funcionando normalmente"}
     except Exception as e:
-        logger.error(f"Erro no health check: {str(e)}")
+        logger.error(f"Erro no health check: {e!s}")
         return {"status": "unhealthy", "message": str(e)}

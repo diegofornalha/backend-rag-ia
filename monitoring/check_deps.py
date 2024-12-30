@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import os
 import json
-import pkg_resources
+import os
 from datetime import datetime
+
+import pkg_resources
 
 
 def check_installed_packages():

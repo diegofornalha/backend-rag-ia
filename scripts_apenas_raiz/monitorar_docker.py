@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-import subprocess
 import json
-import time
 import re
+import subprocess
+import time
+
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
-from rich.live import Live
-from datetime import datetime
 
 console = Console()
 
@@ -41,7 +40,7 @@ def get_build_status():
 
         return builders, containers, build_output
     except Exception as e:
-        console.print(f"[red]Erro ao obter status: {str(e)}[/red]")
+        console.print(f"[red]Erro ao obter status: {e!s}[/red]")
         return [], [], ""
 
 
@@ -138,7 +137,7 @@ def check_image_manifest():
             )
             return True
         return False
-    except Exception as e:
+    except Exception:
         return False
 
 

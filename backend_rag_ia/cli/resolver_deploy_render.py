@@ -1,11 +1,12 @@
 import os
-from supabase import create_client
+
+from dotenv import load_dotenv
 from rich.console import Console
+from rich.markdown import Markdown
+from rich.panel import Panel
 from rich.table import Table
 from sentence_transformers import SentenceTransformer
-from rich.panel import Panel
-from rich.markdown import Markdown
-from dotenv import load_dotenv
+from supabase import create_client
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -104,7 +105,7 @@ def resolver_problema_deploy(
         console.print("4. Verifique as variáveis de ambiente necessárias")
 
     except Exception as e:
-        console.print(f"\n❌ Erro ao buscar soluções: {str(e)}")
+        console.print(f"\n❌ Erro ao buscar soluções: {e!s}")
 
 
 def main():

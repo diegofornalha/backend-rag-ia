@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-import os
-import sys
-import json
-from datetime import datetime
-import importlib.util
 import argparse
+import importlib.util
+import json
+import os
+from datetime import datetime
 
 
 def import_check_module(name):

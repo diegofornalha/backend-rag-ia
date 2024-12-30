@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
-import click
-import httpx
+import configparser
 import json
 import os
-from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress
-import configparser
 from pathlib import Path
+
+import click
 from dotenv import load_dotenv
-from supabase import create_client, Client
+from rich.console import Console
+from rich.progress import Progress
+from rich.table import Table
+from supabase import Client, create_client
 
 console = Console()
 
@@ -111,7 +111,7 @@ def search(query, limit, no_cache):
             display_results(results)
 
         except Exception as e:
-            console.print(f"[red]Erro na busca: {str(e)}")
+            console.print(f"[red]Erro na busca: {e!s}")
 
 
 def display_results(results):

@@ -1,9 +1,6 @@
 import os
-import sys
+
 from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.markdown import Markdown
 
 console = Console()
 
@@ -39,7 +36,7 @@ export HOST=0.0.0.0
 def verificar_dockerfile():
     """Verifica se o Dockerfile está configurado corretamente."""
     try:
-        with open("Dockerfile", "r") as f:
+        with open("Dockerfile") as f:
             conteudo = f.read()
 
         problemas = []
@@ -68,7 +65,7 @@ def verificar_dockerfile():
 def verificar_requirements():
     """Verifica se requirements.txt tem todas as dependências necessárias."""
     try:
-        with open("requirements.txt", "r") as f:
+        with open("requirements.txt") as f:
             deps = f.read().splitlines()
 
         deps_necessarias = [
@@ -98,7 +95,7 @@ def verificar_requirements():
 def verificar_render_yaml():
     """Verifica se render.yaml está configurado corretamente."""
     try:
-        with open("render.yaml", "r") as f:
+        with open("render.yaml") as f:
             conteudo = f.read()
 
         checklist = [

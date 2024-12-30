@@ -8,23 +8,82 @@
   [Respostas sempre em português BR]
 
 - [Estou no ambiente Mac considerar isso]
-- [Projeto Flask, Jinja2 consulte a documentaçao para dividir em cluster e manter organizado, /Users/flow/Desktop/Desktop/backend/templates]
 - [Manter boas praticas de aplicação é principalmente server-side para nao se misturar com Client-Side]
-- [quando eu pedir para "rodar front", quero que trabalhe com a pasta API_frontend_flask]
+- [quando eu pedir para "rodar front", quero que trabalhe com a pasta API_frontend]
 - [Se preoculpe do codigo se integrar bem com o backend em suas resposabilidades devidas]
 - [Cluester frontend é a unica pasta de clusters de api que fica na pasta raiz além de clusters_API]
 - [Antes de criar qualquer arquivo novo, realizar uma busca completa no código para verificar se já não existe arquivo similar ou com mesma função em outra parte do projeto, evitando assim redundância e duplicidade]
+- [Ao remover ou substituir referências de uma tecnologia por outra, realizar pelo menos 2 verificações completas para garantir que a remoção foi bem sucedida]
+
+## 10. 🔍 Regras de Verificação Dupla
+
+1. **Remoção de Referências**
+
+   - [SEMPRE realizar no mínimo 2 verificações completas ao remover referências]
+   - [SEMPRE documentar cada verificação realizada]
+   - [SEMPRE usar diferentes métodos de busca (grep, find, etc)]
+   - [NUNCA assumir sucesso sem segunda verificação]
+
+2. **Processo de Verificação**
+
+   - Primeira Verificação:
+
+     - Busca inicial por referências
+     - Remoção das referências encontradas
+     - Documentação das alterações
+
+   - Segunda Verificação:
+     - Nova busca usando método diferente
+     - Verificação de arquivos relacionados
+     - Confirmação de que nada foi esquecido
+
+3. **Critérios de Conclusão**
+
+   - [✓] Duas verificações sem encontrar referências, OU
+   - [✓] Certeza absoluta com evidências documentadas
+   - [✓] Testes confirmando que nada quebrou
+   - [✓] Documentação das verificações realizadas
+
+4. **Documentação Necessária**
+
+   - Data e hora de cada verificação
+   - Método usado em cada verificação
+   - Arquivos verificados/alterados
+   - Resultado de cada verificação
+
+5. **Exemplo de Documentação**:
+
+   ```markdown
+   ### Remoção de Referências ao Express.js (DATA)
+
+   1. Primeira Verificação:
+
+      - Método: grep case-insensitive
+      - Arquivos encontrados: docs/RULES.md, .cursorrules
+      - Alterações: Removidas referências em ambos arquivos
+
+   2. Segunda Verificação:
+      - Método: busca em requirements.txt
+      - Método: verificação de diretórios
+      - Resultado: Nenhuma referência encontrada
+
+   ✅ Conclusão: Remoção completa confirmada
+   ```
+
+❗ NUNCA considerar concluído sem as duas verificações
+❗ SEMPRE documentar o processo de verificação
+❗ Em caso de dúvida, realizar verificação adicional
 
                                        2. Observações
 
-  () → Observações/notas adicionais
-  (consulte quando necessario o package.json)
+() → Observações/notas adicionais
+(consulte quando necessario o package.json)
 
                                          3. Proibições
 
-  X X → Expressamente proibido
-  X Proibido vue no meu frontend X
-  X Proibido conteúdo misto (server-side/Client-Side Vue.js) X
+X X → Expressamente proibido
+X Proibido vue no meu frontend X
+X Proibido conteúdo misto (server-side/Client-Side Vue.js) X
 
 ↓ Forçar ↓Regras de Execução (Forçar):
 

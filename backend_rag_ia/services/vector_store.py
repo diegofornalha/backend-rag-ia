@@ -3,10 +3,10 @@ Serviço de armazenamento e busca vetorial usando Supabase.
 """
 
 import logging
-from typing import List, Optional, Dict
+
+from models.database import Document, DocumentCreate, EmbeddingCreate
 from sentence_transformers import SentenceTransformer
 from services.supabase_client import supabase
-from models.database import Document, DocumentCreate, Embedding, EmbeddingCreate
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class VectorStore:
 
     async def add_document(
         self, content: str, metadata: dict = None
-    ) -> Optional[Document]:
+    ) -> Document | None:
         """
         Adiciona um documento ao store.
 
@@ -81,7 +81,7 @@ class VectorStore:
             logger.error(f"Erro ao adicionar documento: {e}")
             return None
 
-    async def search(self, query: str, k: int = 4) -> List[Document]:
+    async def search(self, query: str, k: int = 4) -> list[Document]:
         """
         Busca documentos similares à query.
 
@@ -141,7 +141,7 @@ class VectorStore:
             logger.error(f"Erro ao remover documento: {e}")
             return False
 
-    async def list_documents(self, skip: int = 0, limit: int = 10) -> List[Document]:
+    async def list_documents(self, skip: int = 0, limit: int = 10) -> list[Document]:
         """
         Lista documentos com paginação.
 
@@ -166,7 +166,7 @@ class VectorStore:
             logger.error(f"Erro ao listar documentos: {e}")
             return []
 
-    async def get_document(self, doc_id: str) -> Optional[Document]:
+    async def get_document(self, doc_id: str) -> Document | None:
         """
         Busca um documento pelo ID.
 
@@ -232,7 +232,7 @@ class VectorStore:
             logger.error(f"Erro ao atualizar documento: {e}")
             return False
 
-    async def get_documents_history(self, hours: int = 24) -> List[Dict]:
+    async def get_documents_history(self, hours: int = 24) -> list[dict]:
         """
         Busca o histórico de alterações nos documentos.
 
@@ -256,7 +256,7 @@ class VectorStore:
             logger.error(f"Erro ao buscar histórico: {e}")
             return []
 
-    async def get_statistics(self) -> List[Dict]:
+    async def get_statistics(self) -> list[dict]:
         """
         Busca estatísticas do sistema.
 
