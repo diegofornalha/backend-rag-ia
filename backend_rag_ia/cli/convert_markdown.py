@@ -1,85 +1,98 @@
-#!/usr/bin/env python3
+"""CLI para converter arquivos markdown."""
 
 import json
 import sys
 from pathlib import Path
 
-from dotenv import load_dotenv
 from rich.console import Console
 
-# Adiciona o diretório raiz ao PYTHONPATH
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
+from backend_rag_ia.services.md_converter import MarkdownConverter
+from backend_rag_ia.utils.logging_config import logger
 
-from services.md_converter import MarkdownConverter
-
+# Console para output
 console = Console()
-load_dotenv()
 
 
-def convert_markdown_files():
-    """Converte todos os arquivos markdown para JSON."""
+def convert_markdown(
+    input_path: Path,
+    output_path: Path,
+    source_info: dict[str, str],
+) -> bool:
+    """Converte arquivo markdown para JSON.
+
+    Args:
+        input_path: Caminho do arquivo markdown
+        output_path: Caminho para salvar JSON
+        source_info: Informações sobre a fonte
+
+    Returns:
+        True se convertido com sucesso
+    """
     try:
-        # Diretórios
-        md_dir = project_root / "regras_md"
-        json_dir = project_root / "regras_json"
+        # Lê arquivo markdown
+        with input_path.open() as f:
+            content = f.read()
 
-        # Verifica se os diretórios existem
-        if not md_dir.exists():
-            console.print(f"❌ Diretório {md_dir} não encontrado!")
-            return
-
-        # Cria diretório JSON se não existir
-        json_dir.mkdir(exist_ok=True)
-
-        # Lista todos os arquivos markdown
-        md_files = list(md_dir.glob("*.md"))
-        console.print(
-            f"\n📝 Encontrados {len(md_files)} arquivos markdown para conversão."
-        )
-
-        # Converte cada arquivo
+        # Converte para JSON
         converter = MarkdownConverter()
-        for md_file in md_files:
-            try:
-                # Nome do arquivo JSON correspondente
-                json_file = json_dir / f"{md_file.stem.lower()}.json"
+        document = converter.convert(content, source_info)
 
-                console.print(f"\n🔄 Convertendo {md_file.name}...")
+        # Salva JSON
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w") as f:
+            json.dump(document, f, indent=2, ensure_ascii=False)
 
-                # Lê o conteúdo do arquivo markdown
-                with open(md_file, encoding="utf-8") as f:
-                    markdown_content = f.read()
-
-                # Converte para o formato JSON
-                result = converter.convert_md_to_json(
-                    md_content=markdown_content,
-                    metadata={
-                        "title": md_file.stem,
-                        "tipo": "regra",
-                        "autor": "sistema",
-                        "filename": md_file.name,
-                        "categorias": ["regras"],
-                        "tags": ["documentação", "regras"],
-                        "versao": "1.0",
-                    },
-                )
-
-                # Salva o resultado
-                with open(json_file, "w", encoding="utf-8") as f:
-                    json.dump(result, f, ensure_ascii=False, indent=2)
-
-                console.print(f"✅ Arquivo {json_file.name} criado com sucesso!")
-
-            except Exception as e:
-                console.print(f"❌ Erro ao converter {md_file.name}: {e}")
-                continue
-
-        console.print("\n✨ Conversão concluída!")
+        logger.info("Convertido: %s -> %s", input_path.name, output_path.name)
+        return True
 
     except Exception as e:
-        console.print(f"❌ Erro durante a conversão: {e}")
+        logger.exception("Erro ao converter %s: %s", input_path, e)
+        return False
+
+
+def main() -> None:
+    """Função principal."""
+    # Verifica argumentos
+    if len(sys.argv) < 3:
+        logger.error("Uso: convert_markdown.py <input_dir> <output_dir>")
+        sys.exit(1)
+
+    # Obtém caminhos
+    input_dir = Path(sys.argv[1])
+    output_dir = Path(sys.argv[2])
+
+    if not input_dir.exists():
+        logger.error("Diretório de entrada não encontrado: %s", input_dir)
+        sys.exit(1)
+
+    # Processa arquivos
+    success = 0
+    errors = 0
+
+    for file in input_dir.glob("**/*.md"):
+        # Define caminho de saída
+        rel_path = file.relative_to(input_dir)
+        output_path = output_dir / rel_path.with_suffix(".json")
+
+        # Informações da fonte
+        source_info = {
+            "filename": file.name,
+            "path": str(rel_path),
+        }
+
+        # Converte arquivo
+        if convert_markdown(file, output_path, source_info):
+            success += 1
+        else:
+            errors += 1
+
+    # Exibe resultado
+    logger.info(
+        "Conversão concluída: %d sucessos, %d erros",
+        success,
+        errors,
+    )
 
 
 if __name__ == "__main__":
-    convert_markdown_files()
+    main()

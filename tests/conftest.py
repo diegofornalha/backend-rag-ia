@@ -1,6 +1,8 @@
 import os
+
 import pytest
 from dotenv import load_dotenv
+
 
 # Carrega variáveis de ambiente antes dos testes
 @pytest.fixture(scope="session", autouse=True)

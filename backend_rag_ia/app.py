@@ -1,64 +1,138 @@
-import logging
+"""API principal do backend."""
 
-from api.routes import router as rag_router
-from dotenv import load_dotenv
-from fastapi import FastAPI
+from typing import Any
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
 
-# Configuração de logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+from backend_rag_ia.constants import (
+    HTTP_BAD_REQUEST,
+    HTTP_SERVER_ERROR,
 )
+from backend_rag_ia.exceptions import (
+    BaseError,
+    DatabaseError,
+    EmbeddingError,
+)
+from backend_rag_ia.services.semantic_search import SemanticSearch
+from backend_rag_ia.utils.logging_config import logger
 
-logger = logging.getLogger(__name__)
-
-# Carrega variáveis de ambiente
-load_dotenv()
-
-# Cria a aplicação FastAPI
+# Cria app
 app = FastAPI(
-    title="backend-rag-ia",
-    description="API para busca semântica e processamento de documentos",
+    title="Backend RAG IA",
+    description="API para busca semântica em documentos",
     version="1.0.0",
 )
 
-# Configuração CORS
-origins = [
-    "http://localhost:3000",
-    "https://localhost:3000",
-    "http://localhost:10000",
-    "https://localhost:10000",
-    "http://localhost:8000",
-    "https://localhost:8000",
-    "http://backend-rag-ia:8000",
-    "https://backend-rag-ia:8000",
-]
-
+# Configura CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["*"],
     allow_headers=["*"],
-    max_age=3600,
 )
 
-# Inclui as rotas
-app.include_router(rag_router, prefix="/api/v1", tags=["rag"])
+# Serviço de busca
+search_service = SemanticSearch()
 
 
-@app.get("/")
-async def root():
-    """Redireciona para a documentação da API."""
-    return RedirectResponse(url="/docs")
+def _handle_search_error(error: Exception) -> dict[str, Any]:
+    """Trata erros da busca.
+
+    Args:
+        error: Erro ocorrido
+
+    Returns:
+        Resposta de erro formatada
+    """
+    logger.exception("Erro na busca: %s", error)
+
+    if isinstance(error, EmbeddingError):
+        return {
+            "error": "Erro ao gerar embedding",
+            "details": str(error),
+        }
+
+    if isinstance(error, DatabaseError):
+        return {
+            "error": "Erro no banco de dados",
+            "details": str(error),
+        }
+
+    if isinstance(error, BaseError):
+        return {
+            "error": error.message,
+            "details": str(error),
+        }
+
+    return {
+        "error": "Erro interno",
+        "details": str(error),
+    }
 
 
-@app.get("/api/v1/health")
-async def health_check():
-    """Verifica o status da API."""
+@app.get("/health")
+async def health_check() -> dict[str, str]:
+    """Verifica saúde da API."""
     try:
         return {"status": "healthy", "message": "API está funcionando normalmente"}
     except Exception as e:
-        logger.error(f"Erro no health check: {e!s}")
+        logger.exception("Erro no health check: %s", e)
         return {"status": "unhealthy", "message": str(e)}
+
+
+@app.get("/search")
+async def search(query: str) -> dict[str, Any]:
+    """Realiza busca semântica.
+
+    Args:
+        query: Texto para buscar
+
+    Returns:
+        Resultados da busca
+
+    Raises:
+        HTTPException: Se houver erro na busca
+    """
+    try:
+        # Valida query
+        if not query:
+            raise HTTPException(
+                status_code=HTTP_BAD_REQUEST,
+                detail="Query não pode ser vazia",
+            )
+
+        # Realiza busca
+        results = await search_service.search(query)
+
+        # Retorna resultados
+        return {
+            "query": query,
+            "results": results,
+        }
+
+    except Exception as e:
+        # Trata erro
+        error_response = _handle_search_error(e)
+        raise HTTPException(
+            status_code=HTTP_SERVER_ERROR,
+            detail=error_response,
+        ) from e
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(exc: Exception) -> dict[str, Any]:
+    """Handler global de exceções.
+
+    Args:
+        exc: Exceção ocorrida
+
+    Returns:
+        Resposta de erro formatada
+    """
+    logger.exception("Erro não tratado: %s", exc)
+    return {
+        "error": "Erro interno",
+        "details": str(exc),
+    }

@@ -1,0 +1,30 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instala dependências do sistema
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copia os arquivos necessários
+COPY scripts_apenas_raiz/testar_busca_embeddings.py .
+
+# Configura variáveis de ambiente
+ENV SUPABASE_URL="https://uaxnbpzamzxradpmccse.supabase.co"
+ENV SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVheG5icHphbXp4cmFkcG1jY3NlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMzYyNjkzOSwiZXhwIjoyMDQ5MjAyOTM5fQ.gaXXpBWN26TZ1wTcLGrEBKaKG7dsc5JNDBAIRvOhwY0"
+
+# Instala dependências Python com versões específicas
+RUN pip install --no-cache-dir \
+    sentence-transformers==2.2.2 \
+    torch==2.0.1 \
+    transformers==4.30.2 \
+    huggingface-hub==0.16.4 \
+    supabase==1.0.3 \
+    rich==13.4.2 \
+    python-dotenv==1.0.0 \
+    numpy==1.24.3
+
+# Define o comando padrão
+CMD ["python", "testar_busca_embeddings.py"] 

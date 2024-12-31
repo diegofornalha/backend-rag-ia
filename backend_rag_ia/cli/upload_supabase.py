@@ -1,269 +1,136 @@
 #!/usr/bin/env python3
 
-import hashlib
-import json
 import os
-import time
 from pathlib import Path
-from typing import Any
 
 from dotenv import load_dotenv
+from markdown_converter import MarkdownConverter
 from rich.console import Console
 from sentence_transformers import SentenceTransformer
-from supabase import Client, create_client
+from supabase import create_client
 
 load_dotenv()
 
 console = Console()
-model = SentenceTransformer("all-MiniLM-L6-v2")
+project_root = Path(__file__).parent.parent.parent
 
-
-def check_supabase_connection() -> tuple[bool, Client]:
-    """Verifica conexão com o Supabase."""
-    try:
-        supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_KEY")
-
-        if not supabase_url or not supabase_key:
-            console.print(
-                "❌ SUPABASE_URL e SUPABASE_KEY devem estar definidos no .env"
-            )
-            return False, None
-
-        console.print("\n🔌 Conectando ao Supabase...")
-        supabase: Client = create_client(supabase_url, supabase_key)
-        return True, supabase
-
-    except Exception as e:
-        console.print(f"❌ Erro ao conectar ao Supabase: {e}")
-        return False, None
-
-
-def convert_document_format(data: dict[str, Any]) -> dict[str, Any]:
-    """Converte o formato do documento para o formato esperado pela API."""
-    # Combina os metadados globais com os metadados específicos do documento
-    metadata = {**data["metadata_global"], **data["document"]["metadata"]}
-
-    # Retorna no formato esperado
-    return {"content": data["document"]["content"], "metadata": metadata}
-
-
-def create_embedding(content: str) -> list[float]:
-    """Cria embedding para o conteúdo usando o modelo."""
-    try:
-        embedding = model.encode(content)
-        return embedding.tolist()
-    except Exception as e:
-        console.print(f"❌ Erro ao criar embedding: {e}")
-        return []
-
-
-def calculate_document_hash(content: str, metadata: dict[str, Any]) -> str:
-    """Calcula o hash do documento baseado no conteúdo e metadados essenciais."""
-    # Seleciona apenas os metadados essenciais que identificam unicamente o documento
-    essential_metadata = {
-        "title": metadata.get("title", ""),
-        "fonte": metadata.get("fonte", ""),
-        "id": metadata.get("id", ""),
-        "versao": metadata.get("versao", ""),
-    }
-
-    # Cria uma string ordenada e normalizada
-    doc_str = json.dumps(
-        {
-            "content": content.strip(),  # Remove espaços extras
-            "metadata": essential_metadata,
-        },
-        sort_keys=True,
-        ensure_ascii=False,
-    )  # Preserva caracteres UTF-8
-
-    return hashlib.sha256(doc_str.encode("utf-8")).hexdigest()
-
-
-def check_document_exists(supabase: Client, doc_hash: str) -> bool:
+def find_existing_document(supabase, filename):
     """Verifica se o documento já existe no Supabase."""
     try:
         response = (
             supabase.table("documents")
             .select("id")
-            .eq("document_hash", doc_hash)
+            .eq("filename", filename)
             .execute()
         )
-        return len(response.data) > 0
+        return response.data[0] if response.data else None
     except Exception as e:
         console.print(f"❌ Erro ao verificar documento: {e}")
-        return False
+        return None
 
-
-def upload_document(supabase: Client, file_path: str) -> tuple[bool, str]:
-    """Faz upload de um documento para o Supabase. Retorna (sucesso, status)."""
+def handle_existing_document(existing_doc, content, metadata, supabase, model):
+    """Atualiza um documento existente."""
     try:
-        # Carrega o documento
-        with open(file_path) as f:
-            data = json.load(f)
+        doc_id = existing_doc["id"]
+        document = {"content": content, "metadata": metadata}
+        # Atualiza documento
+        supabase.table("documents").update(document).eq("id", doc_id).execute()
+        # Atualiza embedding
+        embedding = model.encode(content).tolist()
+        supabase.table("embeddings").update({"embedding": embedding}).eq("document_id", doc_id).execute()
+        console.print("✅ Documento atualizado com sucesso!")
+    except Exception as e:
+        console.print(f"❌ Erro ao atualizar documento: {e}")
 
-        # Converte para o formato esperado
-        document = convert_document_format(data)
-
-        # Calcula o hash do documento
-        doc_hash = calculate_document_hash(document["content"], document["metadata"])
-
-        # Verifica se o documento já existe
-        if check_document_exists(supabase, doc_hash):
-            console.print(f"⏭️ Documento {file_path} já existe, pulando...")
-            return True, "pulado"
-
-        # Adiciona o hash ao documento
-        document["document_hash"] = doc_hash
-
-        # Envia para o Supabase
-        console.print(f"📤 Enviando {file_path}...")
+def create_new_document(content, metadata, supabase, model):
+    """Cria um novo documento."""
+    try:
+        # Cria documento
+        document = {"content": content, "metadata": metadata}
         result = supabase.table("documents").insert(document).execute()
-
         if not result.data:
-            console.print(f"❌ Erro ao enviar {file_path}")
-            if hasattr(result, "error"):
-                console.print(f"📝 Erro: {result.error}")
-            return False, "erro"
-
-        # Cria e envia o embedding
-        doc_id = result.data[0]["id"]
-        content = document["content"]
-
-        console.print("🧠 Gerando embedding...")
-        embedding = create_embedding(content)
-        if not embedding:
-            return False, "erro"
-
-        # Insere embedding
-        embedding_data = {"document_id": doc_id, "embedding": embedding}
-
-        embedding_result = supabase.table("embeddings").insert(embedding_data).execute()
-
-        if embedding_result.data:
-            # Vincula o embedding_id ao documento
-            embedding_id = embedding_result.data[0]["id"]
-            update_result = (
-                supabase.table("documents")
-                .update({"embedding_id": embedding_id})
-                .eq("id", doc_id)
-                .execute()
-            )
-
-            if update_result.data:
-                console.print(f"✅ Documento {file_path} enviado com sucesso!")
-                return True, "sucesso"
-            console.print("⚠️ Documento enviado mas falha ao vincular embedding_id")
-            return True, "sucesso_parcial"
-
-        console.print(f"❌ Erro ao criar embedding para {file_path}")
-        if hasattr(embedding_result, "error"):
-            console.print(f"📝 Erro: {embedding_result.error}")
-        return False, "erro"
-
-    except Exception as e:
-        console.print(f"❌ Erro ao processar {file_path}: {e}")
-        return False, "erro"
-
-
-def remove_duplicates(supabase: Client) -> None:
-    """Remove documentos duplicados do Supabase baseado no título."""
-    try:
-        console.print("\n🧹 Removendo documentos duplicados...")
-
-        # Busca todos os documentos
-        response = supabase.table("documents").select("id,metadata->title").execute()
-        if not response.data:
+            console.print("❌ Erro ao criar documento")
             return
-
-        # Agrupa por título
-        docs_by_title = {}
-        for doc in response.data:
-            title = doc.get("title", "")
-            if title in docs_by_title:
-                docs_by_title[title].append(doc["id"])
-            else:
-                docs_by_title[title] = [doc["id"]]
-
-        # Remove duplicatas (mantém apenas o mais recente)
-        for title, ids in docs_by_title.items():
-            if len(ids) > 1:
-                # Ordena IDs em ordem crescente e remove todos exceto o último
-                ids.sort()
-                ids_to_delete = ids[:-1]  # Mantém o último (mais recente)
-                console.print(
-                    f"  Removendo {len(ids_to_delete)} duplicatas de '{title}'"
-                )
-
-                # Remove documentos duplicados
-                supabase.table("documents").delete().in_("id", ids_to_delete).execute()
-
-        console.print("✅ Limpeza concluída!")
-
+        # Cria embedding
+        doc_id = result.data[0]["id"]
+        embedding = model.encode(content).tolist()
+        embedding_data = {"document_id": doc_id, "embedding": embedding}
+        supabase.table("embeddings").insert(embedding_data).execute()
+        console.print("✅ Documento criado com sucesso!")
     except Exception as e:
-        console.print(f"❌ Erro ao remover duplicatas: {e}")
+        console.print(f"❌ Erro ao criar documento: {e}")
 
+def init_services():
+    """Inicializa serviços necessários."""
+    console.print("🔌 Conectando ao Supabase...")
+    supabase = create_client(
+        os.getenv("SUPABASE_URL"),
+        os.getenv("SUPABASE_KEY")
+    )
+    console.print("🧠 Carregando modelo de embeddings...")
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    converter = MarkdownConverter()
+    return supabase, model, converter
+
+def setup_directories():
+    """Configura diretórios de trabalho."""
+    md_dir = project_root / "regras_md"
+    json_dir = project_root / "regras_json"
+    if not md_dir.exists():
+        console.print(f"❌ Diretório {md_dir} não encontrado!")
+        return None, None
+    json_dir.mkdir(exist_ok=True)
+    return md_dir, json_dir
+
+def process_single_file(md_file, converter, supabase, model):
+    """Processa um único arquivo markdown."""
+    console.print(f"\n🔄 Processando {md_file.name}...")
+    # Conversão MD → JSON
+    with open(md_file, encoding="utf-8") as f:
+        markdown_content = f.read()
+    metadata = {
+        "title": md_file.stem,
+        "tipo": "regra",
+        "autor": "sistema",
+        "filename": md_file.name,
+        "categorias": ["regras"],
+        "tags": ["documentação", "regras"],
+        "versao": "1.0",
+    }
+    result = converter.convert_md_to_json(
+        md_content=markdown_content,
+        metadata=metadata,
+    )
+    # Verifica documento existente
+    content = result["document"]["content"]
+    existing_doc = find_existing_document(supabase, md_file.name)
+    if existing_doc:
+        handle_existing_document(existing_doc, content, metadata, supabase, model)
+    else:
+        create_new_document(content, metadata, supabase, model)
 
 def main():
     """Função principal."""
-    # Verifica conexão com Supabase
-    success, supabase = check_supabase_connection()
-    if not success:
-        return
-
-    console.print("✅ Conectado ao Supabase!")
-
-    # Remove documentos duplicados
-    remove_duplicates(supabase)
-
-    # Diretório com os documentos JSON
-    json_dir = Path(__file__).parent.parent / "regras_json"
-    if not json_dir.exists():
-        console.print(f"❌ Diretório {json_dir} não encontrado!")
-        return
-
-    console.print("\nIniciando upload dos documentos para o Supabase...")
-    console.print(f"Diretório: {json_dir.absolute()}\n")
-
-    # Lista todos os arquivos JSON
-    json_files = list(json_dir.glob("*.json"))
-    console.print(
-        f"\nEncontrados {len(json_files)} documentos para upload no Supabase."
-    )
-
-    # Processa cada documento
-    start_time = time.time()
-    sucessos = 0
-    falhas = 0
-    pulados = 0
-    sucessos_parciais = 0
-
-    for file_path in json_files:
-        success, status = upload_document(supabase, str(file_path))
-        if status == "sucesso":
-            sucessos += 1
-        elif status == "pulado":
-            pulados += 1
-        elif status == "sucesso_parcial":
-            sucessos_parciais += 1
-        else:
-            falhas += 1
-        time.sleep(1)  # Espera 1 segundo entre uploads
-        console.print(f"  Processando {file_path.name}")
-
-    # Estatísticas finais
-    tempo_total = time.time() - start_time
-    console.print(f"\nUpload para Supabase concluído em {tempo_total:.2f} segundos!")
-    if sucessos > 0:
-        console.print(f"✅ {sucessos} documentos enviados com sucesso")
-    if sucessos_parciais > 0:
-        console.print(f"⚠️ {sucessos_parciais} documentos enviados com sucesso parcial")
-    if pulados > 0:
-        console.print(f"⏭️ {pulados} documentos já existiam")
-    if falhas > 0:
-        console.print(f"❌ {falhas} documentos falharam")
-
+    try:
+        # Inicializa serviços
+        supabase, model, converter = init_services()
+        # Configura diretórios
+        md_dir, json_dir = setup_directories()
+        if not md_dir or not json_dir:
+            return
+        # Lista arquivos markdown
+        md_files = list(md_dir.glob("*.md"))
+        console.print(f"\n📝 Encontrados {len(md_files)} arquivos markdown.")
+        # Processa cada arquivo
+        for md_file in md_files:
+            try:
+                process_single_file(md_file, converter, supabase, model)
+            except Exception as e:
+                console.print(f"❌ Erro ao processar {md_file.name}: {e}")
+                continue
+        console.print("\n✨ Processamento concluído!")
+    except Exception as e:
+        console.print(f"❌ Erro durante o processamento: {e}")
 
 if __name__ == "__main__":
     main()

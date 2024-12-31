@@ -28,8 +28,8 @@ def get_build_status():
         )
         try:
             build_output = subprocess.check_output(build_cmd, shell=True).decode()
-        except:
-            build_output = ""
+        except subprocess.SubprocessError as e:
+            build_output = f"Erro ao executar comando: {e}"
 
         builders = [
             json.loads(line) for line in builder_output.splitlines() if line.strip()
@@ -150,7 +150,7 @@ def main():
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
-        task = progress.add_task("[cyan]Monitorando build (26/27)...", total=None)
+        progress.add_task("[cyan]Monitorando build (26/27)...", total=None)
 
         while True:
             console.clear()

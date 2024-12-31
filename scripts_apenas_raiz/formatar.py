@@ -1,93 +1,63 @@
 #!/usr/bin/env python3
-import glob
-import os
+"""Script para formatar código Python usando Ruff."""
+
+from __future__ import annotations
+
 import subprocess
+from pathlib import Path
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.prompt import Confirm
 
 console = Console()
 
 
-def check_directory_references():
-    """Verifica referências a diretórios em todos os arquivos Python."""
-    try:
-        console.print(
-            Panel.fit("🔍 Verificando referências a diretórios", style="bold yellow")
-        )
-
-        # Mapeamento de diretórios antigos para novos
-        dir_mapping = {
-            "backend-rag-ia": "backend_rag_ia",
-            "scripts": "scripts_apenas_raiz",
-            "tests": "tests_apenas_raiz",
-        }
-
-        # Procura em todos os arquivos Python
-        python_files = glob.glob("**/*.py", recursive=True)
-
-        issues_found = False
-        for file_path in python_files:
-            with open(file_path) as f:
-                content = f.read()
-
-            for old_dir, new_dir in dir_mapping.items():
-                if old_dir in content:
-                    console.print(
-                        f"[red]⚠️ Arquivo {file_path} contém referência ao diretório antigo '{old_dir}'[/red]"
-                    )
-                    console.print(
-                        f"[yellow]   Sugestão: Atualizar para '{new_dir}'[/yellow]"
-                    )
-                    issues_found = True
-
-        if not issues_found:
-            console.print(
-                "[green]✅ Nenhuma referência desatualizada encontrada![/green]"
-            )
-
-        return not issues_found
-
-    except Exception as e:
-        console.print(f"[red]❌ Erro ao verificar referências: {e!s}[/red]")
-        return False
-
-
-def run_black(directory: str) -> bool:
-    """Executa o Black em um diretório.
+def run_ruff(directory: str, fix: bool = True) -> tuple[bool, list[str]]:
+    """Executa o Ruff em um diretório.
 
     Args:
-        directory: Caminho do diretório para formatar.
+        directory: Caminho do diretório para formatar
+        fix: Se True, aplica correções automáticas
 
     Returns:
-        bool: True se a formatação foi bem sucedida, False caso contrário.
+        Tupla com (passou, lista_de_erros)
     """
     try:
-        result = subprocess.run(
-            ["black", directory], capture_output=True, text=True, check=False
-        )
-        return result.returncode == 0
-    except Exception as e:
-        console.print(f"[red]❌ Erro ao executar Black: {e!s}[/red]")
-        return False
+        cmd = ["ruff", "check", directory]
+        if fix:
+            cmd.append("--fix")
+
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+        if result.returncode == 0:
+            console.print(f"[green]✅ {directory} passou na verificação do Ruff![/green]")
+            return True, []
+
+        errors = result.stdout.strip().split("\n")
+        console.print(f"[yellow]⚠️ Ruff encontrou {len(errors)} problemas[/yellow]")
+        return False, errors
+
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]❌ Erro ao executar Ruff: {e!s}[/red]")
+        return False, [str(e)]
 
 
-def run_ruff(directory: str) -> tuple[bool, list[str]]:
-    """Executa o Ruff em um diretório e retorna os problemas encontrados.
+def run_mypy(directory: str) -> tuple[bool, list[str]]:
+    """Executa o MyPy para verificação de tipos.
 
     Args:
-        directory: O diretório a ser verificado.
+        directory: Caminho do diretório para verificar
 
     Returns:
-        Uma tupla contendo:
-        - bool: True se passou na verificação, False caso contrário
-        - list[str]: Lista de erros encontrados
+        Tupla com (passou, lista_de_erros)
     """
     try:
         result = subprocess.run(
             [
-                "ruff",
-                "check",
+                "mypy",
+                "--ignore-missing-imports",
+                "--check-untyped-defs",
                 directory,
             ],
             capture_output=True,
@@ -96,94 +66,116 @@ def run_ruff(directory: str) -> tuple[bool, list[str]]:
         )
 
         if result.returncode == 0:
-            console.print(f"[green]✅ {directory} passou na verificação do Ruff![/green]")
+            console.print(f"[green]✅ {directory} passou na verificação do MyPy![/green]")
             return True, []
 
-        errors = result.stdout.splitlines()
+        errors = result.stdout.strip().split("\n")
+        console.print(f"[yellow]⚠️ MyPy encontrou {len(errors)} problemas[/yellow]")
         return False, errors
 
-    except Exception as e:
-        console.print(f"[red]❌ Erro ao executar Ruff: {e!s}[/red]")
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]❌ Erro ao executar MyPy: {e!s}[/red]")
         return False, [str(e)]
 
 
-def format_and_check_directory(directory: str, max_attempts: int = 3) -> bool:
-    """Formata e verifica um diretório, tentando corrigir problemas automaticamente.
+def format_directory(directory: str, check_types: bool = True, max_attempts: int = 3) -> bool:
+    """Formata e verifica um diretório usando Ruff e MyPy.
 
     Args:
-        directory: Caminho do diretório para processar.
-        max_attempts: Número máximo de tentativas de correção.
+        directory: Caminho do diretório para formatar
+        check_types: Se True, executa verificação de tipos com MyPy
+        max_attempts: Número máximo de tentativas de formatação
 
     Returns:
-        bool: True se todas as verificações passaram, False caso contrário.
+        True se todas as verificações passaram
     """
-    if not os.path.exists(directory):
-        console.print(f"[yellow]⚠️ Diretório {directory} não encontrado[/yellow]")
-        return False
+    current_errors: list[str] = []
 
-    attempt = 1
-    last_errors = []
-    
-    while attempt <= max_attempts:
-        console.print(f"\n[cyan]Tentativa {attempt} de {max_attempts} para {directory}...[/cyan]")
-        
-        # Executa Black
-        if not run_black(directory):
-            console.print(f"[red]❌ Black falhou na tentativa {attempt}[/red]")
-            return False
-        
-        # Executa Ruff
-        passed, current_errors = run_ruff(directory)
-        if passed:
-            console.print(f"[green]✅ Todas as verificações passaram para {directory}![/green]")
-            return True
-        
-        # Verifica se os erros são os mesmos da última tentativa
-        if set(current_errors) == set(last_errors):
-            console.print("[yellow]⚠️ Mesmos erros persistem, interrompendo tentativas[/yellow]")
-            break
-        
-        last_errors = current_errors
-        attempt += 1
-    
-    console.print(f"[red]❌ Não foi possível corrigir todos os problemas em {directory} após {max_attempts} tentativas[/red]")
+    for attempt in range(1, max_attempts + 1):
+        if attempt > 1:
+            console.print(f"\n[yellow]Tentativa {attempt} de {max_attempts}...[/yellow]")
+
+        # Executa Ruff com correções
+        passed_ruff, ruff_errors = run_ruff(directory, fix=True)
+        current_errors = ruff_errors
+
+        if passed_ruff:
+            # Se Ruff passou, verifica tipos com MyPy
+            if check_types:
+                passed_mypy, mypy_errors = run_mypy(directory)
+                if passed_mypy:
+                    return True
+                current_errors.extend(mypy_errors)
+            else:
+                return True
+
+    # Se chegou aqui, todas as tentativas falharam
+    console.print("\n[red]❌ Erros encontrados após todas as tentativas:[/red]")
+    for error in current_errors:
+        console.print(f"[red]{error}[/red]")
     return False
 
 
-def format_python_files():
-    """Formata todos os arquivos Python do projeto usando Black e verifica com Ruff."""
-    try:
-        # Primeiro verifica referências
-        check_directory_references()
+def get_python_files(directory: str) -> list[Path]:
+    """Retorna lista de arquivos Python em um diretório.
 
-        # Lista de diretórios para formatar
-        directories = ["backend_rag_ia", "monitoring", "scripts_apenas_raiz"]
+    Args:
+        directory: Caminho do diretório para buscar
 
-        # Formatação e verificação
-        console.print(
-            Panel.fit("🎨 Formatando e verificando código Python", style="bold blue")
-        )
+    Returns:
+        Lista de caminhos de arquivos Python
+    """
+    return list(Path(directory).rglob("*.py"))
 
-        all_passed = True
-        for directory in directories:
-            if not format_and_check_directory(directory):
-                all_passed = False
 
-        if all_passed:
-            console.print(
-                "\n[bold green]✨ Formatação e verificação concluídas com sucesso![/bold green]"
-            )
-        else:
-            console.print(
-                "\n[bold yellow]⚠️ Formatação concluída, mas alguns problemas persistem[/bold yellow]"
-            )
+def main() -> None:
+    """Função principal do script."""
+    # Configuração inicial
+    directory = "."
+    check_types = Confirm.ask(
+        "Quer verificar a cobertura de tipos com MyPy?",
+        default=True,
+    )
 
-    except Exception as e:
-        console.print(f"[red]❌ Erro durante o processo: {e!s}[/red]")
-        return False
+    # Conta arquivos Python
+    python_files = get_python_files(directory)
+    file_count = len(python_files)
 
-    return True
+    if not file_count:
+        console.print("[yellow]⚠️ Nenhum arquivo Python encontrado![/yellow]")
+        return
+
+    # Mostra resumo
+    title = "🔍 Formatação com Ruff"
+    if check_types:
+        title += " e MyPy"
+
+    content = [
+        f"1. Diretório: {directory}",
+        f"2. Arquivos Python encontrados: {file_count}",
+        "3. Quer verificar a cobertura de tipos com MyPy?\n",
+        "   ✓ Sim" if check_types else "   ✗ Não",
+    ]
+
+    console.print(Panel(
+        "\n".join(content),
+        title=title,
+        border_style="blue",
+    ))
+
+    if not Confirm.ask("Continuar?", default=True):
+        return
+
+    # Executa formatação
+    with console.status("[bold blue]Formatando código..."):
+        success = format_directory(directory, check_types)
+
+    if success:
+        console.print("[green]✅ Todas as verificações passaram![/green]")
+    else:
+        console.print("[red]❌ Algumas verificações falharam.[/red]")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
-    format_python_files()
+    main()
