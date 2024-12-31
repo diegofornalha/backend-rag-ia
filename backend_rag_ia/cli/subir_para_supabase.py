@@ -2,33 +2,32 @@
 
 import os
 import hashlib
-import json
 import time
 from typing import Dict, Any
-import requests
 from pathlib import Path
+from dotenv import load_dotenv
+from supabase import create_client, Client
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
-# Configuração da API
-API_BASE_URL = "https://api.coflow.com.br/api/v1"
-HEADERS = {
-    "Content-Type": "application/json",
-    "Accept": "application/json"
-}
+# Carrega variáveis de ambiente
+load_dotenv()
+console = Console()
 
 def calculate_hash(content: str) -> str:
     """Calcula o hash SHA-256 do conteúdo."""
     return hashlib.sha256(content.encode()).hexdigest()
 
-def check_document_exists(content_hash: str) -> bool:
-    """Verifica se o documento já existe no Supabase usando a API."""
+def check_document_exists(supabase: Client, content_hash: str) -> bool:
+    """Verifica se o documento já existe no Supabase."""
     try:
-        response = requests.get(
-            f"{API_BASE_URL}/documents/check/{content_hash}",
-            headers=HEADERS
-        )
-        return response.status_code == 200 and response.json().get("exists", False)
+        response = supabase.table("01_base_conhecimento_regras_geral") \
+            .select("id") \
+            .eq("content_hash", content_hash) \
+            .execute()
+        return len(response.data) > 0
     except Exception as e:
-        print(f"❌ Erro ao verificar documento: {e}")
+        console.print(f"❌ Erro ao verificar documento: {e}")
         return False
 
 def process_markdown(file_path: str, base_dir: str) -> Dict[str, Any]:
@@ -36,6 +35,10 @@ def process_markdown(file_path: str, base_dir: str) -> Dict[str, Any]:
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
+
+        if not content.strip():
+            console.print(f"⚠️ Arquivo vazio: {file_path}")
+            return None
 
         # Calcula o caminho relativo corretamente
         abs_file_path = Path(file_path).resolve()
@@ -52,98 +55,110 @@ def process_markdown(file_path: str, base_dir: str) -> Dict[str, Any]:
             "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")
         }
 
+        # Calcula o hash do conteúdo
+        content_hash = calculate_hash(content)
+
         return {
-            "content": content,
+            "titulo": metadata["filename"],
+            "conteudo": content,
             "metadata": metadata,
-            "content_hash": calculate_hash(content)
+            "content_hash": content_hash
         }
     except Exception as e:
-        print(f"❌ Erro ao processar {file_path}: {e}")
+        console.print(f"❌ Erro ao processar {file_path}: {e}")
         return None
 
-def upload_document(document: Dict[str, Any]) -> bool:
-    """Faz upload do documento para o Supabase via API."""
+def upload_document(supabase: Client, document: Dict[str, Any]) -> bool:
+    """Faz upload do documento para o Supabase."""
     try:
-        if check_document_exists(document["content_hash"]):
-            print(f"📝 Documento já existe (hash: {document['content_hash']})")
+        if check_document_exists(supabase, document["content_hash"]):
+            console.print(f"📝 Documento já existe (hash: {document['content_hash']})")
             return True
 
-        payload = {
-            "titulo": document["metadata"]["filename"],
-            "conteudo": document["content"],
-            "metadata": document["metadata"],
-            "content_hash": document["content_hash"]
-        }
+        # Insere o documento
+        response = supabase.table("01_base_conhecimento_regras_geral").insert({
+            "titulo": document["titulo"],
+            "conteudo": document["conteudo"].encode('utf-8').decode('utf-8'),  # Garante UTF-8 válido
+            "metadata": document["metadata"]
+            # content_hash é gerado automaticamente pelo trigger
+        }).execute()
 
-        response = requests.post(
-            f"{API_BASE_URL}/documents",
-            headers=HEADERS,
-            json=payload
-        )
-
-        if response.status_code in [200, 201]:
-            print(f"✅ Documento enviado com sucesso!")
+        if response.data:
+            console.print(f"✅ Documento enviado com sucesso!")
             return True
 
-        print(f"❌ Erro ao enviar documento: {response.status_code}")
-        print(f"📝 Resposta: {response.text}")
+        console.print(f"❌ Erro ao enviar documento")
+        console.print(f"📝 Resposta: {response}")
         return False
 
     except Exception as e:
-        print(f"❌ Erro no upload: {e}")
+        console.print(f"❌ Erro no upload: {e}")
         return False
 
-def upload_directory(directory: str) -> tuple[int, int]:
+def upload_directory(supabase: Client, directory: str) -> tuple[int, int]:
     """Faz upload de todos os arquivos markdown de um diretório."""
     sucessos = 0
     falhas = 0
     base_dir = os.path.dirname(os.path.dirname(directory))
 
-    for root, _, files in os.walk(directory):
-        for file in files:
-            if file.endswith('.md'):
-                file_path = os.path.join(root, file)
-                print(f"\n📤 Processando {file_path}...")
-                
-                document = process_markdown(file_path, base_dir)
-                if document and upload_document(document):
-                    sucessos += 1
-                else:
-                    falhas += 1
-                
-                time.sleep(1)  # Evita sobrecarga da API
+    # Lista todos os arquivos .md recursivamente
+    md_files = list(Path(directory).rglob("*.md"))
+    total_files = len(md_files)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console
+    ) as progress:
+        task = progress.add_task("Processando arquivos...", total=total_files)
+
+        for file_path in md_files:
+            progress.update(task, description=f"📤 Processando {file_path.name}...")
+            
+            document = process_markdown(str(file_path), base_dir)
+            if document and upload_document(supabase, document):
+                sucessos += 1
+            else:
+                falhas += 1
+            
+            progress.advance(task)
+            time.sleep(0.5)  # Pequeno delay para evitar sobrecarga
 
     return sucessos, falhas
 
 def main():
     """Função principal."""
-    print("🚀 Iniciando upload para Supabase via API Render...")
+    console.print("\n🚀 Iniciando upload de documentos para o Supabase...")
 
-    # Verifica se a API está online
+    # Inicializa cliente Supabase
     try:
-        response = requests.get(f"{API_BASE_URL}/health")
-        if response.status_code != 200:
-            print("❌ API offline!")
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_KEY")
+        
+        if not url or not key:
+            console.print("❌ SUPABASE_URL e SUPABASE_KEY devem estar definidos no .env")
             return
-        print("✅ API online!")
+            
+        supabase = create_client(url, key)
+        console.print("✅ Conectado ao Supabase!")
     except Exception as e:
-        print(f"❌ Erro ao verificar API: {e}")
+        console.print(f"❌ Erro ao conectar ao Supabase: {e}")
         return
 
     # Diretório com os arquivos markdown
     directory = os.path.join(os.path.dirname(os.path.dirname(__file__)), "regras_md")
     
     if not os.path.exists(directory):
-        print(f"❌ Diretório {directory} não encontrado!")
+        console.print(f"❌ Diretório {directory} não encontrado!")
         return
 
-    print(f"\n📁 Processando diretório: {directory}")
-    sucessos, falhas = upload_directory(directory)
+    console.print(f"\n📁 Processando diretório: {directory}")
+    sucessos, falhas = upload_directory(supabase, directory)
 
-    print("\n✨ Processo finalizado!")
-    print(f"✅ {sucessos} documentos enviados com sucesso")
+    console.print("\n✨ Processo finalizado!")
+    console.print(f"✅ {sucessos} documentos enviados com sucesso")
     if falhas > 0:
-        print(f"❌ {falhas} documentos falharam")
+        console.print(f"❌ {falhas} documentos falharam")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,57 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+  RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Verificar Docker
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Build e teste da imagem
+        run: |
+          docker build -t app:test .
+          docker run --rm app:test echo "Teste de build OK"
+
+      - name: Deploy to Render
+        id: deploy
+        run: |
+          DEPLOY_ID=$(curl -X POST \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
+            -H "accept: application/json" \
+            -H "authorization: Bearer $RENDER_API_KEY" | jq -r '.id')
+          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+
+      - name: Verificar status do deploy
+        run: |
+          echo "Verificando status do deploy..."
+          for i in {1..30}; do
+            STATUS=$(curl -H "authorization: Bearer $RENDER_API_KEY" \
+              "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/${{ steps.deploy.outputs.deploy_id }}" \
+              | jq -r '.status')
+            
+            if [ "$STATUS" = "live" ]; then
+              echo "Deploy concluído com sucesso!"
+              exit 0
+            elif [ "$STATUS" = "failed" ]; then
+              echo "Deploy falhou!"
+              exit 1
+            fi
+            
+            echo "Deploy em andamento... ($STATUS)"
+            sleep 10
+          done
+          echo "Timeout ao aguardar deploy"
+          exit 1
