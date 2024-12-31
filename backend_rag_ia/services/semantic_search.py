@@ -17,7 +17,7 @@ from backend_rag_ia.exceptions import (
 from backend_rag_ia.utils.logging_config import logger
 
 
-class SemanticSearch:
+class SemanticSearchManager:
     """Serviço de busca semântica."""
 
     def __init__(self) -> None:

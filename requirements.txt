@@ -9,29 +9,29 @@
 # ===========================================
 
 # API Framework
-fastapi>=0.109.0
-uvicorn>=0.27.0
-python-dotenv>=1.0.0
+fastapi==0.104.1
+uvicorn==0.24.0
+python-dotenv==1.0.0
 gunicorn>=21.2.0
 
 # Machine Learning e IA
 langchain>=0.1.5
-numpy>=1.24.0
+numpy==1.24.3
 sentence-transformers==2.2.2
-huggingface-hub==0.17.3
-torch==2.2.0
-transformers==4.35.0
+huggingface-hub==0.16.4
+torch==2.0.1
+transformers==4.30.2
 
 # Banco de Dados
-supabase>=2.3.4
+supabase==1.0.3
 psycopg2-binary>=2.9.9
 pgvector>=0.2.4  # Para busca vetorial no Postgres
 
 # Utilitários
 pydantic>=2.5.3
-pydantic-settings>=2.1.0
+pydantic-settings==2.1.0
 python-multipart>=0.0.9
-httpx>=0.26.0
+httpx>=0.23.0,<0.24.0
 
 # Cache e Performance
 cachetools>=5.3.2
@@ -42,7 +42,7 @@ pytest-asyncio>=0.23.5
 
 # CLI
 click>=8.1.7
-rich==13.7.0
+rich==13.4.2
 
 # Segurança (Mantenha sempre atualizado)
 cryptography>=42.0.0  # Crítico para segurança

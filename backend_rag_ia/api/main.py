@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from .routes import search, health
+from .routes import search
+from .health import router as health_router
 from .middleware import logging_middleware, error_handler, environment_middleware
 from ..config.settings import get_settings
 
@@ -35,7 +36,7 @@ app.add_middleware(
 
 # Incluir rotas
 app.include_router(search.router, prefix="/api/v1", tags=["search"])
-app.include_router(health.router, prefix="/api/v1", tags=["health"])
+app.include_router(health_router, prefix="/api/v1", tags=["health"])
 
 # Rota raiz
 @app.get("/")
