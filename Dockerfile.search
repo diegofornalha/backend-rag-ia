@@ -2,6 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
+# Argumentos de build que podem ser sobrescritos
+ARG SUPABASE_URL
+ARG SUPABASE_KEY
+ARG ENVIRONMENT=production
+
 # Instala dependências do sistema
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -12,8 +17,11 @@ RUN apt-get update && \
 COPY scripts_apenas_raiz/testar_busca_embeddings.py .
 
 # Configura variáveis de ambiente
-ENV SUPABASE_URL="https://uaxnbpzamzxradpmccse.supabase.co"
-ENV SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVheG5icHphbXp4cmFkcG1jY3NlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMzYyNjkzOSwiZXhwIjoyMDQ5MjAyOTM5fQ.gaXXpBWN26TZ1wTcLGrEBKaKG7dsc5JNDBAIRvOhwY0"
+ENV SUPABASE_URL=${SUPABASE_URL} \
+    SUPABASE_KEY=${SUPABASE_KEY} \
+    ENVIRONMENT=${ENVIRONMENT} \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
 # Instala dependências Python com versões específicas
 RUN pip install --no-cache-dir \

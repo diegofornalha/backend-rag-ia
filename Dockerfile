@@ -1,45 +1,42 @@
+# Imagem base Python
 FROM python:3.11-slim
 
+# Variáveis de ambiente
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    POETRY_VERSION=1.6.1 \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_CREATE=false \
+    PATH="$PATH:/root/.local/bin" \
+    PORT=10000 \
+    OPERATION_MODE=render \
+    IS_RENDER=true
+
+# Diretório de trabalho
 WORKDIR /app
 
 # Instala dependências do sistema
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
-    software-properties-common \
-    git \
-    libpq-dev \
-    python3-dev \
-    gcc \
-    g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia os arquivos do projeto
-COPY requirements.txt .
-COPY main.py .
-COPY backend_rag_ia ./backend_rag_ia
+# Instala poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
-# Configura ambiente virtual e instala dependências Python
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Copia arquivos de dependências
+COPY pyproject.toml poetry.lock ./
 
-# Atualiza pip e instala ferramentas de build
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Instala dependências
+RUN poetry install --no-dev --no-root
 
-# Instala pgvector primeiro para garantir suas dependências
-RUN pip install --no-cache-dir pgvector==0.2.4
-
-# Instala as demais dependências
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Define variáveis de ambiente
-ENV PYTHONPATH=/app:/app/backend_rag_ia
-ENV PYTHON_VERSION=3.11
-ENV HOST=0.0.0.0
-ENV PORT=10000
+# Copia o código da aplicação
+COPY backend_rag_ia backend_rag_ia/
 
 # Expõe a porta
-EXPOSE 10000
+EXPOSE $PORT
 
-# Comando para executar a aplicação
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10000"] 
+# Comando para iniciar a aplicação
+CMD uvicorn backend_rag_ia.api.main:app --host 0.0.0.0 --port $PORT 

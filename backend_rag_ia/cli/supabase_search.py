@@ -92,14 +92,42 @@ def search(query, limit, no_cache):
         try:
             supabase = get_supabase_client()
 
-            # Realiza a busca no Supabase
-            response = supabase.rpc(
-                "search_documents",
-                {
-                    "query_text": query,
-                    "match_count": limit or int(config["DEFAULT"]["max_results"]),
-                },
-            ).execute()
+            # Tenta busca textual
+            response = (
+                supabase.table("documents")
+                .select("*")
+                .textSearch("content", query)
+                .limit(limit or int(config["DEFAULT"]["max_results"]))
+                .execute()
+            )
+
+            # Se não encontrar nada, tenta busca simples
+            if not response.data:
+                response = (
+                    supabase.table("documents")
+                    .select("*")
+                    .ilike("content", f"%{query}%")
+                    .limit(limit or int(config["DEFAULT"]["max_results"]))
+                    .execute()
+                )
+
+            # Se ainda não encontrar, tenta nos metadados
+            if not response.data:
+                response = (
+                    supabase.table("documents")
+                    .select("*")
+                    .ilike("metadata->>title", f"%{query}%")
+                    .execute()
+                )
+
+            # Se ainda não encontrar, tenta nas tags
+            if not response.data:
+                response = (
+                    supabase.table("documents")
+                    .select("*")
+                    .ilike("metadata->>tags", f"%{query}%")
+                    .execute()
+                )
 
             progress.update(task, completed=100)
 
@@ -117,15 +145,19 @@ def search(query, limit, no_cache):
 def display_results(results):
     """Exibe resultados formatados."""
     table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("Score", style="cyan", justify="right")
+    table.add_column("ID", style="cyan", justify="right")
     table.add_column("Título", style="green")
     table.add_column("Conteúdo", style="white", width=60)
 
+    if not results:
+        console.print("\n[yellow]Nenhum resultado encontrado[/yellow]")
+        return
+
     for result in results:
-        score = f"{result.get('similarity', 0):.2f}"
+        doc_id = str(result.get("id", ""))
         title = result.get("metadata", {}).get("title", "Sem título")
         content = result.get("content", "")[:100] + "..."
-        table.add_row(score, title, content)
+        table.add_row(doc_id, title, content)
 
     console.print(table)
 

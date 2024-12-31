@@ -1,0 +1,18 @@
+{
+  "sample_documents": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "titulo": "Exemplo de Documento",
+      "conteudo": "Este é um documento de exemplo para testes",
+      "metadata": {
+        "public": true
+      }
+    }
+  ],
+  "sample_embeddings": [
+    {
+      "documento_id": "550e8400-e29b-41d4-a716-446655440000",
+      "embedding": [0.1, 0.2, 0.3]
+    }
+  ]
+}
