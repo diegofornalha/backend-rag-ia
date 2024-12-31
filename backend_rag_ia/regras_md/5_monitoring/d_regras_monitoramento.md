@@ -1,5 +1,7 @@
 # Regras de Monitoramento
 
+> Diretrizes e configurações para monitoramento de performance, saúde e disponibilidade do sistema, incluindo métricas, alertas e boas práticas.
+
 ## 1. Métricas Importantes
 
 ### 1.1 Performance
@@ -92,4 +94,3 @@ services:
 - Evitar falsos positivos
 - Definir severidades claras
 - Documentar procedimentos
-- Manter contatos atualizados

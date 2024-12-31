@@ -197,11 +197,6 @@ docker buildx du
    - Implementar métricas de build
    - Melhorar documentação
 
-3. **Baixa Prioridade**:
-   - Explorar buildkit avançado
-   - Implementar testes de camadas
-   - Otimizar scripts de build
-
 ### Comandos de Build por Ambiente
 
 1. **Desenvolvimento Local (Mac para Docker Hub)**:
@@ -224,7 +219,7 @@ docker buildx du
 - Render já configura automaticamente o registro e a tag correta
 - Não é necessário fazer push manual para o Render, ele puxa direto do GitHub
 
-**Dicas**:
+**Dicas**
 
 - Para desenvolvimento local: use `--platform` para garantir compatibilidade
 - Para Render: deixe o build automático fazer seu trabalho
