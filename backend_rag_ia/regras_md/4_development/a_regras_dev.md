@@ -77,3 +77,50 @@
 - Documentar APIs
 - Criar diagramas quando necessário
 - Documentar decisões arquiteturais
+
+## 1. Processamento de Documentos
+
+### 1.1 Normalização de Conteúdo
+
+- Todo conteúdo deve ser normalizado antes do processamento
+- Remover BOM (Byte Order Mark) se presente
+- Normalizar quebras de linha para LF
+- Remover caracteres de controle, exceto newline
+- Garantir codificação UTF-8 em todas as operações
+
+### 1.2 Armazenamento
+
+- Usar base64 para codificar conteúdo antes do armazenamento
+- Manter hash SHA-256 do conteúdo normalizado
+- Preservar metadados relevantes (nome, caminho, categoria)
+- Incluir timestamp de atualização
+
+### 1.3 Embeddings
+
+- Gerar embeddings a partir do conteúdo original (não codificado)
+- Usar modelo all-MiniLM-L6-v2 para embeddings
+- Verificar existência de embeddings antes de criar novos
+- Sincronizar embeddings após upload de documentos
+
+## 2. Boas Práticas de Desenvolvimento
+
+### 2.1 Tratamento de Erros
+
+- Implementar tratamento adequado de exceções
+- Fornecer feedback claro sobre erros
+- Registrar falhas para análise posterior
+- Permitir reprocessamento de documentos com falha
+
+### 2.2 Performance
+
+- Adicionar delays entre operações de upload
+- Processar documentos em lotes quando possível
+- Otimizar consultas ao banco de dados
+- Cachear resultados quando apropriado
+
+### 2.3 Segurança
+
+- Validar entrada de dados
+- Sanitizar conteúdo antes do processamento
+- Usar conexões seguras com APIs
+- Proteger credenciais e chaves de acesso

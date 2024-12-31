@@ -282,11 +282,6 @@
    - Fácil localização
    - Melhor escalabilidade
 
-3. **Colaboração**
-   - Reduz confusão
-   - Facilita revisão
-   - Melhora documentação
-
 ### ✅ Checklist de Conformidade
 
 - [ ] Nenhum arquivo na raiz das pastas principais

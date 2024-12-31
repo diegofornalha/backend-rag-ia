@@ -1,5 +1,51 @@
 # Regras de Documentação
 
+## 1. Formatação de Arquivos Markdown
+
+### 1.1 Codificação e Caracteres
+
+- Todos os arquivos devem usar codificação UTF-8
+- Não deve haver BOM (Byte Order Mark) no início dos arquivos
+- Evitar caracteres de controle, exceto quebras de linha
+- Usar LF (\n) para quebras de linha, não CRLF (\r\n)
+
+### 1.2 Estrutura do Documento
+
+- Usar títulos com # (h1) para o título principal
+- Subtítulos devem seguir hierarquia (##, ###, etc)
+- Manter uma linha em branco entre seções
+- Usar listas com - para itens não ordenados
+- Usar listas com 1. para itens ordenados
+
+### 1.3 Metadados
+
+- Cada documento deve ter um título único e descritivo
+- Incluir categoria/seção no caminho do arquivo
+- Manter consistência na nomenclatura dos arquivos
+
+## 2. Boas Práticas
+
+### 2.1 Conteúdo
+
+- Usar linguagem clara e objetiva
+- Manter parágrafos concisos
+- Incluir exemplos quando relevante
+- Evitar repetição de informações
+
+### 2.2 Organização
+
+- Agrupar informações relacionadas
+- Usar seções lógicas e bem definidas
+- Manter consistência no estilo de formatação
+- Atualizar documentação quando houver mudanças
+
+### 2.3 Versionamento
+
+- Documentar alterações significativas
+- Manter histórico de atualizações
+- Incluir data de última modificação
+- Sincronizar documentação com código
+
 ## 1. Quando Dividir Arquivos
 
 ### Indicadores para Divisão

@@ -90,15 +90,3 @@ Arquivos críticos são componentes essenciais do sistema que requerem atenção
    ```
 
 ### Exemplo de Nova Regra:
-
-```markdown
-### 2. `config.py`
-
-- **Função**: Gerenciamento de configurações globais
-- **Impacto**: Sistema completo
-- **Localização**: `/backend-rag-ia/config/`
-- **Cuidados Especiais**:
-  - Validar todas as variáveis de ambiente
-  - Testar em todos os ambientes
-  - Documentar cada configuração
-```

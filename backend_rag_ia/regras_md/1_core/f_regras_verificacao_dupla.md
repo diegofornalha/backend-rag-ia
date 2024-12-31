@@ -4,7 +4,8 @@
 
 - **Sempre** realizar duas verificações independentes
 - **Nunca** assumir sucesso sem segunda verificação
-- **Documentar** todo o processo
+- **Documentar** todo o processo detalhadamente
+- **Validar** codificação UTF-8 dos arquivos
 
 ## 2. Processo de Verificação
 
@@ -13,19 +14,23 @@
 1. **Busca Inicial**:
 
    ```bash
-   # Exemplo com grep
-   grep -r "termo_busca" ./
+   # Verificar codificação do arquivo
+   file -I arquivo.md
+
+   # Busca com grep considerando codificação
+   LC_ALL=C grep -r "termo_busca" ./
    ```
 
 2. **Documentação**:
 
    ```markdown
-   ### Remoção de [FEATURE] - [DATA]
+   ### Verificação de [FEATURE] - [DATA]
 
    1. Primeira Verificação:
-      - Método: grep case-insensitive
+      - Codificação: UTF-8
+      - Método: grep com LC_ALL=C
       - Arquivos: [lista]
-      - Alterações: [detalhes]
+      - Caracteres especiais: [detalhes]
    ```
 
 ### Segunda Verificação
@@ -33,16 +38,20 @@
 1. **Método Diferente**:
 
    ```bash
-   # Exemplo com find
-   find . -type f -exec grep -l "termo_busca" {} \;
+   # Verificar e converter quebras de linha
+   dos2unix arquivo.md
+
+   # Busca com find e validação de codificação
+   find . -type f -exec sh -c 'file -i "{}" | grep -q "utf-8" && grep -l "termo_busca" "{}"' \;
    ```
 
 2. **Documentação**:
    ```markdown
    2. Segunda Verificação:
-      - Método: find + grep
+      - Normalização: LF (Unix)
+      - Método: find + grep com validação UTF-8
       - Resultado: [detalhes]
-      - Status: ✅ Concluído
+      - Status: ✅ Validado
    ```
 
 ## 3. Critérios de Conclusão
@@ -50,6 +59,8 @@
 ✅ **Concluído quando**:
 
 - Duas verificações sem encontrar referências
+- Codificação UTF-8 confirmada
+- Quebras de linha normalizadas
 - Testes passando
 - Documentação completa
 - Evidências arquivadas
@@ -57,31 +68,9 @@
 ❌ **Não concluído se**:
 
 - Apenas uma verificação realizada
+- Problemas de codificação detectados
 - Documentação incompleta
 - Dúvidas pendentes
 - Testes falhando
 
 ## 4. Exemplo Completo
-
-```markdown
-### Remoção de Express.js (2023-12-31)
-
-1. Primeira Verificação:
-
-   - Método: grep case-insensitive
-   - Comando: grep -ri "express" ./
-   - Arquivos encontrados:
-     - docs/RULES.md
-     - requirements.txt
-   - Alterações: Removidas todas referências
-
-2. Segunda Verificação:
-   - Método: find + grep
-   - Comando: find . -type f -exec grep -l "express" {} \;
-   - Resultado: Nenhuma referência encontrada
-   - Testes: ✅ Passando
-
-✅ Conclusão: Remoção completa confirmada
-📝 Documentação atualizada
-🧪 Testes validados
-```

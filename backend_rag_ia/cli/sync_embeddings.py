@@ -39,13 +39,31 @@ def check_supabase_connection() -> tuple[bool, Client]:
 def get_documents_without_embeddings(supabase: Client) -> list[dict[str, Any]]:
     """Obtém documentos que não possuem embeddings."""
     try:
-        # Busca documentos sem embeddings
-        response = (
-            supabase.table("documents")
-            .select("id, content")
-            .is_("embedding_id", "null")
+        # Primeiro obtém os IDs dos documentos que já têm embeddings
+        embeddings_response = (
+            supabase.table("02_embeddings_regras_geral")
+            .select("documento_id")
             .execute()
         )
+        
+        # Extrai os IDs dos documentos que já têm embeddings
+        docs_with_embeddings = [doc["documento_id"] for doc in embeddings_response.data]
+        
+        # Busca documentos que não têm embeddings
+        if docs_with_embeddings:
+            response = (
+                supabase.table("01_base_conhecimento_regras_geral")
+                .select("id, conteudo")
+                .not_("id", "in", f"({','.join(map(str, docs_with_embeddings))})")
+                .execute()
+            )
+        else:
+            # Se não houver embeddings, retorna todos os documentos
+            response = (
+                supabase.table("01_base_conhecimento_regras_geral")
+                .select("id, conteudo")
+                .execute()
+            )
 
         documents = response.data
         console.print(f"\n🔍 Encontrados {len(documents)} documentos sem embeddings.")
@@ -71,7 +89,7 @@ def sync_document_embedding(supabase: Client, document: dict[str, Any]) -> bool:
     """Sincroniza o embedding de um documento."""
     try:
         doc_id = document["id"]
-        content = document["content"]
+        content = document["conteudo"]
 
         # Cria embedding
         embedding = create_embedding(content)
@@ -79,10 +97,10 @@ def sync_document_embedding(supabase: Client, document: dict[str, Any]) -> bool:
             return False
 
         # Insere embedding
-        data = {"document_id": doc_id, "embedding": embedding}
+        data = {"documento_id": doc_id, "embedding": embedding}
 
         console.print(f"📤 Sincronizando embedding para documento {doc_id}...")
-        result = supabase.table("embeddings").insert(data).execute()
+        result = supabase.table("02_embeddings_regras_geral").insert(data).execute()
 
         if result.data:
             console.print("✅ Embedding sincronizado com sucesso!")
