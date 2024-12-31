@@ -172,3 +172,90 @@ docker buildx build --platform linux/amd64,linux/arm64 -t fornalha/backend:lates
 1. Verificar no Docker Hub: https://hub.docker.com/r/fornalha/backend
 2. Confirmar tag `latest` atualizada
 3. Verificar manifestos para ambas arquiteturas (amd64 e arm64)
+
+## 8. Problemas Conhecidos e Otimizações de Cache
+
+### 8.1 Problemas Conhecidos
+
+1. **Dockerfile Vazio**
+
+   - Sintoma: Erro "Dockerfile cannot be empty"
+   - Causa: Problemas de codificação ou quebras de linha incorretas
+   - Solução:
+     - Verificar codificação do arquivo (deve ser UTF-8)
+     - Remover caracteres especiais invisíveis
+     - Usar LF ao invés de CRLF para quebras de linha
+
+2. **Permissões de Push**
+   - Sintoma: "denied: requested access to the resource is denied"
+   - Causa: Falta de autenticação ou permissões no Docker Hub
+   - Solução:
+     - Executar `docker login` antes do push
+     - Verificar existência do repositório
+     - Confirmar permissões de acesso
+
+### 8.2 Otimizações de Cache
+
+1. **Ordenação de Camadas**
+
+   ```dockerfile
+   # ✅ CORRETO: Copiar requirements.txt primeiro
+   COPY requirements.txt .
+   RUN pip install -r requirements.txt
+
+   # Depois copiar o código fonte
+   COPY . .
+   ```
+
+2. **Cache de Dependências**
+
+   - Usar multi-stage builds para cachear dependências
+   - Separar instalação de dependências do sistema e Python
+   - Manter camadas mais estáveis no topo do Dockerfile
+
+3. **Estratégias de Cache**
+
+   ```dockerfile
+   # Estágio de cache de dependências
+   FROM python:3.11-slim as deps
+   WORKDIR /deps
+   COPY requirements.txt .
+   RUN pip install --prefix=/install -r requirements.txt
+
+   # Estágio de build
+   FROM python:3.11-slim as builder
+   COPY --from=deps /install /usr/local
+   ```
+
+4. **Pré-compilação**
+   - Compilar pacotes Python em estágio separado
+   - Usar `pip wheel` para criar wheels pré-compilados
+   - Reutilizar wheels em builds subsequentes
+
+### 8.3 Monitoramento de Cache
+
+1. **Métricas de Build**
+
+   - Tempo total de build
+   - Hit rate do cache
+   - Tamanho das camadas
+   - Uso de recursos
+
+2. **Comandos Úteis**
+
+   ```bash
+   # Verificar camadas e seu uso de cache
+   docker history <image>
+
+   # Limpar cache não utilizado
+   docker builder prune
+
+   # Inspecionar cache do buildx
+   docker buildx du
+   ```
+
+3. **Boas Práticas**
+   - Monitorar uso do cache regularmente
+   - Limpar cache obsoleto periodicamente
+   - Documentar padrões efetivos de cache
+   - Manter registro de otimizações realizadas
