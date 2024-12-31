@@ -132,3 +132,22 @@ regras_md/
 - Dependências fortes entre seções
 - Projeto em fase inicial
 - Processo ainda não estável
+
+## Padrão de Nomenclatura
+
+### Arquivos em Diretórios
+
+- Usar prefixo alfabético sequencial (a*, b*, c\_, etc.)
+- Nomes em minúsculas com underscores
+- Exemplo de sequência em um diretório:
+  ```
+  2_database/
+  ├── a_initial_schema.sql
+  ├── b_add_embeddings.sql
+  ├── c_security_layer.sql
+  ├── d_move_schema.sql
+  ├── e_regras_supabase.md
+  └── f_problemas_docker.md
+  ```
+- Ao adicionar novo arquivo, usar a próxima letra disponível na sequência
+- Manter ordem alfabética para facilitar navegação e manutenção

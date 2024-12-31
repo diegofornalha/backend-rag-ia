@@ -25,9 +25,16 @@
    - Autenticação
 
 4. [Performance](./problemas/performance/README.md)
+
    - Cache
    - Otimização
    - Índices
+
+5. [Docker](./f_problemas_docker.md)
+   - Problemas de Build
+   - Cache e Otimização
+   - Push e Autenticação
+   - Monitoramento
 
 ## Como Usar esta Documentação
 

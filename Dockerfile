@@ -33,10 +33,10 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --no-dev --no-root
 
 # Copia o código da aplicação
-COPY backend_rag_ia backend_rag_ia/
+COPY backend_rag_ia /app/backend_rag_ia/
 
 # Expõe a porta
 EXPOSE $PORT
 
 # Comando para iniciar a aplicação
-CMD uvicorn backend_rag_ia.api.main:app --host 0.0.0.0 --port $PORT 
+CMD ["uvicorn", "backend_rag_ia.api.main:app", "--host", "0.0.0.0", "--port", "$PORT"]
