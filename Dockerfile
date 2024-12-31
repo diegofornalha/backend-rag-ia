@@ -6,9 +6,6 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    POETRY_VERSION=1.6.1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
     PATH="$PATH:/root/.local/bin" \
     PORT=10000 \
     OPERATION_MODE=render \
@@ -23,14 +20,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
-
 # Copia arquivos de dependências
-COPY pyproject.toml poetry.lock ./
+COPY requirements.txt ./
 
 # Instala dependências
-RUN poetry install --no-dev --no-root
+RUN pip install -r requirements.txt
 
 # Copia o código da aplicação
 COPY backend_rag_ia /app/backend_rag_ia/
