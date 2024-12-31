@@ -25,6 +25,9 @@ def process_markdown_file(file_path: str):
             print(f"Aviso: Arquivo vazio: {file_path}")
             return None
         
+        # Gera hash apenas do conteúdo original
+        content_hash = hashlib.sha256(content.encode()).hexdigest()
+        
         # Estrutura o conteúdo como JSONB
         content_obj = {
             "text": content,
@@ -35,31 +38,60 @@ def process_markdown_file(file_path: str):
             "file_path": file_path
         }
         
-        # Gera hash do conteúdo original
-        content_hash = hashlib.sha256(content.encode()).hexdigest()
-        
         return content_obj, content_hash
 
 def upload_document(file_path: str, content_obj: dict, content_hash: str):
     try:
-        # Verifica se documento já existe
+        # Verifica se documento já existe pelo file_path
         existing = supabase.table("01_base_conhecimento_regras_geral") \
-            .select("id") \
-            .eq("content_hash", content_hash) \
+            .select("id, content_hash") \
+            .eq("metadata->>file_path", file_path) \
             .execute()
         
         if existing.data:
-            print(f"Documento já existe com hash {content_hash}")
-            return existing.data[0]['id']
-        
-        # Converte o conteúdo para JSON string
-        content_json = json.dumps(content_obj)
-        
-        # Insere novo documento
+            doc_id = existing.data[0]['id']
+            existing_hash = existing.data[0]['content_hash']
+            
+            # Se o hash é o mesmo, não precisa atualizar
+            if existing_hash == content_hash:
+                print(f"Documento já existe e não foi modificado: {file_path}")
+                return doc_id
+                
+            print(f"Atualizando documento existente: {file_path}")
+            
+            # Remove embeddings antigos
+            supabase.table("02_embeddings_regras_geral") \
+                .delete() \
+                .eq("documento_id", doc_id) \
+                .execute()
+            
+            # Atualiza documento
+            result = supabase.table("01_base_conhecimento_regras_geral") \
+                .update({
+                    "conteudo": json.dumps(content_obj),
+                    "metadata": {"file_path": file_path}
+                }) \
+                .eq("id", doc_id) \
+                .execute()
+                
+            # Gera e insere novo embedding
+            embedding = create_embedding(content_obj['text'])
+            emb_result = supabase.table("02_embeddings_regras_geral") \
+                .insert({
+                    "documento_id": doc_id,
+                    "embedding": embedding
+                }) \
+                .execute()
+                
+            print(f"Embedding atualizado para documento {doc_id}")
+            return doc_id
+            
+        # Se não existe, cria novo documento
+        print(f"Criando novo documento: {file_path}")
         result = supabase.table("01_base_conhecimento_regras_geral") \
             .insert({
                 "titulo": os.path.basename(file_path),
-                "conteudo": content_json,
+                "conteudo": json.dumps(content_obj),
                 "metadata": {"file_path": file_path}
             }) \
             .execute()
