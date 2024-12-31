@@ -31,19 +31,24 @@ def check_document_exists(content_hash: str) -> bool:
         print(f"❌ Erro ao verificar documento: {e}")
         return False
 
-def process_markdown(file_path: str) -> Dict[str, Any]:
+def process_markdown(file_path: str, base_dir: str) -> Dict[str, Any]:
     """Processa arquivo markdown e extrai conteúdo e metadados."""
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
+        # Calcula o caminho relativo corretamente
+        abs_file_path = Path(file_path).resolve()
+        abs_base_dir = Path(base_dir).resolve()
+        rel_path = abs_file_path.relative_to(abs_base_dir)
+
         # Extrai metadados básicos do arquivo
         metadata = {
             "filename": os.path.basename(file_path),
-            "path": str(Path(file_path).relative_to(os.getcwd())),
+            "path": str(rel_path),
             "type": "markdown",
             "public": True,
-            "category": str(Path(file_path).parent.name),
+            "category": rel_path.parent.name,
             "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")
         }
 
@@ -92,6 +97,7 @@ def upload_directory(directory: str) -> tuple[int, int]:
     """Faz upload de todos os arquivos markdown de um diretório."""
     sucessos = 0
     falhas = 0
+    base_dir = os.path.dirname(os.path.dirname(directory))
 
     for root, _, files in os.walk(directory):
         for file in files:
@@ -99,7 +105,7 @@ def upload_directory(directory: str) -> tuple[int, int]:
                 file_path = os.path.join(root, file)
                 print(f"\n📤 Processando {file_path}...")
                 
-                document = process_markdown(file_path)
+                document = process_markdown(file_path, base_dir)
                 if document and upload_document(document):
                     sucessos += 1
                 else:
@@ -125,7 +131,7 @@ def main():
         return
 
     # Diretório com os arquivos markdown
-    directory = "regras_md"
+    directory = os.path.join(os.path.dirname(os.path.dirname(__file__)), "regras_md")
     
     if not os.path.exists(directory):
         print(f"❌ Diretório {directory} não encontrado!")
