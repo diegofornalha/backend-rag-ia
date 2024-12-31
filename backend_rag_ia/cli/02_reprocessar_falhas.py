@@ -4,7 +4,7 @@ import os
 import hashlib
 import time
 import base64
-from typing import Dict, Any, List
+from typing import Dict, Any
 from pathlib import Path
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -15,6 +15,16 @@ from sentence_transformers import SentenceTransformer
 load_dotenv()
 console = Console()
 model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Lista de arquivos que falharam
+ARQUIVOS_FALHA = [
+    "regras_md/3_deployment/d_regras_docker.md",
+    "regras_md/2_database/a_regras_sql.md",
+    "regras_md/2_database/f_problemas_docker.md",
+    "regras_md/1_core/f_regras_verificacao_dupla.md",
+    "regras_md/1_core/b_project_rules.md",
+    "regras_md/1_core/d_regras_documentacao.md"
+]
 
 def normalize_content(content: str) -> str:
     """Normaliza o conteúdo do arquivo."""
@@ -141,7 +151,7 @@ def upload_document(supabase: Client, document: Dict[str, Any]) -> bool:
 
 def main():
     """Função principal."""
-    console.print("\n🔄 Iniciando processo de upload...")
+    console.print("\n🔄 Reprocessando arquivos que falharam...")
 
     # Inicializa cliente Supabase
     try:
@@ -158,47 +168,33 @@ def main():
         console.print(f"❌ Erro ao conectar ao Supabase: {e}")
         return
 
-    # Define diretório base
-    base_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "regras_md")
-    if not os.path.exists(base_dir):
-        console.print(f"❌ Diretório não encontrado: {base_dir}")
-        return
-
-    # Lista todos os arquivos markdown
-    markdown_files: List[str] = []
-    for root, _, files in os.walk(base_dir):
-        for file in files:
-            if file.endswith(".md"):
-                markdown_files.append(os.path.join(root, file))
-
-    if not markdown_files:
-        console.print("❌ Nenhum arquivo markdown encontrado")
-        return
-
-    console.print(f"📁 Encontrados {len(markdown_files)} arquivos markdown")
-
-    # Processa cada arquivo
+    # Processa cada arquivo que falhou
     sucessos = 0
     falhas = 0
     falhas_lista = []
 
-    for file_path in markdown_files:
-        console.print(f"\n📄 Processando: {os.path.relpath(file_path, base_dir)}")
+    for arquivo in ARQUIVOS_FALHA:
+        console.print(f"\n📄 Processando: {arquivo}")
         
+        file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), arquivo)
+        if not os.path.exists(file_path):
+            console.print(f"❌ Arquivo não encontrado: {file_path}")
+            continue
+
         document = process_markdown(file_path)
         if document and upload_document(supabase, document):
             sucessos += 1
         else:
             falhas += 1
-            falhas_lista.append(os.path.relpath(file_path, base_dir))
+            falhas_lista.append(arquivo)
 
         time.sleep(0.5)  # Pequeno delay entre uploads
 
     # Resultados
     console.print("\n✨ Processo finalizado!")
-    console.print(f"✅ {sucessos} documentos enviados com sucesso")
+    console.print(f"✅ {sucessos} documentos reprocessados com sucesso")
     if falhas > 0:
-        console.print(f"❌ {falhas} documentos falharam:")
+        console.print(f"❌ {falhas} documentos falharam novamente:")
         for arquivo in falhas_lista:
             console.print(f"  - {arquivo}")
 
