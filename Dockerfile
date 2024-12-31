@@ -30,7 +30,7 @@ RUN pip install -r requirements.txt
 COPY backend_rag_ia /app/backend_rag_ia/
 
 # Expõe a porta
-EXPOSE $PORT
+EXPOSE 10000
 
 # Comando para iniciar a aplicação
-CMD ["uvicorn", "backend_rag_ia.api.main:app", "--host", "0.0.0.0", "--port", "$PORT"]
+CMD ["uvicorn", "backend_rag_ia.api.main:app", "--host", "0.0.0.0", "--port", "10000"]
