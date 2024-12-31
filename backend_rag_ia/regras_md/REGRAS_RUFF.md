@@ -115,6 +115,45 @@ Antes de considerar o código aprovado, verificar:
 - [ ] Código testado e funcionando
 - [ ] Configuração do Ruff atualizada se necessário
 
+## Busca Semântica e Aprendizado Contínuo
+
+### 1. Verificação Semântica
+
+1. **Primeira Verificação**:
+
+   - Usar busca semântica para encontrar referências diretas
+   - Verificar arquivos de configuração
+   - Buscar em comentários e documentação
+   - Analisar nomes de funções e variáveis
+
+2. **Segunda Verificação**:
+
+   - Usar diferentes termos relacionados na busca
+   - Verificar arquivos relacionados ao contexto
+   - Buscar em diferentes diretórios
+   - Analisar dependências e imports
+
+3. **Critérios de Conclusão**:
+   - Duas verificações completas realizadas
+   - Diferentes abordagens de busca utilizadas
+   - Resultados documentados e comparados
+   - Nenhuma referência não intencional encontrada
+
+### 2. Aprendizado e Documentação
+
+1. **Registro de Aprendizado**:
+
+   - Documentar padrões encontrados
+   - Registrar termos relacionados úteis
+   - Manter histórico de buscas efetivas
+   - Atualizar guias de boas práticas
+
+2. **Melhoria Contínua**:
+   - Refinar termos de busca com base em resultados
+   - Identificar falsos positivos comuns
+   - Otimizar estratégias de verificação
+   - Compartilhar aprendizados com a equipe
+
 ## Exemplo de Documentação
 
 ```markdown

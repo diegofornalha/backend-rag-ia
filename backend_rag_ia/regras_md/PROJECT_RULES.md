@@ -147,7 +147,7 @@
 
 ### 2.4 Linting para ML/IA
 
-#### Configuração do Flake8
+#### Configuração do Ruff
 
 1. **Regras Específicas para ML**:
 

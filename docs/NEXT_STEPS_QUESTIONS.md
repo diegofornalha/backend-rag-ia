@@ -26,7 +26,7 @@ Este documento mantém um catálogo de perguntas sugeridas para próximos passos
 
 1. Gostaria de instalar as dependências necessárias (ruff e mypy)?
 2. Quer testar o novo script de formatação em um diretório específico?
-3. Deseja comparar o desempenho entre Ruff+MyPy e Black+Flake8?
+3. Deseja comparar o desempenho do Ruff com outras ferramentas de linting?
 4. Quer configurar alguma regra específica para seu projeto ML?
 5. Precisa de ajuda para entender alguma das configurações?
 
