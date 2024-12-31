@@ -1,6 +1,3 @@
-# Este arquivo marca o diretório como um módulo Python
-# Também pode ser usado para expor a API pública do módulo
+"""Backend RAG IA - Sistema de busca semântica."""
 
-from .app import app
-
-__all__ = ["app"]
+__version__ = "1.0.0"

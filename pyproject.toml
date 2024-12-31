@@ -1,8 +1,8 @@
 # Configurações do Ruff para verificação de código
 [tool.ruff]
 # Configurações gerais
-line-length = 88
-target-version = "py39"
+line-length = 100
+target-version = "py311"
 extend-exclude = ["docs/*", "tests/*"]
 
 [tool.ruff.lint]
@@ -33,3 +33,28 @@ inline-quotes = "double"
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.poetry]
+name = "backend-rag-ia"
+version = "0.1.0"
+description = "Backend RAG IA"
+authors = ["Diego Fornalha <diegofornalha@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+sentence-transformers = "2.2.2"
+torch = "2.0.1"
+transformers = "4.30.2"
+huggingface-hub = "0.16.4"
+supabase = "1.0.3"
+rich = "13.4.2"
+python-dotenv = "1.0.0"
+numpy = "1.24.3"
+fastapi = "^0.104.1"
+uvicorn = "^0.24.0"
+ruff = "^0.1.6"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
