@@ -112,8 +112,8 @@ def check_dns():
     try:
         with open("/etc/resolv.conf") as f:
             dns_config = f.read()
-    except:
-        dns_config = "Could not read DNS config"
+    except (FileNotFoundError, PermissionError) as e:
+        dns_config = f"Could not read DNS config: {e}"
 
     return dns_config
 

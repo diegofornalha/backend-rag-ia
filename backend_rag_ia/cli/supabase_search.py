@@ -131,15 +131,12 @@ def display_results(results):
 
 
 @cli.command()
-def config():
+def show_config():
     """Mostra configuração atual."""
     for section in config.sections():
-        console.print(f"\n[bold]{section}:")
+        click.echo(f"\n[{section}]")
         for key, value in config[section].items():
-            # Oculta a chave do Supabase
-            if "key" in key.lower():
-                value = value[:8] + "..." if value else ""
-            console.print(f"  {key} = {value}")
+            click.echo(f"{key} = {value}")
 
 
 if __name__ == "__main__":

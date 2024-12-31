@@ -1,93 +1,143 @@
-import os
+"""CLI para busca semântica."""
 
-from dotenv import load_dotenv
+import os
+import sys
+from typing import Any
+
 from rich.console import Console
 from rich.table import Table
-from sentence_transformers import SentenceTransformer
-from supabase import create_client
+from supabase import Client, create_client
 
-# Carrega variáveis de ambiente
-load_dotenv()
+from backend_rag_ia.constants import (
+    ERROR_SUPABASE_CONFIG,
+    PREVIEW_LENGTH_MEDIUM,
+)
+from backend_rag_ia.exceptions import SupabaseError
+from backend_rag_ia.utils.logging_config import logger
 
+# Console para output
 console = Console()
 
-# Inicializa Supabase
-url = os.getenv("SUPABASE_URL")
-key = os.getenv("SUPABASE_KEY")
-supabase = create_client(url, key)
 
+def init_supabase() -> tuple[bool, Client | None]:
+    """Inicializa cliente do Supabase.
 
-def buscar_documentos(
-    texto_busca: str, similaridade_minima: float = 0.5, limite: int = 5
-):
-    """
-    Realiza busca semântica nos documentos usando embeddings.
+    Returns:
+        Tupla com sucesso e cliente
 
-    Args:
-        texto_busca: O que você quer encontrar
-        similaridade_minima: Quão similar o documento precisa ser (0.1 a 1.0)
-        limite: Quantos resultados retornar
+    Raises:
+        SupabaseError: Se houver erro na configuração
     """
     try:
-        # Inicializa o modelo de embeddings
-        console.print("\n🤖 Carregando modelo de embeddings...")
-        modelo = SentenceTransformer("multi-qa-MiniLM-L6-cos-v1")
+        # Verifica configuração
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
 
-        # Gera embedding para o texto da busca
-        console.print("🔄 Gerando embedding para busca...")
-        embedding_busca = modelo.encode(texto_busca)
+        if not supabase_url or not supabase_key:
+            logger.error("Configuração do Supabase incompleta")
+            raise SupabaseError(ERROR_SUPABASE_CONFIG)
 
-        # Faz a busca no Supabase usando a função match_documents
-        console.print("🔍 Buscando documentos similares...")
-        resultado = supabase.rpc(
+        # Conecta
+        console.print("\n🔌 Conectando ao Supabase...")
+        supabase: Client = create_client(supabase_url, supabase_key)
+        return True, supabase
+
+    except Exception as e:
+        logger.exception("Erro ao conectar ao Supabase: %s", e)
+        return False, None
+
+
+async def search_documents(
+    supabase: Client,
+    query: str,
+    limit: int = 5,
+    threshold: float = 0.5,
+) -> list[dict[str, Any]]:
+    """Busca documentos por similaridade.
+
+    Args:
+        supabase: Cliente do Supabase
+        query: Texto para buscar
+        limit: Número máximo de resultados
+        threshold: Limiar de similaridade
+
+    Returns:
+        Lista de documentos similares
+    """
+    try:
+        # Gera embedding
+        embedding = await supabase.rpc(
+            "generate_embedding",
+            {"text": query},
+        ).execute()
+
+        # Busca documentos
+        response = await supabase.rpc(
             "match_documents",
             {
-                "query_embedding": embedding_busca.tolist(),
-                "match_threshold": similaridade_minima,
-                "match_count": limite,
+                "query_embedding": embedding.data,
+                "match_count": limit,
+                "similarity_threshold": threshold,
             },
         ).execute()
 
-        documentos = resultado.data
-
-        if not documentos:
-            console.print("\n❌ Nenhum documento similar encontrado.")
-            return
-
-        # Mostra resultados em uma tabela bonita
-        table = Table(title=f"\n📚 Documentos Similares a: '{texto_busca}'")
-        table.add_column("Similaridade", justify="center", style="cyan")
-        table.add_column("Conteúdo", style="green")
-        table.add_column("ID", justify="right", style="magenta")
-
-        for doc in documentos:
-            similaridade = doc.get("similarity", 0)
-            conteudo = doc.get("content", "")
-            # Limita tamanho do conteúdo para melhor visualização
-            conteudo_resumido = (
-                conteudo[:100] + "..." if len(conteudo) > 100 else conteudo
-            )
-            doc_id = doc.get("id", "")
-
-            table.add_row(f"{similaridade:.1%}", conteudo_resumido, str(doc_id))
-
-        console.print(table)
-        console.print(f"\n✨ Encontrados {len(documentos)} documentos similares!")
+        return response.data
 
     except Exception as e:
-        console.print(f"\n❌ Erro durante a busca: {e!s}")
+        logger.exception("Erro na busca: %s", e)
+        return []
 
 
-def main():
-    console.print("\n🔍 Sistema de Busca Semântica com Embeddings\n")
+def display_results(results: list[dict[str, Any]]) -> None:
+    """Exibe resultados da busca.
 
-    # Solicita parâmetros da busca
-    texto = input("O que você quer encontrar? ")
-    similaridade = float(input("Similaridade mínima (0.1 a 1.0): "))
-    limite = int(input("Número máximo de resultados: "))
+    Args:
+        results: Lista de documentos
+    """
+    if not results:
+        console.print("\n❌ Nenhum resultado encontrado")
+        return
 
-    # Realiza a busca
-    buscar_documentos(texto, similaridade, limite)
+    # Cria tabela
+    table = Table(title="\n🔍 Resultados da busca")
+    table.add_column("ID", style="cyan")
+    table.add_column("Conteúdo", style="green")
+    table.add_column("Similaridade", justify="right", style="magenta")
+
+    # Adiciona resultados
+    for doc in results:
+        # Limita tamanho do conteúdo
+        content = doc["content"]
+        if len(content) > PREVIEW_LENGTH_MEDIUM:
+            content = content[:PREVIEW_LENGTH_MEDIUM] + "..."
+
+        # Adiciona linha
+        doc_id = doc.get("id", "")
+        similarity = f"{doc.get('similarity', 0):.2%}"
+        table.add_row(doc_id, content, similarity)
+
+    # Exibe tabela
+    console.print(table)
+
+
+async def main() -> None:
+    """Função principal."""
+    # Verifica argumentos
+    if len(sys.argv) < 2:
+        logger.error("Por favor, forneça uma query para busca!")
+        return
+
+    # Inicializa Supabase
+    success, supabase = init_supabase()
+    if not success:
+        return
+
+    # Realiza busca
+    query = " ".join(sys.argv[1:])
+    console.print(f"\n🔍 Buscando: {query}")
+
+    results = await search_documents(supabase, query)
+    display_results(results)
 
 
 if __name__ == "__main__":

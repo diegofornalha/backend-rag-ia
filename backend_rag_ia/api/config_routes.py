@@ -1,8 +1,8 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 import os
 from enum import Enum
-from typing import Optional
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1/config", tags=["config"])
 
@@ -39,5 +39,5 @@ async def update_semantic_mode(update: SemanticModeUpdate):
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Erro ao atualizar modo: {str(e)}"
-        ) 
+            detail=f"Erro ao atualizar modo: {e!s}"
+        ) from e

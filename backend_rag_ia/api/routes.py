@@ -1,225 +1,130 @@
-import logging
-from datetime import datetime
+"""Rotas da API."""
+
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from models.markdown import MarkdownUpload
-from pydantic import BaseModel
-from services.md_converter import MarkdownConverter
-from services.vector_store import VectorStore
 
-router = APIRouter()
-logger = logging.getLogger(__name__)
+from backend_rag_ia.constants import (
+    ERROR_SEARCH_FAILED,
+    HTTP_BAD_REQUEST,
+    HTTP_SERVER_ERROR,
+)
+from backend_rag_ia.exceptions import (
+    ValidationError,
+)
+from backend_rag_ia.services.semantic_search import SemanticSearchManager
+from backend_rag_ia.utils.logging_config import logger
 
+router = APIRouter(prefix="/api/v1", tags=["search"])
 
-class Document(BaseModel):
-    content: str
-    metadata: dict[str, Any] = {}
+def _validate_query(query: str) -> None:
+    """Valida a query de busca.
 
+    Args:
+        query: Query a ser validada
 
-class SearchQuery(BaseModel):
-    query: str
-    k: int | None = 4
+    Raises:
+        ValidationError: Se a query for inválida
+    """
+    if not query or not query.strip():
+        raise ValidationError("Query não pode ser vazia")
 
+def _handle_search_error(error: Exception) -> None:
+    """Trata erros de busca.
 
-class DocumentChange(BaseModel):
-    operation: str
-    document_id: int
-    previous_count: int
-    new_count: int
-    changed_at: datetime
-    time_since_last_change: str | None
+    Args:
+        error: Erro ocorrido
 
-
-class Statistics(BaseModel):
-    key: str
-    value: int
-    updated_at: datetime
-
-
-@router.post("/documents")
-async def add_document(document: Document):
-    """Adiciona um novo documento ao índice."""
-    try:
-        vector_store = VectorStore()
-        result = await vector_store.add_document(document)
-        return {"message": "Documento adicionado com sucesso", "document_id": result}
-    except Exception as e:
-        logger.error(f"Erro ao adicionar documento: {e!s}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.delete("/documents/{doc_id}")
-async def delete_document(doc_id: str):
-    """Remove um documento do índice pelo ID."""
-    try:
-        vector_store = VectorStore()
-        success = await vector_store.delete_document(doc_id)
-        if not success:
-            raise HTTPException(status_code=404, detail="Documento não encontrado")
-        return {"message": "Documento removido com sucesso", "document_id": doc_id}
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        logger.error(f"Erro ao remover documento: {e!s}")
-        raise HTTPException(status_code=500, detail=str(e))
-
+    Raises:
+        HTTPException: Com detalhes do erro
+    """
+    logger.exception("Erro na busca: %s", error)
+    if isinstance(error, ValidationError):
+        raise HTTPException(
+            status_code=HTTP_BAD_REQUEST,
+            detail=str(error),
+        ) from error
+    raise HTTPException(
+        status_code=HTTP_SERVER_ERROR,
+        detail=ERROR_SEARCH_FAILED.format(error=str(error)),
+    ) from error
 
 @router.post("/search")
-async def search_documents(query: SearchQuery):
-    """Realiza busca semântica nos documentos."""
-    try:
-        vector_store = VectorStore()
-        results = await vector_store.search(query.query, k=query.k)
-        return {"results": results, "count": len(results)}
-    except Exception as e:
-        logger.error(f"Erro na busca: {e!s}")
-        raise HTTPException(status_code=500, detail=str(e))
+async def search(query: str) -> dict[str, Any]:
+    """Realiza busca semântica.
 
+    Args:
+        query: Query de busca
 
-@router.get("/health")
-async def health_check():
-    """Verifica o status da API."""
+    Returns:
+        Resultados da busca
+
+    Raises:
+        HTTPException: Se ocorrer algum erro
+    """
     try:
-        vector_store = VectorStore()
-        status = await vector_store.health_check()
+        # Valida query
+        _validate_query(query)
+
+        # Realiza busca
+        search_manager = SemanticSearchManager()
+        results = await search_manager.search(query)
+
+        # Retorna resultados
         return {
-            "status": "healthy" if status else "unhealthy",
-            "message": "API está funcionando normalmente",
+            "query": query,
+            "results": results,
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+
+    except Exception as e:
+        _handle_search_error(e)
+
+@router.get("/history")
+async def get_history() -> dict[str, Any]:
+    """Retorna histórico de buscas.
+
+    Returns:
+        Histórico de buscas
+
+    Raises:
+        HTTPException: Se ocorrer algum erro
+    """
+    try:
+        search_manager = SemanticSearchManager()
+        history = search_manager.get_history()
+        return {
+            "history": history,
+            "timestamp": datetime.now(UTC).isoformat(),
         }
     except Exception as e:
-        logger.error(f"Erro no health check: {e!s}")
-        return {"status": "unhealthy", "message": str(e)}
+        logger.exception("Erro ao obter histórico: %s", e)
+        raise HTTPException(
+            status_code=HTTP_SERVER_ERROR,
+            detail=f"Erro ao obter histórico: {e}",
+        ) from e
 
-
-@router.get("/documents")
-async def list_documents(skip: int = 0, limit: int = 10):
-    """Lista todos os documentos com paginação."""
-    try:
-        vector_store = VectorStore()
-        documents = await vector_store.list_documents(skip=skip, limit=limit)
-        return {"documents": documents, "count": len(documents)}
-    except Exception as e:
-        logger.error(f"Erro ao listar documentos: {e!s}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/documents/{doc_id}")
-async def get_document(doc_id: str):
-    """Busca um documento específico pelo ID."""
-    try:
-        vector_store = VectorStore()
-        document = await vector_store.get_document(doc_id)
-        if not document:
-            raise HTTPException(status_code=404, detail="Documento não encontrado")
-        return document
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        logger.error(f"Erro ao buscar documento: {e!s}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.put("/documents/{doc_id}")
-async def update_document(doc_id: str, document: Document):
-    """Atualiza um documento existente."""
-    try:
-        vector_store = VectorStore()
-        updated = await vector_store.update_document(
-            doc_id, document.content, document.metadata
-        )
-        if not updated:
-            raise HTTPException(status_code=404, detail="Documento não encontrado")
-        return {"message": "Documento atualizado com sucesso", "document_id": doc_id}
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        logger.error(f"Erro ao atualizar documento: {e!s}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/documents/history/{hours}", response_model=list[DocumentChange])
-async def get_documents_history(hours: int = 24):
-    """
-    Retorna o histórico de alterações nos documentos.
-
-    Args:
-        hours: Número de horas para buscar o histórico (padrão: 24)
+@router.get("/stats")
+async def get_stats() -> dict[str, Any]:
+    """Retorna estatísticas de busca.
 
     Returns:
-        Lista de alterações com:
-        - Operação realizada (INSERT/DELETE)
-        - ID do documento
-        - Contagem anterior
-        - Nova contagem
-        - Data/hora da alteração
-        - Tempo desde a última alteração
+        Estatísticas de busca
+
+    Raises:
+        HTTPException: Se ocorrer algum erro
     """
     try:
-        vector_store = VectorStore()
-        history = await vector_store.get_documents_history(hours)
-        return history
+        search_manager = SemanticSearchManager()
+        stats = search_manager.get_stats()
+        return {
+            "stats": stats,
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
     except Exception as e:
-        logger.error(f"Erro ao buscar histórico: {e!s}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/statistics", response_model=list[Statistics])
-async def get_statistics():
-    """
-    Retorna estatísticas do sistema.
-
-    Returns:
-        Lista de estatísticas com:
-        - Chave (ex: documents_count)
-        - Valor
-        - Data/hora da última atualização
-    """
-    try:
-        vector_store = VectorStore()
-        stats = await vector_store.get_statistics()
-        return stats
-    except Exception as e:
-        logger.error(f"Erro ao buscar estatísticas: {e!s}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/documents/count")
-async def count_documents():
-    """
-    Retorna o número total de documentos no sistema.
-
-    Returns:
-        Contagem total de documentos armazenados.
-    """
-    try:
-        vector_store = VectorStore()
-        count = await vector_store.count_documents()
-        return {"total": count, "timestamp": datetime.now()}
-    except Exception as e:
-        logger.error(f"Erro ao contar documentos: {e!s}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/convert/markdown")
-async def convert_markdown(document: MarkdownUpload):
-    """
-    Converte documento markdown para o formato JSON do Supabase.
-
-    Args:
-        document: Documento markdown com metadados
-
-    Returns:
-        Documento JSON no formato esperado pelo Supabase
-    """
-    try:
-        # Converte o documento
-        result = MarkdownConverter.convert_md_to_json(
-            md_content=document.content, metadata=document.metadata.dict()
-        )
-
-        return {"success": True, "document": result}
-
-    except Exception as e:
-        logger.error(f"Erro na conversão do markdown: {e!s}")
-        raise HTTPException(status_code=400, detail=f"Erro na conversão: {e!s}")
+        logger.exception("Erro ao obter estatísticas: %s", e)
+        raise HTTPException(
+            status_code=HTTP_SERVER_ERROR,
+            detail=f"Erro ao obter estatísticas: {e}",
+        ) from e

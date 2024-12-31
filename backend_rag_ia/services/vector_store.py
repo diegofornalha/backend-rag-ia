@@ -1,322 +1,113 @@
-"""
-Serviço de armazenamento e busca vetorial usando Supabase.
-"""
+"""Armazenamento de documentos com embeddings."""
 
-import logging
+from typing import Any
 
-from models.database import Document, DocumentCreate, EmbeddingCreate
-from sentence_transformers import SentenceTransformer
-from services.supabase_client import supabase
+from transformers import SentenceTransformer
 
-logger = logging.getLogger(__name__)
+from backend_rag_ia.services.supabase_client import SupabaseClient
 
 
 class VectorStore:
-    """Implementa armazenamento e busca vetorial usando Supabase."""
+    """Armazenamento de documentos com embeddings."""
 
-    def __init__(
-        self, embedding_model: str = "all-MiniLM-L6-v2", batch_size: int = 32
-    ) -> None:
-        """
-        Inicializa o VectorStore.
+    def __init__(self, supabase_client: SupabaseClient) -> None:
+        """Inicializa o armazenamento.
 
         Args:
-            embedding_model: Nome do modelo de embedding.
-            batch_size: Tamanho do lote para operações em batch.
+            supabase_client: Cliente do Supabase
         """
-        self.embedding_model = SentenceTransformer(embedding_model)
-        self.batch_size = batch_size
+        self.supabase_client = supabase_client
+        self.table = "documents"
 
-    async def add_document(
-        self, content: str, metadata: dict = None
-    ) -> Document | None:
-        """
-        Adiciona um documento ao store.
+    def create_embeddings(self, texts: list[str]) -> list[list[float]]:
+        """Cria embeddings para uma lista de textos usando o modelo all-MiniLM-L6-v2.
 
         Args:
-            content: Conteúdo do documento.
-            metadata: Metadados do documento.
+            texts: Lista de textos para gerar embeddings
 
         Returns:
-            Document: Documento criado ou None se houver erro.
+            Lista de embeddings
         """
-        try:
-            # Extrai o document_hash dos metadados
-            document_hash = metadata.get("document_hash") if metadata else None
+        model = SentenceTransformer('all-MiniLM-L6-v2')
+        embeddings = model.encode(texts)
+        return embeddings.tolist()
 
-            # Cria documento
-            doc_data = DocumentCreate(
-                content=content, metadata=metadata or {}, document_hash=document_hash
-            )
-
-            result = supabase.table("documents").insert(doc_data.model_dump()).execute()
-            if not result.data:
-                raise ValueError("Erro ao inserir documento")
-
-            doc_id = result.data[0]["id"]
-
-            # Gera e salva embedding
-            embedding = self.embedding_model.encode(content)
-            embedding_data = EmbeddingCreate(
-                document_id=doc_id, embedding=embedding.tolist()
-            )
-
-            result = (
-                supabase.table("embeddings")
-                .insert(embedding_data.model_dump())
-                .execute()
-            )
-            if not result.data:
-                raise ValueError("Erro ao inserir embedding")
-
-            # Atualiza referência do embedding no documento
-            embedding_id = result.data[0]["id"]
-            supabase.table("documents").update({"embedding_id": embedding_id}).eq(
-                "id", doc_id
-            ).execute()
-
-            return Document.model_validate(result.data[0])
-
-        except Exception as e:
-            logger.error(f"Erro ao adicionar documento: {e}")
-            return None
-
-    async def search(self, query: str, k: int = 4) -> list[Document]:
-        """
-        Busca documentos similares à query.
+    def insert_documents(self, documents: list[dict[str, Any]]) -> None:
+        """Insere documentos no Supabase com seus embeddings.
 
         Args:
-            query: Texto da busca.
-            k: Número de resultados.
-
-        Returns:
-            List[Document]: Lista de documentos similares.
+            documents: Lista de documentos para inserir
         """
-        try:
-            # Gera embedding da query
-            query_embedding = self.embedding_model.encode(query)
+        for doc in documents:
+            embedding = self.create_embeddings([doc['content']])[0]
+            doc['embedding'] = embedding
+            self.supabase_client.table('documents').insert(doc).execute()
 
-            # Busca documentos similares
-            results = supabase.rpc(
-                "match_documents",
-                {"query_embedding": query_embedding.tolist(), "match_count": k},
-            ).execute()
-
-            if not results.data:
-                return []
-
-            return [Document.model_validate(doc) for doc in results.data]
-
-        except Exception as e:
-            logger.error(f"Erro na busca: {e}")
-            return []
-
-    async def delete_document(self, doc_id: str) -> bool:
-        """
-        Remove um documento e seu embedding.
+    def search_documents(self, query: str, match_count: int = 3) -> list[dict[str, Any]]:
+        """Realiza uma busca semântica por documentos similares à query.
 
         Args:
-            doc_id: ID do documento.
+            query: Texto para buscar
+            match_count: Número máximo de resultados
 
         Returns:
-            bool: True se removido com sucesso, False caso contrário.
+            Lista de documentos similares
         """
-        try:
-            # Busca o documento para obter o embedding_id
-            doc = supabase.table("documents").select("*").eq("id", doc_id).execute()
-            if not doc.data:
-                return False
+        query_embedding = self.create_embeddings([query])[0]
 
-            embedding_id = doc.data[0].get("embedding_id")
+        rpc_response = self.supabase_client.rpc(
+            'match_documents',
+            {
+                'query_embedding': query_embedding,
+                'match_count': match_count
+            }
+        ).execute()
 
-            # Remove o embedding se existir
-            if embedding_id:
-                supabase.table("embeddings").delete().eq("id", embedding_id).execute()
+        return rpc_response.data
 
-            # Remove o documento
-            result = supabase.table("documents").delete().eq("id", doc_id).execute()
-            return bool(result.data)
-
-        except Exception as e:
-            logger.error(f"Erro ao remover documento: {e}")
-            return False
-
-    async def list_documents(self, skip: int = 0, limit: int = 10) -> list[Document]:
-        """
-        Lista documentos com paginação.
+    def delete_document(self, document_id: str) -> None:
+        """Remove um documento específico do Supabase.
 
         Args:
-            skip: Número de documentos para pular.
-            limit: Número máximo de documentos para retornar.
-
-        Returns:
-            List[Document]: Lista de documentos.
+            document_id: ID do documento para remover
         """
-        try:
-            result = (
-                supabase.table("documents")
-                .select("*")
-                .range(skip, skip + limit - 1)
-                .execute()
-            )
-            if not result.data:
-                return []
-            return [Document.model_validate(doc) for doc in result.data]
-        except Exception as e:
-            logger.error(f"Erro ao listar documentos: {e}")
-            return []
+        self.supabase_client.table('documents').delete().eq('id', document_id).execute()
 
-    async def get_document(self, doc_id: str) -> Document | None:
-        """
-        Busca um documento pelo ID.
+    def update_document(self, document_id: str, new_content: str) -> None:
+        """Atualiza o conteúdo e embedding de um documento existente.
 
         Args:
-            doc_id: ID do documento.
-
-        Returns:
-            Optional[Document]: Documento encontrado ou None.
+            document_id: ID do documento para atualizar
+            new_content: Novo conteúdo do documento
         """
-        try:
-            result = supabase.table("documents").select("*").eq("id", doc_id).execute()
-            if not result.data:
-                return None
-            return Document.model_validate(result.data[0])
-        except Exception as e:
-            logger.error(f"Erro ao buscar documento: {e}")
-            return None
+        new_embedding = self.create_embeddings([new_content])[0]
 
-    async def update_document(
-        self, doc_id: str, content: str, metadata: dict = None
-    ) -> bool:
-        """
-        Atualiza um documento existente.
+        self.supabase_client.table('documents').update({
+            'content': new_content,
+            'embedding': new_embedding
+        }).eq('id', document_id).execute()
+
+    def get_document(self, document_id: str) -> dict[str, Any]:
+        """Recupera um documento específico do Supabase.
 
         Args:
-            doc_id: ID do documento.
-            content: Novo conteúdo.
-            metadata: Novos metadados.
+            document_id: ID do documento para recuperar
 
         Returns:
-            bool: True se atualizado com sucesso.
+            Documento encontrado ou None
         """
-        try:
-            # Verifica se o documento existe
-            doc = await self.get_document(doc_id)
-            if not doc:
-                return False
+        response = self.supabase_client.table('documents').select('*').eq('id', document_id).execute()
+        return response.data[0] if response.data else None
 
-            # Atualiza o documento
-            doc_data = {"content": content, "metadata": metadata or {}}
-
-            # Gera novo embedding
-            embedding = self.embedding_model.encode(content)
-
-            # Atualiza embedding existente
-            embedding_result = (
-                supabase.table("embeddings")
-                .update({"embedding": embedding.tolist()})
-                .eq("document_id", doc_id)
-                .execute()
-            )
-
-            if not embedding_result.data:
-                raise ValueError("Erro ao atualizar embedding")
-
-            # Atualiza documento
-            result = (
-                supabase.table("documents").update(doc_data).eq("id", doc_id).execute()
-            )
-            return bool(result.data)
-
-        except Exception as e:
-            logger.error(f"Erro ao atualizar documento: {e}")
-            return False
-
-    async def get_documents_history(self, hours: int = 24) -> list[dict]:
-        """
-        Busca o histórico de alterações nos documentos.
-
-        Args:
-            hours: Número de horas para buscar o histórico.
+    def list_documents(self) -> list[dict[str, Any]]:
+        """Lista todos os documentos armazenados no Supabase.
 
         Returns:
-            List[Dict]: Lista de alterações com detalhes.
+            Lista de documentos
         """
-        try:
-            result = supabase.rpc(
-                "get_document_changes_history", {"last_n_hours": hours}
-            ).execute()
+        response = self.supabase_client.table('documents').select('*').execute()
+        return response.data
 
-            if not result.data:
-                return []
-
-            return result.data
-
-        except Exception as e:
-            logger.error(f"Erro ao buscar histórico: {e}")
-            return []
-
-    async def get_statistics(self) -> list[dict]:
-        """
-        Busca estatísticas do sistema.
-
-        Returns:
-            List[Dict]: Lista de estatísticas com seus valores e timestamps.
-        """
-        try:
-            result = supabase.table("statistics").select("*").execute()
-
-            if not result.data:
-                return []
-
-            return result.data
-
-        except Exception as e:
-            logger.error(f"Erro ao buscar estatísticas: {e}")
-            return []
-
-    async def count_documents(self) -> int:
-        """
-        Conta o total de documentos no sistema.
-
-        Returns:
-            int: Número total de documentos.
-        """
-        try:
-            # Busca o valor atual da estatística
-            result = (
-                supabase.table("statistics")
-                .select("value")
-                .eq("key", "documents_count")
-                .execute()
-            )
-
-            if result.data:
-                return result.data[0]["value"]
-
-            # Se não encontrar na tabela statistics, conta diretamente
-            result = (
-                supabase.table("documents").select("count", count="exact").execute()
-            )
-            return result.count or 0
-
-        except Exception as e:
-            logger.error(f"Erro ao contar documentos: {e}")
-            return 0
-
-    async def health_check(self) -> bool:
-        """
-        Verifica a saúde do sistema.
-
-        Returns:
-            bool: True se saudável, False caso contrário.
-        """
-        try:
-            # Tenta fazer uma consulta simples
-            result = (
-                supabase.table("documents").select("count", count="exact").execute()
-            )
-            return True
-        except Exception as e:
-            logger.error(f"Erro no health check: {e}")
-            return False
+    def clear_documents(self) -> None:
+        """Remove todos os documentos do Supabase."""
+        self.supabase_client.table('documents').delete().neq('id', '').execute()

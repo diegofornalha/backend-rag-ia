@@ -1,116 +1,183 @@
-from typing import Optional, List, Dict, Any
+"""Serviço de busca semântica."""
+
 import os
-import logging
-from datetime import datetime
-import httpx
-import asyncio
+from typing import Any
 
-logger = logging.getLogger(__name__)
+from supabase import Client, create_client
 
-class SemanticSearchManager:
-    """Gerenciador de busca semântica com suporte a múltiplos modos."""
+from backend_rag_ia.constants import (
+    DEFAULT_SEARCH_LIMIT,
+    ERROR_SUPABASE_CONFIG,
+)
+from backend_rag_ia.exceptions import (
+    DatabaseError,
+    EmbeddingError,
+    SupabaseError,
+)
+from backend_rag_ia.utils.logging_config import logger
 
-    def __init__(self):
-        self.mode = os.getenv("SEMANTIC_SEARCH_MODE", "local")
-        self.last_error = None
-        self.last_success = None
-        # URLs de teste - você deve substituir pelos endpoints reais
-        self.local_url = "http://localhost:8000/search"
-        self.render_url = "https://api.coflow.com.br/search"
 
-    async def search(self, query: str, **kwargs) -> List[Dict[Any, Any]]:
+class SemanticSearch:
+    """Serviço de busca semântica."""
+
+    def __init__(self) -> None:
+        """Inicializa o serviço."""
+        self.supabase = self._init_supabase()
+        self.status = {
+            "success": False,
+            "mode": None,
+            "error": None,
+        }
+
+    def _init_supabase(self) -> Client:
+        """Inicializa cliente do Supabase.
+
+        Returns:
+            Cliente do Supabase
+
+        Raises:
+            SupabaseError: Se houver erro na configuração
         """
-        Realiza busca semântica usando o modo configurado.
-        No modo auto, tenta local primeiro e faz fallback para Render se necessário.
+        # Verifica configuração
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_KEY")
+
+        if not url or not key:
+            logger.error("Configuração do Supabase incompleta")
+            raise SupabaseError(ERROR_SUPABASE_CONFIG)
+
+        try:
+            # Inicializa cliente
+            supabase = create_client(url, key)
+            self._update_status(success=True, mode="local")
+            return supabase
+
+        except Exception as e:
+            logger.exception("Erro ao conectar ao Supabase: %s", e)
+            self._update_status(success=False, mode="local", error=str(e))
+            raise SupabaseError from e
+
+    async def search(
+        self,
+        query: str,
+        limit: int = DEFAULT_SEARCH_LIMIT,
+        threshold: float = 0.5,
+    ) -> list[dict[str, Any]]:
+        """Realiza busca semântica.
+
+        Args:
+            query: Texto para buscar
+            limit: Número máximo de resultados
+            threshold: Limiar de similaridade
+
+        Returns:
+            Lista de documentos similares
+
+        Raises:
+            DatabaseError: Se houver erro na busca
         """
-        if self.mode == "auto":
-            try:
-                # Tenta busca local primeiro
-                results = await self._search_local(query, **kwargs)
-                self._update_status(success=True, mode="local")
-                return results
-            except Exception as e:
-                logger.warning(f"Busca local falhou: {str(e)}. Tentando Render...")
-                self._update_status(success=False, mode="local", error=str(e))
-                
-                try:
-                    # Fallback para Render
-                    results = await self._search_render(query, **kwargs)
-                    self._update_status(success=True, mode="render")
-                    return results
-                except Exception as e2:
-                    self._update_status(success=False, mode="render", error=str(e2))
-                    raise Exception(f"Ambas as buscas falharam. Local: {str(e)}. Render: {str(e2)}")
-        
-        elif self.mode == "local":
-            return await self._search_local(query, **kwargs)
-        
-        elif self.mode == "render":
-            return await self._search_render(query, **kwargs)
-        
-        else:
-            raise ValueError(f"Modo inválido: {self.mode}")
-
-    async def _search_local(self, query: str, **kwargs) -> List[Dict[Any, Any]]:
-        """Realiza busca usando pgvector local."""
         try:
-            # Simula um pequeno delay para teste
-            await asyncio.sleep(0.5)
-            
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    self.local_url,
-                    json={"query": query, **kwargs},
-                    timeout=5.0
-                )
-                response.raise_for_status()
-                return response.json()
-        except Exception as e:
-            logger.error(f"Erro na busca local: {str(e)}")
-            raise
+            # Gera embedding
+            embedding = await self._generate_embedding(query)
 
-    async def _search_render(self, query: str, **kwargs) -> List[Dict[Any, Any]]:
-        """Realiza busca usando Supabase+pgvector no Render."""
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    self.render_url,
-                    json={"query": query, **kwargs},
-                    headers={"Authorization": f"Bearer {os.getenv('RENDER_API_KEY')}"},
-                    timeout=10.0
-                )
-                response.raise_for_status()
-                return response.json()
-        except Exception as e:
-            logger.error(f"Erro na busca no Render: {str(e)}")
-            raise
-
-    def _update_status(self, success: bool, mode: str, error: Optional[str] = None):
-        """Atualiza o status da última operação."""
-        timestamp = datetime.now()
-        
-        if success:
-            self.last_success = {
-                "timestamp": timestamp,
-                "mode": mode
-            }
-            self.last_error = None
-        else:
-            self.last_error = {
-                "timestamp": timestamp,
-                "mode": mode,
-                "error": error
-            }
-
-    def get_status(self) -> Dict[str, Any]:
-        """Retorna o status atual do gerenciador."""
-        return {
-            "current_mode": self.mode,
-            "last_success": self.last_success,
-            "last_error": self.last_error,
-            "available_modes": ["local", "render", "auto"],
-            "is_healthy": self.last_error is None or (
-                self.last_success and 
-                self.last_success["timestamp"] > self.last_error["timestamp"]
+            # Busca documentos
+            results = await self._search_documents(
+                embedding=embedding,
+                limit=limit,
+                threshold=threshold,
             )
-        } 
+
+            # Retorna resultados
+            return results
+
+        except Exception as e:
+            logger.exception("Erro na busca: %s", e)
+            raise DatabaseError from e
+
+    async def _generate_embedding(self, text: str) -> list[float]:
+        """Gera embedding para um texto.
+
+        Args:
+            text: Texto para gerar embedding
+
+        Returns:
+            Lista de floats do embedding
+
+        Raises:
+            EmbeddingError: Se houver erro ao gerar embedding
+        """
+        try:
+            # Chama função RPC
+            result = await self.supabase.rpc(
+                "generate_embedding",
+                {"text": text},
+            ).execute()
+
+            # Verifica resultado
+            if result.data:
+                return result.data
+
+            logger.error("Erro ao gerar embedding: resultado vazio")
+            raise EmbeddingError("Resultado vazio")
+
+        except Exception as e:
+            logger.exception("Erro ao gerar embedding: %s", e)
+            raise EmbeddingError from e
+
+    async def _search_documents(
+        self,
+        embedding: list[float],
+        limit: int = DEFAULT_SEARCH_LIMIT,
+        threshold: float = 0.5,
+    ) -> list[dict[str, Any]]:
+        """Busca documentos por similaridade.
+
+        Args:
+            embedding: Embedding da query
+            limit: Número máximo de resultados
+            threshold: Limiar de similaridade
+
+        Returns:
+            Lista de documentos similares
+
+        Raises:
+            DatabaseError: Se houver erro na busca
+        """
+        try:
+            # Chama função RPC
+            result = await self.supabase.rpc(
+                "match_documents",
+                {
+                    "query_embedding": embedding,
+                    "match_count": limit,
+                    "similarity_threshold": threshold,
+                },
+            ).execute()
+
+            # Verifica resultado
+            if result.data:
+                return result.data
+            return []
+
+        except Exception as e:
+            logger.exception("Erro na busca por similaridade: %s", e)
+            raise DatabaseError from e
+
+    def _update_status(
+        self,
+        success: bool,
+        mode: str | None = None,
+        error: str | None = None,
+    ) -> None:
+        """Atualiza status do serviço.
+
+        Args:
+            success: Se a operação foi bem sucedida
+            mode: Modo de operação
+            error: Mensagem de erro
+        """
+        self.status = {
+            "success": success,
+            "mode": mode,
+            "error": error,
+        }

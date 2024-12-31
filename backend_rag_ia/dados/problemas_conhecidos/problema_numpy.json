@@ -1,0 +1,8 @@
+{
+  "categoria": "NumPy",
+  "titulo": "Erro no módulo ctypes",
+  "problema": "Erro ao executar busca semântica devido a incompatibilidade do NumPy",
+  "erro": "AttributeError: module 'numpy.ctypeslib' has no attribute '_get_scalar_type_map'",
+  "solucao": "Atualizar a versão do NumPy para uma versão compatível com o ambiente atual",
+  "prevencao": "Fixar a versão do NumPy no requirements.txt e documentar a versão específica que funciona"
+}

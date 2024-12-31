@@ -1,102 +1,122 @@
-#!/usr/bin/env python3
+"""CLI para converter regras markdown para JSON."""
 
 import json
+import sys
 from pathlib import Path
 
+from rich.console import Console
 
-def create_rule_document(title, content, rule_type, source_file):
-    """Cria documento JSON para uma regra."""
-    return {
-        "metadata_global": {
-            "language": "pt-BR",
-            "tipo": "regra",
-            "fonte": source_file,
-            "categorias": ["regras", rule_type.lower()],
-        },
-        "document": {
-            "content": content,
-            "metadata": {
-                "type": rule_type,
-                "title": title,
-                "importancia": "alta",
-                "aplicacao": "obrigatória",
-                "escopo": ["desenvolvimento", "produção"],
-                "formato_original": "markdown",
+from backend_rag_ia.services.md_converter import MarkdownConverter
+from backend_rag_ia.utils.logging_config import logger
+
+# Console para output
+console = Console()
+
+
+def convert_rule(
+    md_file: Path,
+    output_path: Path,
+    source_info: dict[str, str],
+) -> bool:
+    """Converte arquivo de regra para JSON.
+
+    Args:
+        md_file: Caminho do arquivo markdown
+        output_path: Caminho para salvar JSON
+        source_info: Informações sobre a fonte
+
+    Returns:
+        True se convertido com sucesso
+    """
+    try:
+        # Lê arquivo markdown
+        with md_file.open() as f:
+            content = f.read()
+
+        # Converte para JSON
+        converter = MarkdownConverter()
+        document = converter.convert(
+            content,
+            {
+                **source_info,
+                "tipo": "regra",
+                "categorias": ["regras"],
+                "tags": ["documentação", "regras"],
+                "versao": "1.0",
             },
-        },
-    }
+        )
+
+        # Salva JSON
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w") as f:
+            json.dump(document, f, ensure_ascii=False, indent=2)
+
+        logger.info("Convertido: %s -> %s", md_file.name, output_path.name)
+        return True
+
+    except Exception as e:
+        logger.exception("Erro ao converter %s: %s", md_file, e)
+        return False
 
 
-def extract_content_from_md(md_content):
-    """Extrai conteúdo estruturado do arquivo markdown."""
-    lines = md_content.strip().split("\n")
-    sections = []
-    current_section = []
-    current_title = ""
+def process_rules_directory(rules_dir: Path, output_dir: Path) -> None:
+    """Processa diretório de regras.
 
-    for line in lines:
-        if line.startswith("#"):
-            if current_section:
-                sections.append((current_title, "\n".join(current_section)))
-                current_section = []
-            current_title = line.strip("# ").strip()
-        elif line.strip():
-            current_section.append(line.strip())
+    Args:
+        rules_dir: Diretório com arquivos markdown
+        output_dir: Diretório para salvar JSONs
+    """
+    # Lista arquivos markdown
+    md_files = list(rules_dir.glob("**/*.md"))
+    logger.info("Encontrados %d arquivos markdown", len(md_files))
 
-    if current_section:
-        sections.append((current_title, "\n".join(current_section)))
+    # Processa cada arquivo
+    success = 0
+    errors = 0
 
-    return sections
+    for md_file in md_files:
+        # Define caminho de saída
+        rel_path = md_file.relative_to(rules_dir)
+        output_path = output_dir / rel_path.with_suffix(".json")
 
+        # Informações da fonte
+        source_info = {
+            "filename": md_file.name,
+            "path": str(rel_path),
+        }
 
-def convert_md_to_json(md_file, output_dir):
-    """Converte arquivo markdown em documento JSON."""
-    with open(md_file, encoding="utf-8") as f:
-        content = f.read()
+        # Converte arquivo
+        if convert_rule(md_file, output_path, source_info):
+            success += 1
+        else:
+            errors += 1
 
-    # Extrai o tipo da regra do nome do arquivo
-    rule_type = md_file.stem.replace("REGRAS_", "").replace("_RULES", "")
-
-    # Processa o conteúdo
-    sections = extract_content_from_md(content)
-
-    # Cria o documento principal
-    main_content = "\n\n".join([f"{title}:\n{content}" for title, content in sections])
-    doc = create_rule_document(
-        title=md_file.stem,
-        content=main_content,
-        rule_type=rule_type,
-        source_file=md_file.name,
+    # Exibe resultado
+    logger.info(
+        "Conversão concluída: %d sucessos, %d erros",
+        success,
+        errors,
     )
 
-    # Cria nome do arquivo JSON
-    json_filename = f"{md_file.stem.lower()}.json"
-    output_path = output_dir / json_filename
 
-    # Salva o documento
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(doc, f, ensure_ascii=False, indent=2)
+def main() -> None:
+    """Função principal."""
+    # Verifica argumentos
+    if len(sys.argv) < 3:
+        logger.error("Uso: convert_rules.py <rules_dir> <output_dir>")
+        sys.exit(1)
 
-    print(f"Convertido: {md_file.name} -> {output_path.name}")
+    # Obtém caminhos
+    rules_dir = Path(sys.argv[1])
+    output_dir = Path(sys.argv[2])
 
+    if not rules_dir.exists():
+        logger.error("Diretório de regras não encontrado: %s", rules_dir)
+        sys.exit(1)
 
-def process_rules_directory(rules_dir, output_dir):
-    """Processa todos os arquivos markdown no diretório de regras."""
-    rules_dir = Path(rules_dir)
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    for md_file in rules_dir.glob("*.md"):
-        convert_md_to_json(md_file, output_dir)
+    # Processa diretório
+    process_rules_directory(rules_dir, output_dir)
 
 
 if __name__ == "__main__":
-    rules_dir = Path(__file__).parent.parent / "regras"
-    output_dir = Path(__file__).parent.parent / "documents" / "regras"
-
-    if not rules_dir.exists():
-        print(f"Diretório de regras não encontrado: {rules_dir}")
-        exit(1)
-
-    process_rules_directory(rules_dir, output_dir)
-    print("\nConversão concluída!")
+    main()

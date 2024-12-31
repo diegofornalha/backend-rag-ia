@@ -58,11 +58,11 @@ class RenderManager:
 
             console.print("[red]❌ Imagem não tem suporte para linux/amd64[/red]")
             return False
-        except:
+        except requests.RequestException as e:
             console.print(
-                "[yellow]⚠️ Não foi possível verificar o manifesto da imagem[/yellow]"
+                f"[yellow]⚠️ Não foi possível verificar o manifesto da imagem: {e}[/yellow]"
             )
-            return True  # Continuar mesmo assim
+            return False
 
     def reiniciar_servidor(self):
         console.print("\n[bold blue]🔄 Reiniciando servidor no Render...[/bold blue]")
@@ -95,7 +95,7 @@ class RenderManager:
                 console.print(
                     f"[red]Detalhes do erro: {json.dumps(erro_detalhes, indent=2)}[/red]"
                 )
-            except:
+            except (json.JSONDecodeError, ValueError):
                 console.print(f"[red]Resposta do erro: {response.text}[/red]")
             return False
 

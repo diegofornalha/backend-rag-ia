@@ -3,7 +3,6 @@ import os
 import socket
 import urllib.error
 import urllib.request
-from datetime import datetime
 
 import pytest
 

@@ -33,10 +33,10 @@ def instalar_hook():
     try:
         with pre_commit.open("w") as f:
             f.write(PRE_COMMIT_HOOK)
-        
+
         # Torna o arquivo executável
         os.chmod(pre_commit, os.stat(pre_commit).st_mode | stat.S_IEXEC)
-        
+
         console.print("[green]✅ Hook de pré-commit instalado com sucesso![/green]")
         return True
     except Exception as e:
@@ -45,4 +45,4 @@ def instalar_hook():
 
 if __name__ == "__main__":
     console.print("\n[bold blue]Instalando hook de pré-commit...[/bold blue]")
-    instalar_hook() 
+    instalar_hook()

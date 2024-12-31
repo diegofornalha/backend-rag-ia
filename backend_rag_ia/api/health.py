@@ -1,6 +1,7 @@
-from fastapi import APIRouter
 import os
 from datetime import datetime
+
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/api/v1", tags=["health"])
 
@@ -22,4 +23,4 @@ async def health_check():
             "description": mode_description,
             "status": "active"
         }
-    } 
+    }

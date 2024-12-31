@@ -58,7 +58,7 @@ def verificar_imagem() -> bool:
     else:
         logger.info("Imagem não encontrada ou desatualizada, tentando pull...")
         console.print("Imagem não encontrada ou desatualizada, tentando pull...")
-        
+
         sucesso, resultado = executar_comando(f"docker pull {IMAGEM_DOCKER}")
         if not sucesso:
             logger.error(f"Erro no pull da imagem: {resultado}")
@@ -71,7 +71,7 @@ def verificar_imagem() -> bool:
             logger.error("ID da imagem não corresponde ao esperado após pull")
             console.print("[red]❌ Pull realizado mas ID da imagem não corresponde ao esperado[/red]")
             return False
-            
+
         logger.info("Pull realizado com sucesso")
         console.print(f"[green]✅ Pull realizado com sucesso - Imagem correta (ID: {ID_ESPERADO})[/green]")
 
@@ -89,7 +89,7 @@ def verificar_configuracao() -> bool:
     """Verifica configurações da imagem Docker (portas e variáveis)."""
     logger.info("Iniciando verificação de configuração")
     console.print("\n[bold blue]2. Verificando Configuração da Imagem[/bold blue]")
-    
+
     sucesso, resultado = executar_comando(f"docker inspect {IMAGEM_DOCKER}")
     if not sucesso:
         logger.error("Falha ao inspecionar imagem")
@@ -102,7 +102,7 @@ def verificar_configuracao() -> bool:
         logger.exception("Erro ao processar configuração da imagem")
         console.print("[red]❌ Erro ao processar configuração da imagem[/red]")
         return False
-    
+
     # Verifica portas
     portas = config.get("ExposedPorts", {})
     porta_esperada = f"{PORTA_PADRAO}/tcp"
@@ -137,11 +137,11 @@ def testar_ambiente() -> bool:
     """Testa o ambiente Python e suas dependências."""
     logger.info("Iniciando teste do ambiente")
     console.print("\n[bold blue]3. Teste do Ambiente[/bold blue]")
-    
+
     for pacote in PACOTES_PYTHON:
         logger.info(f"Testando {pacote}")
         console.print(f"Testando {pacote}...")
-        
+
         comando = (
             f"{CMD_DOCKER_RUN} {IMAGEM_DOCKER} python --version"
             if pacote == "python"
@@ -151,13 +151,13 @@ import {pacote}
 print("OK - " + {pacote}.__version__ if hasattr({pacote}, "__version__") else "OK")
 '"""
         )
-        
+
         sucesso, resultado = executar_comando(comando)
         if not sucesso:
             logger.error(f"Falha ao verificar {pacote}: {resultado}")
             console.print(f"[red]❌ Falha ao verificar {pacote}: {resultado}[/red]")
             return False
-            
+
         logger.info(f"{pacote}: {resultado}")
         console.print(f"[green]✅ {pacote}: {resultado}[/green]")
 
