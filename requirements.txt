@@ -42,7 +42,7 @@ pytest-asyncio>=0.23.5
 
 # CLI
 click>=8.1.7
-rich>=13.7.0
+rich==13.7.0
 
 # Segurança (Mantenha sempre atualizado)
 cryptography>=42.0.0  # Crítico para segurança

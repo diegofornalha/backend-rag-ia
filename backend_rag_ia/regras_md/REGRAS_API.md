@@ -369,3 +369,68 @@ docs = vector_store.filter_by_metadata({
    - Validação de entrada
    - Sanitização de dados
    - Logging de operações
+
+## Configuração de Busca Semântica
+
+### 1. Variável de Controle
+
+```bash
+# No arquivo .env
+SEMANTIC_SEARCH_MODE=local  # Opções: local, render, auto
+```
+
+### 2. Modos de Operação
+
+1. **Modo Local (Docker)**:
+
+   - Usa pgvector local via Docker
+   - Embeddings armazenados localmente
+   - Ideal para desenvolvimento e testes
+   - Configurar com `SEMANTIC_SEARCH_MODE=local`
+
+2. **Modo Render (Produção)**:
+
+   - Usa Supabase+pgvector em produção
+   - Embeddings no Supabase
+   - Ideal para produção
+   - Configurar com `SEMANTIC_SEARCH_MODE=render`
+
+3. **Modo Auto**:
+   - Tenta local primeiro
+   - Fallback para Render se local falhar
+   - Ideal para desenvolvimento com backup
+   - Configurar com `SEMANTIC_SEARCH_MODE=auto`
+
+### 3. Como Alternar
+
+1. **Via Ambiente**:
+
+   ```bash
+   # Ativar modo local
+   export SEMANTIC_SEARCH_MODE=local
+
+   # Ativar modo Render
+   export SEMANTIC_SEARCH_MODE=render
+
+   # Ativar modo automático
+   export SEMANTIC_SEARCH_MODE=auto
+   ```
+
+2. **Via API**:
+
+   ```bash
+   # Verificar modo atual
+   curl http://localhost:10000/api/v1/config/semantic-mode
+
+   # Alterar modo (requer autenticação)
+   curl -X POST http://localhost:10000/api/v1/config/semantic-mode \
+        -H "Content-Type: application/json" \
+        -d '{"mode": "local"}'
+   ```
+
+### 4. Verificação de Status
+
+- Endpoint `/api/v1/health` inclui modo atual
+- Logs indicam qual modo está ativo
+- Métricas separadas por modo
+- Alertas específicos por ambiente

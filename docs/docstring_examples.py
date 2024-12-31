@@ -1,7 +1,7 @@
 """Módulo de exemplo para demonstrar o estilo de documentação.
 
 Este módulo contém exemplos de documentação seguindo o estilo Google
-e as regras definidas no .pydocstyle e .flake8.
+e as regras definidas pelo Ruff.
 """
 
 
@@ -51,7 +51,7 @@ class ModeloExemplo:
         if dados.shape[0] != labels.shape[0]:
             raise ValueError("Dados e labels devem ter o mesmo número de amostras")
 
-        # Exemplo de list comprehension (seguindo regras do flake8-comprehensions)
+        # Exemplo de list comprehension (seguindo regras do Ruff)
         metricas = [self._treinar_epoca(dados, labels) for _ in range(epochs)]
 
         self.treinado = True
@@ -88,7 +88,7 @@ class ModeloExemplo:
         if not self.treinado:
             raise RuntimeError("Modelo precisa ser treinado antes de fazer predições")
 
-        # Exemplo de list comprehension (seguindo regras do flake8-comprehensions)
+        # Exemplo de list comprehension (seguindo regras do Ruff)
         return np.array([self._predizer_amostra(x) for x in dados])
 
     def _predizer_amostra(self, amostra: np.ndarray) -> float:

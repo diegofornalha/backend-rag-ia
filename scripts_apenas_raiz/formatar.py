@@ -72,55 +72,38 @@ def run_black(directory: str) -> bool:
         return False
 
 
-def run_flake8(directory: str) -> tuple[bool, list[str]]:
-    """Executa o flake8 em um diretório e retorna os problemas encontrados.
+def run_ruff(directory: str) -> tuple[bool, list[str]]:
+    """Executa o Ruff em um diretório e retorna os problemas encontrados.
 
     Args:
-        directory: Caminho do diretório para verificar.
+        directory: O diretório a ser verificado.
 
     Returns:
-        tuple: (passou_verificacao, lista_de_problemas)
+        Uma tupla contendo:
+        - bool: True se passou na verificação, False caso contrário
+        - list[str]: Lista de erros encontrados
     """
     try:
         result = subprocess.run(
             [
-                "flake8",
+                "ruff",
+                "check",
                 directory,
-                "--config=.flake8",
-                "--format=%(path)s:%(row)d:%(col)d: %(code)s %(text)s",
             ],
             capture_output=True,
-            text=True, check=False,
+            text=True,
+            check=False,
         )
 
         if result.returncode == 0:
-            console.print(
-                f"[green]✅ {directory} passou na verificação do flake8![/green]"
-            )
+            console.print(f"[green]✅ {directory} passou na verificação do Ruff![/green]")
             return True, []
-        console.print(f"\n[yellow]⚠️ Problemas encontrados em {directory}:[/yellow]")
-        errors = result.stdout.strip().split("\n")
-        formatted_errors = []
-        
-        if errors and errors[0]:  # Se há erros
-            for line in errors:
-                try:
-                    file_path, line_no, col, rest = line.split(":", 3)
-                    code = rest.split()[0]
-                    msg = rest[len(code):].strip()
-                    
-                    error_msg = f"📄 {os.path.basename(file_path)} - Linha {line_no}, Coluna {col}: {code} {msg}"
-                    formatted_errors.append(error_msg)
-                    console.print(f"   [yellow]{error_msg}[/yellow]")
-                except ValueError:
-                    if line.strip():
-                        formatted_errors.append(line.strip())
-                        console.print(f"   [yellow]{line.strip()}[/yellow]")
 
-        return False, formatted_errors
+        errors = result.stdout.splitlines()
+        return False, errors
 
     except Exception as e:
-        console.print(f"[red]❌ Erro ao executar flake8: {e!s}[/red]")
+        console.print(f"[red]❌ Erro ao executar Ruff: {e!s}[/red]")
         return False, [str(e)]
 
 
@@ -149,8 +132,8 @@ def format_and_check_directory(directory: str, max_attempts: int = 3) -> bool:
             console.print(f"[red]❌ Black falhou na tentativa {attempt}[/red]")
             return False
         
-        # Executa Flake8
-        passed, current_errors = run_flake8(directory)
+        # Executa Ruff
+        passed, current_errors = run_ruff(directory)
         if passed:
             console.print(f"[green]✅ Todas as verificações passaram para {directory}![/green]")
             return True
@@ -168,7 +151,7 @@ def format_and_check_directory(directory: str, max_attempts: int = 3) -> bool:
 
 
 def format_python_files():
-    """Formata todos os arquivos Python do projeto usando Black e verifica com flake8."""
+    """Formata todos os arquivos Python do projeto usando Black e verifica com Ruff."""
     try:
         # Primeiro verifica referências
         check_directory_references()
