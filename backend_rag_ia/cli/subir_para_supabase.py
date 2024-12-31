@@ -78,9 +78,9 @@ def upload_document(supabase: Client, document: Dict[str, Any]) -> bool:
         # Insere o documento
         response = supabase.table("01_base_conhecimento_regras_geral").insert({
             "titulo": document["titulo"],
-            "conteudo": document["conteudo"].encode('utf-8').decode('utf-8'),  # Garante UTF-8 válido
-            "metadata": document["metadata"]
-            # content_hash é gerado automaticamente pelo trigger
+            "conteudo": document["conteudo"],  # Envia como texto simples
+            "metadata": document["metadata"],
+            "content_hash": document["content_hash"]  # Inclui o hash explicitamente
         }).execute()
 
         if response.data:
