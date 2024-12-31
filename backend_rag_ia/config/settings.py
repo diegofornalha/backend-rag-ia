@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, List
 
 class Settings(BaseSettings):
     """
@@ -15,10 +15,6 @@ class Settings(BaseSettings):
     SUPABASE_URL: str
     SUPABASE_KEY: str
     
-    # Busca Semântica
-    SEARCH_THRESHOLD: float = 0.7
-    SEARCH_LIMIT: int = 10
-    
     # Ambiente
     ENVIRONMENT: str = "production"
     DEBUG: bool = False
@@ -28,19 +24,15 @@ class Settings(BaseSettings):
     RENDER_URL: str = "https://rag-api.onrender.com"
     LOCAL_URL: str = "http://localhost:10000"
     
-    # Configurações do Render
-    IS_RENDER: bool = False
-    RENDER_INSTANCE_ID: str | None = None
-    RENDER_SERVICE_ID: str | None = None
-    
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "allow"  # Permite variáveis extras
 
     @property
     def is_render_environment(self) -> bool:
         """Verifica se está rodando no ambiente Render."""
-        return self.IS_RENDER or self.ENVIRONMENT == "render"
+        return self.ENVIRONMENT == "render"
     
     @property
     def active_url(self) -> str:
