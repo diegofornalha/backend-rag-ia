@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Ferramenta CLI para realizar buscas semânticas com processamento LLM e interface conversacional.
+"""
 
 import os
 import json
@@ -20,18 +23,31 @@ load_dotenv()
 # Configura console
 console = Console()
 
-# Configura Gemini
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY não encontrada no .env")
+def get_api_url(endpoint: str = "") -> str:
+    """
+    Constrói a URL da API.
     
-genai.configure(api_key=GEMINI_API_KEY)
+    Args:
+        endpoint: Endpoint da API (opcional)
+        
+    Returns:
+        str: URL completa da API
+    """
+    base_url = os.getenv("ACTIVE_URL", os.getenv("LOCAL_URL", "http://localhost:10000"))
+    api_version = os.getenv("API_VERSION", "v1")
+    base = f"{base_url}/api/{api_version}"
+    return f"{base}/{endpoint.lstrip('/')}" if endpoint else base
 
 class GeminiChat:
     """Gerencia chat com Gemini."""
     
     def __init__(self):
         """Inicializa modelo Gemini em modo chat."""
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if not gemini_key:
+            raise ValueError("GEMINI_API_KEY não encontrada no .env")
+            
+        genai.configure(api_key=gemini_key)
         self.model = genai.GenerativeModel('gemini-pro')
         self.chat = self.model.start_chat(history=[])
         
@@ -201,11 +217,8 @@ def search_documents(query: str, context: str = "") -> Optional[Dict]:
         Resultados da busca ou None se houver erro
     """
     try:
-        # Obtém a URL da API do ambiente
-        api_url = os.getenv("LOCAL_URL", "http://localhost:10000")
-        
-        # Endpoint de busca
-        search_endpoint = f"{api_url}/api/v1/api/v1/search"
+        # Constrói endpoint de busca
+        search_endpoint = get_api_url("search")
         
         # Prepara query com contexto
         full_query = f"{context}\nNova pergunta: {query}" if context else query
@@ -248,144 +261,102 @@ def search_documents(query: str, context: str = "") -> Optional[Dict]:
         console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
         return None
 
-def format_response(response: str, docs: List[Dict]) -> str:
-    """Formata resposta final com fontes.
+def format_response(response: str, docs: List[Dict]) -> None:
+    """Formata e exibe a resposta.
     
     Args:
-        response: Resposta do LLM
-        docs: Documentos relevantes
-        
-    Returns:
-        Resposta formatada em markdown
+        response: Resposta processada
+        docs: Lista de documentos relevantes
     """
-    if not response:
-        return "Desculpe, não consegui gerar uma resposta."
-        
-    # Adiciona fontes
+    # Exibe resposta principal
+    console.print("\n[bold]Resposta:[/bold]")
+    console.print(Markdown(response))
+    
+    # Exibe documentos relevantes
     if docs:
-        response += "\n\n**Fontes consultadas:**\n"
-        for doc in docs[:3]:  # Limita a 3 fontes
-            title = doc.get("titulo", "").replace("_", " ").title()
-            response += f"- {title}\n"
+        console.print(f"\n[bold]Documentos relevantes ({len(docs)} encontrados):[/bold]")
+        
+        # Cria tabela
+        table = Table(show_header=True, header_style="bold")
+        table.add_column("ID", style="dim")
+        table.add_column("Título")
+        table.add_column("Relevância", justify="right")
+        
+        # Adiciona resultados
+        for doc in docs:
+            similarity = doc.get("similarity", 0)
+            table.add_row(
+                str(doc.get("id", ""))[:10],
+                doc.get("titulo", ""),
+                f"{similarity*100:.0f}%"
+            )
             
-    return response
+        console.print(table)
 
 def main() -> None:
     """Função principal."""
     try:
-        # Carrega variáveis de ambiente
-        load_dotenv()
-        
-        # Inicializa histórico e chat
-        history = ChatHistory()
+        # Inicializa chat e histórico
         chat = GeminiChat()
+        history = ChatHistory()
         
-        console.clear()
-        console.print("\n✨ Bem-vindo ao Assistente RAG! ✨", style="bold magenta")
-        console.print("\nOlá! Sou um assistente conversacional que pode ajudar você a encontrar informações.")
-        console.print("Vou primeiro entender sua necessidade e depois buscar as informações mais relevantes.")
-        console.print("\nDicas:")
-        console.print("• Seja específico em suas perguntas")
-        console.print("• Posso fazer perguntas para entender melhor")
-        console.print("• Digite 'q' para sair ou 'clear' para limpar o histórico\n")
+        console.print("\n[bold]🤖 Assistente de Busca Semântica[/bold]")
+        console.print("Digite 'sair' para encerrar ou 'limpar' para reiniciar a conversa.")
         
-        # Loop principal
         while True:
-            try:
-                # Obtém query do usuário
-                query = Prompt.ask("\n💭 Você")
-                
-                # Verifica comandos especiais
-                if query.lower() == 'q':
-                    console.print("\n👋 Até logo!", style="bold magenta")
-                    break
-                elif query.lower() == 'clear':
-                    history.clear()
-                    chat = GeminiChat()  # Reinicia chat
-                    console.print("\n🧹 Histórico limpo!", style="bold yellow")
-                    continue
-                    
-                # Adiciona query ao histórico
-                history.add_message("user", query)
-                
-                # Primeiro processa com Gemini para entender a intenção
-                with ChatSpinner():
-                    initial_response = chat.process_initial_response(query)
+            # Obtém query do usuário
+            query = Prompt.ask("\n[bold]Você[/bold]")
+            
+            # Verifica comandos especiais
+            if query.lower() == "sair":
+                console.print("\n[bold]👋 Até logo![/bold]")
+                break
+            elif query.lower() == "limpar":
+                history.clear()
+                chat = GeminiChat()
+                console.print("\n[bold]🔄 Conversa reiniciada![/bold]")
+                continue
+            
+            # Adiciona query ao histórico
+            history.add_message("user", query)
+            
+            with ChatSpinner():
+                # Processa query inicial
+                initial_response = chat.process_initial_response(query)
                 
                 # Verifica se deve realizar busca
                 if chat.should_search(initial_response):
-                    # Remove o marcador [BUSCAR] da resposta
-                    search_message = initial_response.replace("[BUSCAR]", "").strip()
-                    if search_message:
-                        console.print(f"\n🤖 {search_message}", style="bold green")
+                    # Remove tag [BUSCAR] da resposta
+                    search_msg = initial_response.replace("[BUSCAR]", "").strip()
+                    if search_msg:
+                        console.print(f"\n[bold]🤖 Assistente:[/bold] {search_msg}")
                     
                     # Realiza busca
-                    with ChatSpinner():
-                        results = search_documents(query, history.get_context())
+                    results = search_documents(query, history.get_context())
                     
-                    if not results:
-                        console.print("\n❌ Não consegui encontrar informações relevantes", style="bold red")
-                        continue
-                    
-                    # Extrai documentos com tratamento de erro
-                    try:
-                        if isinstance(results, dict) and "results" in results:
-                            docs = results["results"].get("results", [])
-                        else:
-                            docs = []
-                    except:
-                        docs = []
-                    
-                    # Processa resultados com Gemini
-                    response = chat.process_search_response(query, docs)
-                    formatted_response = format_response(response, docs)
-                    
-                    # Adiciona ao histórico e exibe
-                    history.add_message("assistant", formatted_response)
-                    
-                    console.print("\n🤖 Assistente:", style="bold green")
-                    console.print(Panel(
-                        Markdown(formatted_response),
-                        border_style="green",
-                        expand=True
-                    ))
-                    
-                    # Mostra documentos relevantes em tabela compacta
-                    if docs:
-                        console.print(f"\n📚 Documentos relevantes:", style="dim")
+                    if results:
+                        # Processa documentos encontrados
+                        docs = results.get("results", [])
+                        response = chat.process_search_response(query, docs)
                         
-                        table = Table(show_header=True, header_style="dim")
-                        table.add_column("Título", style="dim")
-                        table.add_column("Relevância", justify="right", style="dim")
+                        # Formata e exibe resposta
+                        format_response(response, docs)
                         
-                        for doc in docs:
-                            try:
-                                title = doc.get("titulo", "").replace("_", " ").title()
-                                relevance = f"{doc.get('relevance', 0):.1f}"
-                                table.add_row(title, relevance)
-                            except:
-                                continue
-                                
-                        console.print(table)
-                
+                        # Adiciona resposta ao histórico
+                        history.add_message("assistant", response)
+                    else:
+                        console.print("\n[red]❌ Não foi possível realizar a busca[/red]")
                 else:
-                    # Apenas mostra a resposta conversacional
+                    # Exibe resposta direta
+                    console.print(f"\n[bold]🤖 Assistente:[/bold] {initial_response}")
+                    
+                    # Adiciona resposta ao histórico
                     history.add_message("assistant", initial_response)
-                    console.print("\n🤖 Assistente:", style="bold green")
-                    console.print(Panel(
-                        Markdown(initial_response),
-                        border_style="green",
-                        expand=True
-                    ))
                 
-            except Exception as e:
-                console.print(f"\n❌ Erro no processamento: {str(e)}", style="bold red")
-                continue
-            
     except KeyboardInterrupt:
-        console.print("\n\n👋 Até logo!", style="bold magenta")
+        console.print("\n\n[bold]👋 Até logo![/bold]")
     except Exception as e:
-        console.print(f"\n❌ Erro: {str(e)}", style="bold red")
+        console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
 
 if __name__ == "__main__":
-    main()
+    main() 
