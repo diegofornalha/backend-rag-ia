@@ -1,0 +1,17 @@
+{
+  "titulo": "Verificação de Endpoints Existentes",
+  "tipo": "tecnico",
+  "contexto": "Discussão sobre a necessidade de verificar todos os endpoints existentes antes de sugerir novos, após um caso onde endpoints existentes foram esquecidos",
+  "status": "aberto",
+  "data_inicio": "2025-01-01T10:35:43.503070",
+  "argumentos": [
+    {
+      "autor": "USER",
+      "conteudo": "A verificação de endpoints é considerada 'básica' e fundamental do ponto de vista do desenvolvedor, indicando uma forte preferência pessoal pela completude na verificação.",
+      "tipo": "preferencia",
+      "data": "2025-01-01T10:35:56.447282"
+    }
+  ],
+  "decisao": null,
+  "razao": null
+}

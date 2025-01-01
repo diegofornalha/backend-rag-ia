@@ -188,3 +188,73 @@
    - Seguir processo de resolução
    - Obter aprovações necessárias
    - Documentar decisão
+
+## 7. Preferências Pessoais vs. Regras do Projeto
+
+### 7.1 Identificação de Preferências Pessoais
+
+1. **Indicadores de Preferência Pessoal**:
+
+   - Uso de termos como "básico", "óbvio", "simples"
+   - Referências a experiências individuais
+   - Sugestões baseadas em hábitos pessoais
+   - Padrões não documentados
+
+2. **Documentação**:
+   - Registrar explicitamente como preferência pessoal
+   - Separar de regras técnicas/obrigatórias
+   - Manter rastreabilidade da origem
+
+### 7.2 Embates Saudáveis
+
+1. **Princípios**:
+
+   - Foco na qualidade do projeto
+   - Argumentação técnica e objetiva
+   - Respeito às diferentes perspectivas
+   - Documentação das discussões
+
+2. **Processo de Discussão**:
+
+   ```
+   1. Identificar natureza do conflito (técnico vs. preferência)
+   2. Apresentar argumentos objetivos
+   3. Considerar impacto no projeto
+   4. Buscar consenso baseado em dados
+   5. Documentar decisão e razões
+   ```
+
+3. **Critérios de Avaliação**:
+   - Impacto na manutenibilidade
+   - Consistência com padrões existentes
+   - Benefícios mensuráveis
+   - Custo de implementação
+
+### 7.3 Resolução Construtiva
+
+1. **Quando é Preferência Pessoal**:
+
+   - Reconhecer explicitamente
+   - Avaliar benefícios objetivos
+   - Considerar impacto na equipe
+   - Documentar como sugestão
+
+2. **Quando é Regra Técnica**:
+
+   - Basear em padrões estabelecidos
+   - Apresentar evidências técnicas
+   - Demonstrar benefícios concretos
+   - Documentar como requisito
+
+3. **Documentação da Decisão**:
+
+   ```markdown
+   ## Decisão: [TÍTULO]
+
+   - Tipo: [Preferência Pessoal/Regra Técnica]
+   - Contexto: [Descrição]
+   - Argumentos: [Pontos principais]
+   - Impacto: [Análise objetiva]
+   - Decisão: [Escolha final]
+   - Razão: [Justificativa]
+   ```
