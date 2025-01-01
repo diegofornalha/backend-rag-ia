@@ -4,8 +4,13 @@
 
 ### Diretórios Raiz
 
-1. Diretórios com sufixo `_apenas_raiz` indicam que devem ficar na raiz do projeto
-2. Subpastas dentro de diretórios `_apenas_raiz` devem seguir o padrão numérico:
+1. Diretórios raiz seguem o padrão numérico com dois dígitos:
+
+   - Formato: `NN_nome_apenas_raiz`
+   - Exemplo: `01_regras_md_apenas_raiz`, `02_logs_apenas_raiz`
+   - Exceção: `backend_rag_ia` (core da aplicação)
+
+2. Subpastas dentro de diretórios `_apenas_raiz` seguem padrão numérico simples:
    - Formato: `N_nome_da_pasta` onde N é um número sequencial
    - Exemplo: `1_core`, `2_database`, `3_deployment`, etc.
    - Todas as subpastas devem seguir este padrão sem exceção
@@ -14,21 +19,26 @@
 
 1. Arquivos dentro das pastas devem seguir o padrão alfabético:
    - Formato: `letra_nome_do_arquivo.extensão`
-   - Exemplo: `a_index.md`, `b_tasks.md`, `c_setup.md`, etc.
+   - Exemplo: `a_index.md`, `b_tasks.md`, `c_regras.md`, etc.
    - Usar letras minúsculas e underscores
    - Evitar caracteres especiais ou acentos
    - Isso se aplica a TODOS os arquivos, incluindo documentação e configuração
 
 ### Regras de Documentação
 
-1. Todos os arquivos markdown (`.md`) devem ficar no diretório `regras_md_apenas_raiz`
+1. Todos os arquivos markdown (`.md`) devem ficar no diretório `01_regras_md_apenas_raiz`
 2. A documentação é organizada em categorias numeradas:
    - `1_core/` - Documentação do núcleo
+     - `a_readme.md` - Documentação principal do projeto
+     - `g_regras_avaliacao_core.md` - Regras para avaliar core vs. não-core
+     - `h_diretrizes_hierarquia.md` - Diretrizes de hierarquia e organização
    - `2_database/` - Documentação do banco de dados
+     - `a_render_settings.md` - Configurações do Render
    - `3_deployment/` - Documentação de implantação
    - `4_development/` - Documentação de desenvolvimento
-     - `a_index.md`
-     - `b_tasks.md` (anteriormente TASKS.md)
+     - `a_index.md` - Índice da documentação
+     - `b_tasks.md` - Lista de tarefas e organização
+     - `c_regras.md` - Regras e padrões do projeto
    - `5_monitoring/` - Documentação de monitoramento
    - `6_melhorias/` - Propostas de melhorias
      - `a_llm_improvements.md`
@@ -38,29 +48,17 @@
      - `e_feedback_loop.md`
      - `f_otimizacao_de_embeddings.md`
 
-### Consolidação de Diretórios ✅
-
-Alguns diretórios têm funções similares e foram consolidados:
-
-1. `ferramentas_rag_apenas_raiz` + `tools_apenas_raiz` → `/tools` ✅
-   - Todas as ferramentas CLI foram movidas para `/tools`
-   - Arquivos duplicados foram removidos
-   - Mantém organização mais clara e evita duplicação
-
 ### Estrutura Final
 
 ```
 /
-├── logs/           # Logs da aplicação
-├── monitoring/     # Scripts de monitoramento
-├── regras_md/     # Documentação em markdown
-├── scripts/       # Scripts utilitários
-├── sql/          # Scripts SQL e migrações
-├── testes/       # Testes automatizados
-└── tools/        # Ferramentas CLI (consolida ferramentas_rag)
-    ├── cli/      # Ferramentas de linha de comando
-    ├── database/ # Ferramentas de banco de dados
-    └── utils/    # Utilitários compartilhados
+├── backend_rag_ia/          # Core da aplicação (exceção)
+├── 01_regras_md_apenas_raiz/# Documentação e regras
+├── 02_logs_apenas_raiz/     # Logs da aplicação
+├── 03_monitoring_apenas_raiz/# Scripts de monitoramento
+├── 04_scripts_apenas_raiz/  # Scripts utilitários
+├── 05_sql_apenas_raiz/      # Scripts SQL e migrações
+└── 06_testes_apenas_raiz/   # Testes automatizados
 ```
 
 ## 1. Ferramentas de Busca Semântica
@@ -105,7 +103,7 @@ Alguns diretórios têm funções similares e foram consolidados:
   - [x] `/utils` - Utilitários compartilhados
 
 - [x] Criar documentação
-  - [x] README.md para cada ferramenta
+  - [x] `a_readme.md` para cada ferramenta
   - [x] Instruções de uso
   - [x] Requisitos e dependências
 
@@ -125,6 +123,6 @@ Alguns diretórios têm funções similares e foram consolidados:
 
 ## 6. Próximos Passos
 
-- [ ] Mover todos os arquivos `.md` para `regras_md_apenas_raiz`
-- [ ] Organizar documentação por categorias
-- [ ] Atualizar referências nos arquivos
+- [x] Mover todos os arquivos `.md` para `regras_md_apenas_raiz`
+- [x] Organizar documentação por categorias
+- [x] Atualizar referências nos arquivos

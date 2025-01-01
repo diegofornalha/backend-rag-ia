@@ -66,8 +66,10 @@ def process_markdown_file(file_path: Path) -> Optional[Dict]:
         return {
             "titulo": title,
             "conteudo": json.dumps({"text": content}),
-            "tipo": "markdown",
-            "fonte": str(file_path)
+            "metadata": json.dumps({
+                "tipo": "markdown",
+                "fonte": str(file_path)
+            })
         }
         
     except Exception as e:
@@ -120,7 +122,18 @@ def upload_documents(client: Client, docs_dir: str) -> None:
                     
                 try:
                     # Faz upload
-                    client.table("documentos").insert(doc_data).execute()
+                    result = client.table("01_base_conhecimento_regras_geral").insert(doc_data).execute()
+                    response_data = result.data if hasattr(result, 'data') else result
+                    
+                    console.print(f"\nResposta do Supabase para {file_path.name}:")
+                    console.print(response_data)
+                    
+                    if isinstance(response_data, dict) and "error" in response_data:
+                        console.print(f"\n[red]Erro ao fazer upload de {file_path.name}: {response_data['error']}[/red]")
+                    elif not response_data:
+                        console.print(f"\n[red]Erro ao fazer upload de {file_path.name}: Resposta vazia[/red]")
+                    else:
+                        console.print(f"\n[green]✅ Upload de {file_path.name} concluído[/green]")
                 except Exception as e:
                     console.print(f"\n[red]Erro ao fazer upload de {file_path.name}: {str(e)}[/red]")
                     continue
@@ -133,6 +146,24 @@ def upload_documents(client: Client, docs_dir: str) -> None:
     except Exception as e:
         console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
 
+def check_table_exists(client: Client) -> bool:
+    """
+    Verifica se a tabela base_conhecimento_regras_geral existe.
+    
+    Args:
+        client: Cliente do Supabase
+        
+    Returns:
+        True se a tabela existe, False caso contrário
+    """
+    try:
+        # Tenta fazer uma consulta simples
+        result = client.table("01_base_conhecimento_regras_geral").select("*").limit(1).execute()
+        return True
+    except Exception as e:
+        console.print(f"\n[red]Erro ao verificar tabela: {str(e)}[/red]")
+        return False
+
 def main() -> None:
     """Função principal."""
     try:
@@ -141,6 +172,16 @@ def main() -> None:
         # Inicializa cliente
         client = get_supabase_client()
         if not client:
+            return
+            
+        # Verifica tabela
+        console.print("\n[bold]Verificando tabela base_conhecimento_regras_geral...[/bold]")
+        if not check_table_exists(client):
+            console.print("\n[red]❌ Tabela '01_base_conhecimento_regras_geral' não encontrada no Supabase[/red]")
+            console.print("\nExecute primeiro os scripts SQL em sql_apenas_raiz/1_setup/:")
+            console.print("1. a_01_base_conhecimento_regras_geral.sql")
+            console.print("2. b_02_embeddings_regras_geral.sql")
+            console.print("3. c_setup_search.sql")
             return
             
         # Obtém diretório dos documentos
