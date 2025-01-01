@@ -61,6 +61,8 @@ A regra "consultar primeiro, criar depois" é um princípio essencial que estabe
 1. **Busca Inicial**:
 
    - Usar RAG para busca semântica
+   - **OBRIGATÓRIO**: Verificar TODOS os endpoints existentes em `/api/routes`
+   - **OBRIGATÓRIO**: Documentar TODOS os endpoints encontrados antes de sugerir novos
    - Verificar diretórios relevantes
    - Analisar documentação existente
    - Identificar padrões estabelecidos
@@ -71,16 +73,19 @@ A regra "consultar primeiro, criar depois" é um princípio essencial que estabe
    - Verificar possibilidade de reutilização
    - Identificar necessidade de adaptação
    - Documentar decisões
+   - **OBRIGATÓRIO**: Criar lista de verificação de endpoints existentes
 
 3. **Decisão**:
    - Reutilizar recursos existentes quando possível
    - Adaptar código existente se necessário
    - Criar novo apenas se realmente necessário
+   - **OBRIGATÓRIO**: Justificar qualquer novo endpoint em relação aos existentes
    - Documentar justificativa
 
 ### 4.2 Documentação
 
 - Registrar processo de consulta
+- **OBRIGATÓRIO**: Manter lista atualizada de TODOS os endpoints
 - Documentar decisões tomadas
 - Manter referências a recursos existentes
 - Atualizar índices e guias
