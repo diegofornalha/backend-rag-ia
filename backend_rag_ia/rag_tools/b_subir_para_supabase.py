@@ -6,11 +6,19 @@ import json
 from datetime import datetime
 from supabase import create_client, Client
 from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
+
+# Carrega variáveis de ambiente
+load_dotenv()
 
 # Configuração do cliente Supabase
 url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_KEY")
+key: str = os.environ.get("SUPABASE_SERVICE_KEY", os.environ.get("SUPABASE_KEY"))  # Tenta service_key primeiro
 supabase: Client = create_client(url, key)
+
+# Debug
+print(f"\nURL: {url}")
+print(f"Key: {key[:6]}...{key[-6:] if key else ''}\n")
 
 # Modelo para gerar embeddings
 model = SentenceTransformer('all-MiniLM-L6-v2')
