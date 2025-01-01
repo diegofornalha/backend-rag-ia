@@ -34,42 +34,45 @@ class SemanticSearchManager:
 
     def _init_supabase(self) -> Optional[Client]:
         """Inicializa cliente do Supabase."""
-        url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_KEY", os.getenv("SUPABASE_SERVICE_KEY"))  # Tenta service key como fallback
-
-        if not url or not key:
-            logger.warning("Configuração do Supabase incompleta, usando modo local")
-            self.local_mode = True
-            return None
-
         try:
-            # Tenta inicializar com diferentes configurações
-            client = create_client(url, key)
-            
-            # Testa a conexão
+            url = os.getenv("SUPABASE_URL")
+            key = os.getenv("SUPABASE_KEY")
+
+            if not url or not key:
+                logger.warning("Configuração do Supabase incompleta")
+                self.local_mode = True
+                return None
+
+            # Tenta inicializar com a chave anônima
             try:
-                client.from_("base_conhecimento").select("count", count='exact').limit(1).execute()
-                logger.info("Conexão com Supabase estabelecida com sucesso")
-                return client
-            except Exception as e:
-                if "Invalid API key" in str(e):
-                    # Tenta com service key se disponível
-                    service_key = os.getenv("SUPABASE_SERVICE_KEY")
-                    if service_key and service_key != key:
-                        try:
-                            client = create_client(url, service_key)
-                            client.from_("base_conhecimento").select("count", count='exact').limit(1).execute()
-                            logger.info("Conexão com Supabase estabelecida usando service key")
-                            return client
-                        except:
-                            pass
+                client = create_client(url, key)
                 
-                logger.warning("Erro ao conectar ao Supabase: %s, usando modo local", e)
+                # Configura headers de autenticação
+                headers = {
+                    "Authorization": f"Bearer {key}",
+                    "apikey": key,
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                }
+                client.postgrest.auth(headers)
+                
+                # Testa a conexão usando o schema correto
+                try:
+                    client.schema("rag").from_("01_base_conhecimento_regras_geral").select("id").limit(1).execute()
+                    logger.info("Conexão com Supabase estabelecida com sucesso")
+                    return client
+                except Exception as e:
+                    logger.error("Erro ao testar conexão: %s", str(e))
+                    self.local_mode = True
+                    return None
+                    
+            except Exception as e:
+                logger.error("Erro ao criar cliente Supabase: %s", str(e))
                 self.local_mode = True
                 return None
                 
         except Exception as e:
-            logger.warning("Erro ao inicializar Supabase: %s, usando modo local", e)
+            logger.error("Erro ao inicializar Supabase: %s", str(e))
             self.local_mode = True
             return None
 
@@ -77,20 +80,20 @@ class SemanticSearchManager:
         self,
         query: str,
         limit: int = DEFAULT_SEARCH_LIMIT,
-        threshold: float = 0.3,  # Reduzido para ser mais flexível
+        threshold: float = 0.3,
     ) -> Dict[str, Any]:
         """Realiza busca híbrida (semântica + textual)."""
         try:
             results = []
             
-            # Tenta busca semântica primeiro
-            if not self.local_mode:
+            # Tenta busca semântica primeiro se não estiver em modo local
+            if not self.local_mode and self.supabase:
                 try:
                     semantic_results = self._semantic_search(query, limit, threshold)
                     if semantic_results:
                         results.extend(semantic_results)
-                except Exception as e:
-                    logger.warning("Erro na busca semântica: %s, tentando busca textual", e)
+                except Exception:
+                    pass  # Silenciosamente falha para busca textual
             
             # Faz busca textual como complemento ou fallback
             text_results = self._text_search(query, limit - len(results))
@@ -102,7 +105,6 @@ class SemanticSearchManager:
                         results.append(result)
             
             if not results:
-                logger.warning("Nenhum resultado encontrado")
                 return {
                     "answer": "Nenhum documento relevante encontrado",
                     "results": []
@@ -139,7 +141,6 @@ class SemanticSearchManager:
             }
 
         except Exception as e:
-            logger.warning("Erro na busca: %s", e)
             return {
                 "answer": f"Erro na busca: {str(e)}",
                 "results": []
@@ -152,21 +153,27 @@ class SemanticSearchManager:
         threshold: float,
     ) -> List[Dict[str, Any]]:
         """Realiza busca semântica."""
+        if self.local_mode or not self.supabase:
+            logger.info("Modo local ativo, pulando busca semântica")
+            return []
+            
         try:
-            if self.local_mode:
-                logger.info("Modo local ativo, pulando busca semântica")
-                return []
-                
             # Gera ou busca embedding em cache
             embedding = self._get_embedding(query)
             
             if not embedding:
+                logger.warning("Não foi possível gerar embedding para a query")
                 return []
                 
             try:
                 # Busca documentos similares
-                return self._search_documents(embedding, limit, threshold)
+                results = self._search_documents(embedding, limit, threshold)
+                if results:
+                    logger.info("Encontrados %d documentos similares", len(results))
+                return results
+                
             except Exception as e:
+                logger.error("Erro na busca por similaridade: %s", str(e))
                 if "Invalid API key" in str(e):
                     logger.warning("Problema com autenticação Supabase, tentando reconectar")
                     # Tenta reinicializar conexão
@@ -176,7 +183,7 @@ class SemanticSearchManager:
                 return []
             
         except Exception as e:
-            logger.warning("Erro na busca semântica: %s", e)
+            logger.error("Erro na busca semântica: %s", str(e))
             return []
 
     def _get_embedding(self, text: str) -> Optional[List[float]]:
@@ -218,26 +225,43 @@ class SemanticSearchManager:
         threshold: float = 0.5,
     ) -> List[Dict[str, Any]]:
         """Busca documentos por similaridade."""
+        if self.local_mode or not self.supabase:
+            logger.info("Modo local ativo, pulando busca por similaridade")
+            return []
+            
         try:
             # Converte embedding para array de double precision
             embedding_array = [float(x) for x in embedding]
             
-            result = self.supabase.rpc(
-                "match_documents",
-                {
-                    "query_embedding": embedding_array,
-                    "match_count": limit,
-                    "match_threshold": threshold
-                }
-            ).execute()
+            try:
+                # Usa o schema correto para a função RPC
+                result = self.supabase.schema("rag").rpc(
+                    "match_documents",
+                    {
+                        "query_embedding": embedding_array,
+                        "match_count": limit,
+                        "match_threshold": threshold
+                    }
+                ).execute()
 
-            if hasattr(result, 'data'):
-                return result.data or []
-            return result or []
+                if hasattr(result, 'data'):
+                    data = result.data or []
+                else:
+                    data = result or []
+                    
+                if data:
+                    logger.info("Encontrados %d documentos similares", len(data))
+                return data
+
+            except Exception as e:
+                logger.error("Erro na chamada RPC: %s", str(e))
+                if "Invalid API key" in str(e):
+                    raise  # Propaga erro de autenticação para tentar reconexão
+                return []
 
         except Exception as e:
-            logger.exception("Erro na busca por similaridade: %s", e)
-            raise DatabaseError from e
+            logger.error("Erro na busca por similaridade: %s", str(e))
+            raise  # Propaga erro para tratamento no nível superior
 
     def _text_search(
         self,
@@ -251,7 +275,8 @@ class SemanticSearchManager:
             # Se tiver Supabase configurado, tenta buscar remotamente
             if not self.local_mode and self.supabase:
                 try:
-                    response = self.supabase.from_("base_conhecimento") \
+                    # Usa o schema correto para a tabela
+                    response = self.supabase.schema("rag").from_("01_base_conhecimento_regras_geral") \
                         .select("*") \
                         .limit(limit) \
                         .execute()
@@ -261,7 +286,8 @@ class SemanticSearchManager:
                     else:
                         results = response or []
                 except Exception as e:
-                    logger.warning("Erro ao buscar no Supabase: %s", e)
+                    logger.error("Erro na busca textual: %s", str(e))
+                    pass  # Silenciosamente falha para busca local
             
             # Se não encontrou resultados remotamente, tenta busca local
             if not results:
@@ -291,21 +317,33 @@ class SemanticSearchManager:
                             }
                             
                             results.append(doc)
-                        except Exception as e:
-                            logger.warning(f"Erro ao ler arquivo {file_path}: {e}")
+                        except Exception:
+                            continue  # Ignora arquivos com erro
                             
-                    logger.info(f"Encontrados {len(results)} documentos locais")
-                except Exception as e:
-                    logger.warning(f"Erro na busca local: {e}")
+                except Exception:
+                    pass  # Silenciosamente falha se houver erro na busca local
                 
             if not results:
                 return []
-                
-            logger.info("Documentos encontrados: %d", len(results))
             
             # Filtra e pontua resultados
             filtered = []
             query_terms = set(query.lower().split())
+            
+            # Palavras-chave adicionais para melhorar a busca
+            related_terms = {
+                'rag': {'retrieval', 'augmented', 'generation', 'busca', 'semantica', 'embeddings'},
+                'sistema': {'componentes', 'arquitetura', 'estrutura', 'funcionamento'},
+                'busca': {'search', 'consulta', 'pesquisa', 'procura'},
+                'documentos': {'arquivos', 'markdown', 'conteúdo', 'texto'},
+                'configuração': {'setup', 'ambiente', 'instalação', 'configurar'}
+            }
+            
+            # Expande os termos de busca
+            expanded_terms = set(query_terms)
+            for term in query_terms:
+                if term in related_terms:
+                    expanded_terms.update(related_terms[term])
             
             for doc in results:
                 content = doc.get('conteudo', {})
@@ -315,20 +353,26 @@ class SemanticSearchManager:
                     except:
                         content = {"text": content}
                         
-                text = content.get('text', '')
-                title = doc.get('titulo', '')
+                text = content.get('text', '').lower()
+                title = doc.get('titulo', '').lower()
                 
                 # Busca por termos individuais e frases
-                doc_text = f"{title} {text}".lower()
+                doc_text = f"{title} {text}"
                 
-                # Pontuação por termos individuais
-                term_matches = sum(1 for term in query_terms if term in doc_text)
+                # Pontuação por termos originais (peso maior)
+                term_matches = sum(2 for term in query_terms if term in doc_text)
+                
+                # Pontuação por termos expandidos (peso menor)
+                expanded_matches = sum(0.5 for term in expanded_terms if term in doc_text)
                 
                 # Pontuação por frase completa
-                phrase_bonus = 2 if query.lower() in doc_text else 0
+                phrase_bonus = 3 if query.lower() in doc_text else 0
+                
+                # Pontuação por título (bônus adicional)
+                title_bonus = sum(2 for term in query_terms if term in title)
                 
                 # Pontuação final
-                relevance = (term_matches / len(query_terms)) + phrase_bonus
+                relevance = term_matches + expanded_matches + phrase_bonus + title_bonus
                 
                 # Se encontrou alguma relevância
                 if relevance > 0:
@@ -337,10 +381,8 @@ class SemanticSearchManager:
                     
             # Ordena por relevância
             filtered.sort(key=lambda x: x.get('relevance', 0), reverse=True)
-                    
-            logger.info("Documentos filtrados: %d", len(filtered))
+            
             return filtered[:limit]
 
-        except Exception as e:
-            logger.warning("Erro na busca textual: %s", e)
-            return []
+        except Exception:
+            return []  # Silenciosamente retorna vazio em caso de erro
