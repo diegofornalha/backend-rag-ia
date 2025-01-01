@@ -15,6 +15,10 @@ from backend_rag_ia.services.semantic_search import SemanticSearchManager
 # Carrega variáveis de ambiente
 load_dotenv()
 
+# Debug: Verifica se as variáveis foram carregadas
+print(f"SUPABASE_URL: {os.getenv('SUPABASE_URL')}")
+print(f"SUPABASE_KEY: {os.getenv('SUPABASE_KEY')}")
+
 console = Console()
 
 class SemanticSearchCLI:
@@ -61,15 +65,38 @@ class SemanticSearchCLI:
             query: Query de busca
             processed: Resultados processados
         """
-        console.print(f"\n🔍 Resultados para: '{query}'")
+        # Exibe query
+        console.print(f"\nResultados para: '{query}'", style="blue bold")
         
         # Exibe resposta gerada
         if "answer" in processed:
-            console.print("\n🤖 Resposta gerada:")
+            console.print("\nResposta gerada:", style="blue bold")
+            
+            # Formata a resposta em tópicos numerados
+            answer = processed["answer"]
+            
+            # Remove numeração existente se houver
+            answer = answer.replace("*", "").replace("#", "")
+            lines = [line.strip() for line in answer.split("\n") if line.strip()]
+            
+            # Remove numeração no início das linhas
+            lines = [line[line.find(" ")+1:] if (line[0].isdigit() and " " in line) else line for line in lines]
+            
+            # Reformata com numeração consistente
+            formatted_lines = []
+            count = 1
+            for line in lines:
+                if line.strip():
+                    formatted_lines.append(f"{count} {line}")
+                    count += 1
+            
+            formatted_answer = "\n".join(formatted_lines)
+            
             console.print(Panel(
-                Markdown(processed["answer"]),
+                Markdown(formatted_answer),
                 title="Resposta",
-                border_style="green"
+                border_style="green",
+                padding=(1,2)
             ))
             
         # Exibe documentos encontrados
@@ -78,17 +105,17 @@ class SemanticSearchCLI:
             console.print("\n❌ Nenhum documento encontrado!")
             return
             
-        console.print(f"\n📚 Documentos relevantes ({len(results)} encontrados):")
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("ID", style="dim")
-        table.add_column("Título", style="green")
+        console.print(f"\nDocumentos relevantes ({len(results)} encontrados):", style="blue bold")
+        
+        # Cria tabela formatada
+        table = Table(show_header=True, header_style="bold magenta", padding=(0,1))
+        table.add_column("ID", style="dim", width=8)
+        table.add_column("Título", style="green", width=20)
         table.add_column("Conteúdo", style="white", width=60)
-        table.add_column("Relevância", style="cyan")
         
         for result in results:
             doc_id = str(result.get("id", ""))[:8]
             title = result.get("titulo", "Sem título")
-            similarity = result.get("similarity", 0)
             
             # Extrai o texto do conteúdo JSON
             content_json = result.get("conteudo", {})
@@ -97,13 +124,16 @@ class SemanticSearchCLI:
                     content_json = json.loads(content_json)
                 except:
                     content_json = {"text": content_json}
-            content = content_json.get("text", "")[:200] + "..."
+            content = content_json.get("text", "")
+            
+            # Limita o conteúdo e adiciona reticências
+            if len(content) > 100:
+                content = content[:100] + "..."
             
             table.add_row(
                 doc_id,
                 title,
-                content,
-                f"{similarity:.1%}" if similarity else "N/A"
+                content
             )
             
         console.print(table)

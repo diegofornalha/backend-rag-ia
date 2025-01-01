@@ -6,7 +6,7 @@ from fastapi import APIRouter
 from backend_rag_ia.models.schemas import HealthResponse
 from backend_rag_ia.config.settings import get_settings
 
-router = APIRouter(prefix="/api/v1", tags=["health"])
+router = APIRouter(tags=["health"])
 
 settings = get_settings()
 

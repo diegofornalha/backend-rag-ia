@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from backend_rag_ia.constants import (
     ERROR_SEARCH_FAILED,
@@ -17,6 +18,10 @@ from backend_rag_ia.services.semantic_search import SemanticSearchManager
 from backend_rag_ia.utils.logging_config import logger
 
 router = APIRouter(prefix="/api/v1", tags=["search"])
+
+class SearchRequest(BaseModel):
+    """Modelo para requisição de busca."""
+    query: str
 
 def _validate_query(query: str) -> None:
     """Valida a query de busca.
@@ -51,11 +56,11 @@ def _handle_search_error(error: Exception) -> None:
     ) from error
 
 @router.post("/search")
-async def search(query: str) -> dict[str, Any]:
+async def search(request: SearchRequest) -> dict[str, Any]:
     """Realiza busca semântica.
 
     Args:
-        query: Query de busca
+        request: Requisição de busca
 
     Returns:
         Resultados da busca
@@ -65,15 +70,15 @@ async def search(query: str) -> dict[str, Any]:
     """
     try:
         # Valida query
-        _validate_query(query)
+        _validate_query(request.query)
 
         # Realiza busca
         search_manager = SemanticSearchManager()
-        results = await search_manager.search(query)
+        results = search_manager.search(request.query)
 
         # Retorna resultados
         return {
-            "query": query,
+            "query": request.query,
             "results": results,
             "timestamp": datetime.now(UTC).isoformat(),
         }
