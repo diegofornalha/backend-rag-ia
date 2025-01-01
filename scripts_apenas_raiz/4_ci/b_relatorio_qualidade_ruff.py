@@ -10,10 +10,16 @@ from typing import Any
 from rich.console import Console
 from rich.table import Table
 
-from backend_rag_ia.utils.logging_config import logger
-
+# Ajusta path para acessar utils
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
+
+try:
+    from backend_rag_ia.utils.logging_config import logger
+except ImportError:
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
 # Console para output
 console = Console()
@@ -137,25 +143,34 @@ def display_report(stats: dict[str, Any]) -> None:
 
 def main() -> None:
     """Função principal."""
-    # Verifica argumentos
-    if len(sys.argv) < 2:
-        logger.error("Uso: gerar_relatorio_ruff.py <directory>")
+    try:
+        # Verifica argumentos
+        if len(sys.argv) < 2:
+            console.print("\n❌ Uso: python b_relatorio_qualidade_ruff.py <directory>")
+            console.print("\nExemplo: python b_relatorio_qualidade_ruff.py backend_rag_ia/")
+            sys.exit(1)
+
+        # Obtém diretório
+        directory = Path(sys.argv[1])
+
+        if not directory.exists():
+            console.print(f"\n❌ Diretório não encontrado: {directory}")
+            sys.exit(1)
+
+        # Executa análise
+        console.print(f"\n🔍 Analisando código em: {directory}")
+        violations = execute_ruff(directory)
+
+        # Gera relatório
+        stats = generate_statistics(violations)
+        display_report(stats)
+
+    except KeyboardInterrupt:
+        console.print("\n\n👋 Análise interrompida!")
+        sys.exit(0)
+    except Exception as e:
+        console.print(f"\n❌ Erro inesperado: {e}")
         sys.exit(1)
-
-    # Obtém diretório
-    directory = Path(sys.argv[1])
-
-    if not directory.exists():
-        logger.error("Diretório não encontrado: %s", directory)
-        sys.exit(1)
-
-    # Executa análise
-    console.print(f"\n🔍 Analisando código em: {directory}")
-    violations = execute_ruff(directory)
-
-    # Gera relatório
-    stats = generate_statistics(violations)
-    display_report(stats)
 
 
 if __name__ == "__main__":
