@@ -1,8 +1,20 @@
+"""API principal do Backend RAG IA."""
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from .routes import search_router, health_router, documents_router, convert_router
-from .middleware import logging_middleware, error_handler, environment_middleware
+from fastapi.responses import JSONResponse, RedirectResponse
+
+from .routes import (
+    search_router,
+    health_router,
+    documents_router,
+    statistics_router
+)
+from .middleware import (
+    logging_middleware,
+    error_handler,
+    environment_middleware
+)
 from ..config.settings import get_settings
 
 settings = get_settings()
@@ -11,8 +23,8 @@ app = FastAPI(
     title=settings.API_TITLE,
     description=settings.API_DESCRIPTION,
     version=settings.API_VERSION,
-    docs_url="/docs" if settings.DEBUG else None,
-    redoc_url="/redoc" if settings.DEBUG else None
+    docs_url="/docs",
+    redoc_url=None  # Desabilitando ReDoc para evitar confusão
 )
 
 # Middlewares
@@ -35,20 +47,12 @@ app.add_middleware(
 
 # Incluir rotas
 app.include_router(search_router, prefix="/api/v1", tags=["search"])
-app.include_router(health_router, tags=["health"])
-app.include_router(documents_router, tags=["documents"])
-app.include_router(convert_router, tags=["convert"])
+app.include_router(health_router, prefix="/api/v1", tags=["health"])
+app.include_router(documents_router, prefix="/api/v1", tags=["documents"])
+app.include_router(statistics_router, prefix="/api/v1", tags=["statistics"])
 
-# Rota raiz
+# Rota raiz com redirecionamento para /docs
 @app.get("/")
 async def root():
-    """Rota raiz da API."""
-    return {
-        "message": settings.API_TITLE,
-        "version": settings.API_VERSION,
-        "environment": settings.ENVIRONMENT,
-        "operation_mode": settings.OPERATION_MODE,
-        "is_render": settings.is_render_environment,
-        "active_url": settings.active_url,
-        "docs_url": "/docs" if settings.DEBUG else None
-    } 
+    """Redireciona para a documentação da API."""
+    return RedirectResponse(url="/docs") 

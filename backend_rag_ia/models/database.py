@@ -18,7 +18,18 @@ class DocumentBase(BaseModel):
 
 class DocumentCreate(DocumentBase):
     """Modelo para criação de documentos."""
+    pass
 
+
+class DocumentResponse(DocumentBase):
+    """Modelo para resposta de documentos."""
+    
+    id: str
+    created_at: str
+    
+    class Config:
+        """Configuração do modelo."""
+        from_attributes = True
 
 
 class Document(DocumentBase):
@@ -31,7 +42,6 @@ class Document(DocumentBase):
 
     class Config:
         """Configuração do modelo."""
-
         from_attributes = True
 
 
@@ -44,7 +54,7 @@ class EmbeddingBase(BaseModel):
 
 class EmbeddingCreate(EmbeddingBase):
     """Modelo para criação de embeddings."""
-
+    pass
 
 
 class Embedding(EmbeddingBase):
@@ -55,5 +65,4 @@ class Embedding(EmbeddingBase):
 
     class Config:
         """Configuração do modelo."""
-
         from_attributes = True

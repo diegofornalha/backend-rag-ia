@@ -1,17 +1,25 @@
-"""Exceções customizadas do projeto."""
+"""Exceções customizadas."""
 
-class ValidationError(Exception):
-    """Exceção para erros de validação."""
+class BaseError(Exception):
+    """Exceção base."""
     pass
 
-class DatabaseError(Exception):
-    """Exceção para erros de banco de dados."""
+class SupabaseError(BaseError):
+    """Erro de conexão com Supabase."""
     pass
 
-class EmbeddingError(Exception):
-    """Exceção para erros na geração de embeddings."""
+class DatabaseError(BaseError):
+    """Erro de operação no banco."""
     pass
 
-class SupabaseError(Exception):
-    """Exceção para erros relacionados ao Supabase."""
+class EmbeddingError(BaseError):
+    """Erro ao gerar embedding."""
+    pass
+
+class LLMError(BaseError):
+    """Erro ao processar com LLM."""
+    pass
+
+class ValidationError(BaseError):
+    """Erro de validação de dados."""
     pass 

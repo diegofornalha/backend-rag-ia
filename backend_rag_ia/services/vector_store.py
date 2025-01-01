@@ -1,11 +1,8 @@
-"""Armazenamento de documentos com embeddings."""
+"""Serviço de armazenamento de vetores."""
 
-from typing import Any
-
-from transformers import SentenceTransformer
-
-from backend_rag_ia.services.supabase_client import SupabaseClient
-
+from typing import Any, List
+from supabase import Client as SupabaseClient
+from sentence_transformers import SentenceTransformer
 
 class VectorStore:
     """Armazenamento de documentos com embeddings."""
@@ -19,7 +16,7 @@ class VectorStore:
         self.supabase_client = supabase_client
         self.table = "documents"
 
-    def create_embeddings(self, texts: list[str]) -> list[list[float]]:
+    def create_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Cria embeddings para uma lista de textos usando o modelo all-MiniLM-L6-v2.
 
         Args:
@@ -32,7 +29,7 @@ class VectorStore:
         embeddings = model.encode(texts)
         return embeddings.tolist()
 
-    def insert_documents(self, documents: list[dict[str, Any]]) -> None:
+    def insert_documents(self, documents: List[dict[str, Any]]) -> None:
         """Insere documentos no Supabase com seus embeddings.
 
         Args:
@@ -43,7 +40,7 @@ class VectorStore:
             doc['embedding'] = embedding
             self.supabase_client.table('documents').insert(doc).execute()
 
-    def search_documents(self, query: str, match_count: int = 3) -> list[dict[str, Any]]:
+    def search_documents(self, query: str, match_count: int = 3) -> List[dict[str, Any]]:
         """Realiza uma busca semântica por documentos similares à query.
 
         Args:
@@ -99,7 +96,7 @@ class VectorStore:
         response = self.supabase_client.table('documents').select('*').eq('id', document_id).execute()
         return response.data[0] if response.data else None
 
-    def list_documents(self) -> list[dict[str, Any]]:
+    def list_documents(self) -> List[dict[str, Any]]:
         """Lista todos os documentos armazenados no Supabase.
 
         Returns:
