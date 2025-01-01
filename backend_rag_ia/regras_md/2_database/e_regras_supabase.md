@@ -24,6 +24,27 @@
    - Evitar fragmentação de informação
    - Consolidar conteúdos relacionados
 
+### 1.2 Identificação de Documentos
+
+1. **Regras de Identificação**:
+
+   - Documento NOVO: não existe `file_path` correspondente no metadata
+   - Documento ATUALIZADO: existe `file_path` mas hash é diferente
+   - Documento EXISTENTE: existe `file_path` e hash é igual
+
+2. **Processo de Verificação**:
+
+   - Primeiro verifica o `file_path` no metadata
+   - Se encontrar, compara o hash do conteúdo
+   - Se hash diferente, atualiza documento e embeddings
+   - Se hash igual, mantém documento sem alterações
+
+3. **Justificativa**:
+   - Evita duplicação de documentos
+   - Mantém histórico de alterações
+   - Garante consistência dos dados
+   - Otimiza processo de sincronização
+
 ## 2. Formato de Documentos
 
 ### 2.1 Tipos de Arquivos

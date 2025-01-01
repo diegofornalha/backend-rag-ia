@@ -1,54 +1,123 @@
-# Regras de Busca Semântica
+# Regras de Busca Semântica (RAG)
 
-> ⚠️ Este documento é um índice das regras relacionadas à busca semântica.
-> Para detalhes específicos, consulte os arquivos referenciados.
+> ⚠️ Este documento define as regras do sistema RAG (Retrieval Augmented Generation).
+> O sistema integra busca semântica, armazenamento vetorial e processamento LLM.
 
 ## 1. Visão Geral
 
-- **Objetivo**: Implementar busca semântica eficiente e resiliente
-- **Modelo**: `all-MiniLM-L6-v2`
-- **Stack**: Python 3.11 + Supabase + pgvector
+- **Objetivo**: Sistema RAG eficiente e resiliente
+- **Modelo Base**: `all-MiniLM-L6-v2` para embeddings
+- **Stack Principal**:
+  - Python 3.11
+  - Supabase + pgvector (armazenamento vetorial)
+  - Google Gemini (processamento LLM)
+  - FastAPI (endpoints RESTful)
 
-## 2. Documentos Relacionados
+## 2. Componentes RAG
 
-1. [Problemas Conhecidos](./busca/PROBLEMAS_CONHECIDOS.md)
+1. **Retrieval (Recuperação)**:
 
-   - Incompatibilidades
-   - Soluções e prevenções
-   - Troubleshooting comum
+   - Embeddings via Sentence Transformers
+   - Armazenamento vetorial no Supabase/pgvector
+   - Busca por similaridade cosine
+   - Fallback para busca textual
 
-2. [Configuração](./busca/CONFIGURACAO.md)
+2. **Augmentation (Enriquecimento)**:
 
-   - Versões das dependências
-   - Setup do ambiente
-   - Configuração do Supabase
+   - Reranking de resultados
+   - Metadados e contexto
+   - Filtros e pesos customizados
+   - Cache em múltiplas camadas
 
-3. [Processo de Busca](./busca/PROCESSO.md)
+3. **Generation (Geração)**:
+   - Processamento LLM dos resultados
+   - Respostas contextualizadas
+   - Explicações em linguagem natural
+   - Formatação rica de saída
 
-   - Fluxo principal
-   - Sistema de fallback
-   - Boas práticas
+## 3. Regras de Implementação
 
-4. [Manutenção](./busca/MANUTENCAO.md)
-   - Monitoramento
-   - Índices
-   - Performance
+1. **Busca Semântica**:
 
-## 3. Regras Essenciais
+   - Usar Sentence Transformers para embeddings
+   - Armazenar vetores no pgvector
+   - Implementar threshold configurável
+   - Otimizar índices vetoriais
 
-1. **Versões Fixas**:
-
-   - Python 3.11
-   - NumPy 1.24.3
-   - Demais versões em [Configuração](./busca/CONFIGURACAO.md)
-
-2. **Fallbacks Obrigatórios**:
+2. **Estratégias de Fallback**:
 
    - Busca textual como backup
-   - Tratamento de erros
-   - Logs detalhados
+   - Filtros por metadados
+   - Full-text search
+   - Logging detalhado de falhas
 
-3. **Manutenção**:
-   - Documentar novos problemas
-   - Atualizar soluções
-   - Manter exemplos práticos
+3. **Integração LLM**:
+
+   - Processamento assíncrono
+   - Retry com backoff
+   - Cache de respostas
+   - Tratamento de erros
+
+4. **API e Endpoints**:
+   - RESTful bem definido
+   - Validação robusta
+   - Documentação OpenAPI
+   - Versionamento adequado
+
+## 4. Arquitetura e Integração
+
+1. **Estrutura de Serviços**:
+
+   - `SemanticSearchManager`: Orquestra o fluxo RAG
+   - `LLMManager`: Processa com Gemini/outros LLMs
+   - `VectorStore`: Gerencia embeddings e cache
+
+2. **⚠️ Regras de Integração CLI-Serviços**:
+
+   - CLI DEVE usar os mesmos serviços da API
+   - PROIBIDO implementações paralelas/distintas
+   - Reutilizar `SemanticSearchManager` para busca
+   - Manter consistência entre CLI e API
+
+3. **Fluxo de Dados RAG**:
+
+   ```
+   Query → Embedding → Busca Vetorial → Reranking → LLM → Resposta
+           ↓            ↓               ↓           ↓
+        Cache       pgvector      Filtros    Processamento
+   ```
+
+4. **Responsabilidades**:
+
+   - CLI: Interface e formatação
+   - Serviços: Lógica RAG
+   - API: Endpoints e validação
+   - Banco: Vetores e matching
+
+5. **Boas Práticas**:
+   - Centralizar lógica RAG nos serviços
+   - CLI/API como interfaces
+   - Cache em múltiplas camadas
+   - Monitoramento e métricas
+
+## 5. Manutenção e Evolução
+
+1. **Monitoramento**:
+
+   - Latência de busca
+   - Hit rate de cache
+   - Qualidade das respostas
+   - Uso de recursos
+
+2. **Otimizações**:
+
+   - Índices vetoriais
+   - Estratégias de cache
+   - Batch processing
+   - Compressão de embeddings
+
+3. **Documentação**:
+   - Atualizar fluxos
+   - Documentar problemas
+   - Manter exemplos
+   - Registrar decisões

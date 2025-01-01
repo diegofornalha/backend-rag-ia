@@ -9,13 +9,13 @@
 # ===========================================
 
 # API Framework
-fastapi==0.104.1
-uvicorn==0.24.0
-python-dotenv==1.0.0
+fastapi>=0.68.0
+uvicorn>=0.15.0
+python-dotenv>=0.19.0
 gunicorn>=21.2.0
 
 # Machine Learning e IA
-langchain>=0.1.5
+langchain>=0.1.0
 numpy==1.24.3
 sentence-transformers==2.2.2
 huggingface-hub==0.16.4
@@ -23,7 +23,7 @@ torch==2.0.1
 transformers==4.30.2
 
 # Banco de Dados
-supabase==1.0.3
+supabase>=0.7.1
 psycopg2-binary>=2.9.9
 pgvector>=0.2.4  # Para busca vetorial no Postgres
 
@@ -42,9 +42,13 @@ pytest-asyncio>=0.23.5
 
 # CLI
 click>=8.1.7
-rich==13.4.2
+rich>=10.12.0
 
 # Segurança (Mantenha sempre atualizado)
 cryptography>=42.0.0  # Crítico para segurança
 requests>=2.31.0      # Importante para requisições HTTP
 urllib3>=2.1.0        # Dependência do requests 
+
+# Adicionar dependências para Gemini e LangChain
+google-generativeai>=0.3.0
+langchain-google-genai>=0.0.5 

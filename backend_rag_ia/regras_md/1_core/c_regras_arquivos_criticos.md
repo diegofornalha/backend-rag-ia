@@ -8,14 +8,15 @@ Arquivos críticos são componentes essenciais do sistema que requerem atenção
 
 ### 1. `app_server.py`
 
-- **Função**: Configuração e inicialização do servidor FastAPI
-- **Impacto**: Afeta toda a aplicação
-- **Localização**: `/backend-rag-ia/cli/`
+- **Função**: Servidor principal da API FastAPI
+- **Impacto**: Toda a aplicação depende deste arquivo
+- **Localização**: `backend_rag_ia/cli/app_server.py`
 - **Cuidados Especiais**:
-  - Alterações devem ser testadas em ambiente de desenvolvimento
-  - Requer revisão de código por pelo menos dois desenvolvedores
-  - Mudanças devem ser documentadas detalhadamente
-  - Backup obrigatório antes de modificações
+  - NUNCA remover endpoints existentes
+  - Manter configuração CORS
+  - Preservar tratamento de erros
+  - Garantir logging adequado
+  - Endpoints críticos: `/health` e `/search`
 
 ## 📋 Regras para Arquivos Críticos
 

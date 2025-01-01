@@ -1,7 +1,4 @@
-from backend_rag_ia.app import app
-
-# Exporta a aplicação para ser usada pelo uvicorn
-__all__ = ["app"]
+from backend_rag_ia.api.main import app
 
 if __name__ == "__main__":
     import uvicorn
