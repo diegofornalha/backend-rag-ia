@@ -83,7 +83,7 @@ async def test_memory_storage_embate_trigger():
     )
     result3 = await storage.save(embate3)
     embates = await storage.list()
-    assert len(embates) == 9  # 3 embates originais + 6 embates técnicos
+    assert len(embates) == 11  # 3 embates originais + 8 embates técnicos
     
     # Encontra o embate técnico
     embate_tecnico = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Uso Intensivo" in e.titulo)
@@ -130,6 +130,22 @@ async def test_memory_storage_embate_trigger():
     assert "Análise Técnica" in embate_priorizacao.argumentos[0]["conteudo"]
     assert "Impacto e Riscos" in embate_priorizacao.argumentos[1]["conteudo"]
     
+    # Encontra o embate de dependências
+    embate_deps = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Dependências" in e.titulo)
+    assert embate_deps.tipo == "tecnico"
+    assert "Análise de Dependências entre Embates" in embate_deps.titulo
+    assert len(embate_deps.argumentos) == 2
+    assert "Análise Técnica" in embate_deps.argumentos[0]["conteudo"]
+    assert "Impacto e Riscos" in embate_deps.argumentos[1]["conteudo"]
+    
+    # Encontra o embate de dashboard
+    embate_dashboard = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Dashboard" in e.titulo)
+    assert embate_dashboard.tipo == "tecnico"
+    assert "Dashboard de Métricas de Embates" in embate_dashboard.titulo
+    assert len(embate_dashboard.argumentos) == 2
+    assert "Análise Técnica" in embate_dashboard.argumentos[0]["conteudo"]
+    assert "Impacto e Riscos" in embate_dashboard.argumentos[1]["conteudo"]
+    
     # Deleta os embates técnicos e verifica se o contador é resetado
     await storage.delete(embate_tecnico.id)
     await storage.delete(embate_jsonb.id)
@@ -137,6 +153,8 @@ async def test_memory_storage_embate_trigger():
     await storage.delete(embate_gemini.id)
     await storage.delete(embate_cicd.id)
     await storage.delete(embate_priorizacao.id)
+    await storage.delete(embate_deps.id)
+    await storage.delete(embate_dashboard.id)
     embates = await storage.list()
     assert len(embates) == 3  # Apenas os embates originais
     
