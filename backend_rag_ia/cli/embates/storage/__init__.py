@@ -314,6 +314,92 @@ class MemoryStorage:
             
             embates.append(embate_logs)
             
+            # Cria embate sobre integração com Gemini
+            embate_gemini = Embate(
+                titulo="Integração do Gemini com Sistema de Embates",
+                tipo="tecnico",
+                contexto="""
+                Proposta de integração do Gemini com o sistema de embates para análise e geração automática.
+                
+                Motivação:
+                1. Automação de Análises:
+                   - Análise semântica de embates
+                   - Sugestões de resolução
+                   - Identificação de padrões
+                
+                2. Benefícios Técnicos:
+                   - Melhor qualidade dos embates
+                   - Respostas mais rápidas
+                   - Insights automáticos
+                
+                3. Manutenibilidade:
+                   - Padronização de análises
+                   - Documentação automática
+                   - Histórico de decisões
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_gemini.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Pontos de Integração:
+                   - Análise de novos embates
+                   - Sugestão de argumentos
+                   - Recomendação de soluções
+                   - Identificação de duplicatas
+                
+                2. Implementação:
+                   - Usar GeminiChat existente
+                   - Configurar prompts específicos
+                   - Implementar retry e fallback
+                   - Adicionar cache de respostas
+                
+                3. Monitoramento:
+                   - Qualidade das sugestões
+                   - Tempo de resposta
+                   - Taxa de aceitação
+                   - Uso de recursos
+                """,
+                "data": now
+            })
+            
+            embate_gemini.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Adicionar GeminiManager
+                   - Configurar prompts
+                   - Implementar callbacks
+                   - Integrar com storage
+                
+                2. Riscos:
+                   - Custo de API
+                   - Latência de respostas
+                   - Qualidade variável
+                   - Dependência externa
+                
+                3. Mitigação:
+                   - Cache inteligente
+                   - Rate limiting
+                   - Validação humana
+                   - Fallback local
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_gemini)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
