@@ -1,140 +1,95 @@
--- Criar nova tabela para embeddings
+-- Adiciona suporte a embeddings
+
+-- Cria tabela de embeddings
 CREATE TABLE IF NOT EXISTS rag."02_embeddings_regras_geral" (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    documento_id UUID NOT NULL REFERENCES rag."01_base_conhecimento_regras_geral"(id) ON DELETE CASCADE,
-    embedding vector(384),  -- Dimensão do modelo all-MiniLM-L6-v2
-    modelo TEXT NOT NULL DEFAULT 'all-MiniLM-L6-v2',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    metadata JSONB DEFAULT '{}'::jsonb,
-    CONSTRAINT fk_documento 
-        FOREIGN KEY(documento_id) 
+    documento_id UUID NOT NULL,
+    embedding vector(384) NOT NULL,
+    criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_documento
+        FOREIGN KEY (documento_id)
         REFERENCES rag."01_base_conhecimento_regras_geral"(id)
         ON DELETE CASCADE
 );
 
--- Primeiro verificar se a tabela antiga ainda existe e migrar dados
-DO $$ 
-BEGIN
-    IF EXISTS (
-        SELECT FROM pg_tables
-        WHERE schemaname = 'public' 
-        AND tablename = 'base_conhecimento_regras_geral'
-    ) THEN
-        -- Migrar dados da tabela antiga
-        INSERT INTO rag."02_embeddings_regras_geral" (documento_id, embedding, created_at, updated_at)
-        SELECT 
-            id as documento_id,
-            embedding,
-            created_at,
-            updated_at
-        FROM public.base_conhecimento_regras_geral
-        WHERE embedding IS NOT NULL;
-
-        -- Remover coluna embedding da tabela antiga
-        ALTER TABLE public.base_conhecimento_regras_geral
-        DROP COLUMN IF EXISTS embedding;
-
-        -- Renomear tabela antiga para novo padrão
-        ALTER TABLE public.base_conhecimento_regras_geral 
-        RENAME TO "01_base_conhecimento_regras_geral";
-    END IF;
-END $$;
-
--- Criar índice para buscas vetoriais
-CREATE INDEX IF NOT EXISTS idx_embeddings_vector 
+-- Cria índice para busca por similaridade
+CREATE INDEX IF NOT EXISTS idx_embeddings_embedding 
 ON rag."02_embeddings_regras_geral" 
-USING ivfflat (embedding vector_cosine_ops)
-WITH (lists = 100);
+USING ivfflat (embedding vector_cosine_ops);
 
--- Criar função para manter updated_at atualizado
-CREATE OR REPLACE FUNCTION rag.update_updated_at_column()
+-- Função para gerar embeddings de teste
+CREATE OR REPLACE FUNCTION rag.generate_test_embedding()
+RETURNS vector
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Retorna um vetor de teste com 384 dimensões
+    RETURN array_fill(0.1::float, ARRAY[384])::vector;
+END;
+$$;
+
+-- Gera embeddings de teste para documentos existentes
+INSERT INTO rag."02_embeddings_regras_geral" (documento_id, embedding)
+SELECT 
+    id,
+    rag.generate_test_embedding()
+FROM rag."01_base_conhecimento_regras_geral"
+WHERE id NOT IN (
+    SELECT documento_id 
+    FROM rag."02_embeddings_regras_geral"
+);
+
+-- Adiciona trigger para atualizar timestamp
+ALTER TABLE rag."01_base_conhecimento_regras_geral"
+ADD COLUMN IF NOT EXISTS atualizado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+
+-- Cria função para atualizar timestamp
+CREATE OR REPLACE FUNCTION rag.update_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.atualizado_em = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
 $$ language 'plpgsql';
 
--- Aplicar trigger em ambas as tabelas
-DROP TRIGGER IF EXISTS update_embeddings_regras_updated_at ON rag."02_embeddings_regras_geral";
-CREATE TRIGGER update_embeddings_regras_updated_at
-    BEFORE UPDATE ON rag."02_embeddings_regras_geral"
-    FOR EACH ROW
-    EXECUTE FUNCTION rag.update_updated_at_column();
+-- Adiciona trigger para atualizar timestamp
+ALTER TABLE rag."01_base_conhecimento_regras_geral"
+DROP TRIGGER IF EXISTS update_timestamp_trigger ON rag."01_base_conhecimento_regras_geral";
 
--- Criar políticas RLS para embeddings
+CREATE TRIGGER update_timestamp_trigger
+    BEFORE UPDATE ON rag."01_base_conhecimento_regras_geral"
+    FOR EACH ROW
+    EXECUTE FUNCTION rag.update_timestamp();
+
+-- Configura RLS
 ALTER TABLE rag."02_embeddings_regras_geral" ENABLE ROW LEVEL SECURITY;
 
+-- Políticas de acesso
 CREATE POLICY select_embeddings ON rag."02_embeddings_regras_geral"
     FOR SELECT
+    TO authenticated
     USING (
         EXISTS (
-            SELECT 1 FROM rag."01_base_conhecimento_regras_geral" d
-            WHERE d.id = rag."02_embeddings_regras_geral".documento_id
-            AND (
-                (d.metadata->>'public')::boolean = true
-                OR
-                auth.uid() = d.owner_id
-            )
+            SELECT 1
+            FROM rag."01_base_conhecimento_regras_geral" d
+            WHERE d.id = documento_id
+            AND d.status = 'ativo'
         )
     );
 
 CREATE POLICY insert_embeddings ON rag."02_embeddings_regras_geral"
     FOR INSERT
-    WITH CHECK (
-        EXISTS (
-            SELECT 1 FROM rag."01_base_conhecimento_regras_geral" d
-            WHERE d.id = rag."02_embeddings_regras_geral".documento_id
-            AND auth.uid() = d.owner_id
-        )
-    );
+    TO service_role
+    WITH CHECK (true);
 
 CREATE POLICY update_embeddings ON rag."02_embeddings_regras_geral"
     FOR UPDATE
-    USING (
-        EXISTS (
-            SELECT 1 FROM rag."01_base_conhecimento_regras_geral" d
-            WHERE d.id = rag."02_embeddings_regras_geral".documento_id
-            AND auth.uid() = d.owner_id
-        )
-    );
+    TO service_role
+    USING (true)
+    WITH CHECK (true);
 
 CREATE POLICY delete_embeddings ON rag."02_embeddings_regras_geral"
     FOR DELETE
-    USING (
-        EXISTS (
-            SELECT 1 FROM rag."01_base_conhecimento_regras_geral" d
-            WHERE d.id = rag."02_embeddings_regras_geral".documento_id
-            AND auth.uid() = d.owner_id
-        )
-    );
-
--- Criar função para busca semântica
-CREATE OR REPLACE FUNCTION rag.match_documents_v2(
-    query_embedding vector(384),
-    match_threshold float,
-    match_count int
-)
-RETURNS TABLE (
-    id uuid,
-    documento_id uuid,
-    content text,
-    similarity float
-)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    RETURN QUERY
-    SELECT
-        e.id,
-        e.documento_id,
-        d.conteudo as content,
-        1 - (e.embedding <=> query_embedding) as similarity
-    FROM rag."02_embeddings_regras_geral" e
-    JOIN rag."01_base_conhecimento_regras_geral" d ON e.documento_id = d.id
-    WHERE 1 - (e.embedding <=> query_embedding) > match_threshold
-    ORDER BY similarity DESC
-    LIMIT match_count;
-END;
-$$; 
+    TO service_role
+    USING (true); 

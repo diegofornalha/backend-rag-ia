@@ -1,84 +1,54 @@
-import logging
+"""Script para inserir documentos de teste no Supabase."""
 
-from dotenv import load_dotenv
-from sentence_transformers import SentenceTransformer
+import os
+from datetime import datetime
+from supabase import create_client
 
-from backend_rag_ia.config.supabase_config import SupabaseConfig
-
-# Configurando logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Carregando variáveis de ambiente
-load_dotenv()
-
-def generate_embedding(text: str) -> list[float]:
-    """Gera embedding para o texto usando sentence-transformers."""
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-    embedding = model.encode(text)
-    return embedding.tolist()
-
-def insert_test_documents():
+def inserir_documentos_teste():
     """Insere documentos de teste no Supabase."""
+    # Verifica variáveis de ambiente
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    
+    if not url or not key:
+        print("❌ Erro: Variáveis SUPABASE_URL e SUPABASE_KEY não definidas")
+        return False
+        
     try:
-        supabase = SupabaseConfig()
+        # Conecta ao Supabase
+        supabase = create_client(url, key)
         
         # Documentos de teste
-        documents = [
+        documentos = [
             {
-                "titulo": "Autenticação JWT",
-                "conteudo": """
-                Para implementar autenticação JWT em uma API FastAPI:
-                1. Instale python-jose e passlib
-                2. Configure uma chave secreta
-                3. Crie funções para gerar e verificar tokens
-                4. Use o decorator @requires_auth nos endpoints
-                """
+                "titulo": "Regra de Negócio 1",
+                "conteudo": "Exemplo de regra de negócio para teste",
+                "tipo": "regra",
+                "status": "ativo",
+                "criado_em": datetime.now().isoformat(),
+                "atualizado_em": datetime.now().isoformat()
             },
             {
-                "titulo": "Configuração PostgreSQL",
-                "conteudo": """
-                Passos para configurar PostgreSQL com pgvector:
-                1. Instale a extensão pgvector
-                2. Crie uma tabela com coluna do tipo vector
-                3. Configure índices para busca por similaridade
-                4. Implemente funções de busca vetorial
-                """
-            },
-            {
-                "titulo": "Deploy no Render",
-                "conteudo": """
-                Como fazer deploy de uma API FastAPI no Render:
-                1. Crie uma conta no Render
-                2. Configure o arquivo requirements.txt
-                3. Defina as variáveis de ambiente
-                4. Configure o comando de start
-                """
+                "titulo": "Política 1",
+                "conteudo": "Exemplo de política para teste",
+                "tipo": "politica",
+                "status": "ativo",
+                "criado_em": datetime.now().isoformat(),
+                "atualizado_em": datetime.now().isoformat()
             }
         ]
         
-        logger.info("🔄 Gerando embeddings e inserindo documentos...")
-        
-        for doc in documents:
-            # Gera embedding para o conteúdo
-            embedding = generate_embedding(doc["conteudo"])
+        # Insere documentos
+        for doc in documentos:
+            response = supabase.client.table("rag.documentos").insert(doc).execute()
+            print(f"✅ Documento inserido: {doc['titulo']}")
             
-            # Insere documento com embedding
-            response = supabase.client.table("documentos").insert({
-                "titulo": doc["titulo"],
-                "conteudo": doc["conteudo"],
-                "embedding": embedding
-            }).execute()
-            
-            if hasattr(response, 'error') and response.error:
-                logger.error(f"❌ Erro ao inserir documento: {response.error}")
-            else:
-                logger.info(f"✅ Documento inserido: {doc['titulo']}")
-        
-        logger.info("✨ Documentos de teste inseridos com sucesso")
+        print("✨ Documentos de teste inseridos com sucesso")
+        return True
         
     except Exception as e:
-        logger.error(f"❌ Erro ao inserir documentos: {e}")
-
+        print(f"❌ Erro ao inserir documentos: {e}")
+        return False
+        
 if __name__ == "__main__":
-    insert_test_documents() 
+    inserir_documentos_teste() 
