@@ -1,0 +1,33 @@
+Reorganização das Pastas de Teste
+
+Problema Identificado:
+- Arquivos de teste estavam espalhados em pastas separadas na raiz do projeto (unit/ e integration/)
+- Isso tornava a estrutura do projeto menos organizada e mais difícil de manter
+
+Solução Implementada:
+1. Criada estrutura de pastas centralizada em 00_testes_apenas_raiz/
+   - 00_testes_apenas_raiz/unit/
+   - 00_testes_apenas_raiz/integration/
+
+2. Movidos arquivos de teste:
+   Da pasta integration/ para 00_testes_apenas_raiz/integration/:
+   - a_test_semantic_search_integration.py
+   - b_test_render.py
+   - c_test_supabase.py
+   - conftest_embates.py
+   - d_test_insert_embate.py
+   - test_cli_commands.py
+   - test_embates.py
+   - test_embates_flow.py
+   - test_embates_integration.py
+   - test_rules_generation.py
+   - test_supabase_sync.py
+
+3. Removidas pastas antigas:
+   - Removida pasta unit/ (estava vazia)
+   - Removida pasta integration/ após mover os arquivos
+
+Benefícios:
+- Melhor organização do código
+- Estrutura mais clara e centralizada para os testes
+- Facilita a manutenção e localização dos arquivos de teste
