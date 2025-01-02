@@ -143,7 +143,7 @@ class CondensadorEmbates:
         
         return embates
     
-    async def agrupar_por_tema(self, embates: List[Embate]) -> Dict[str, List[Embate]]:
+    def agrupar_por_tema(self, embates: List[Embate]) -> Dict[str, List[Embate]]:
         """Agrupa embates por tema usando embeddings para similaridade semântica."""
         grupos: Dict[str, List[Embate]] = {}
         embeddings = {}

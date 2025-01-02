@@ -1,0 +1,30 @@
+{
+  "titulo": "Decisão sobre Uso Real do Monitoramento",
+  "tipo": "tecnico",
+  "contexto": "Identificamos que o sistema de monitoramento (Prometheus/Grafana) está configurado mas não está sendo efetivamente utilizado no fluxo dos embates",
+  "status": "resolvido",
+  "data_inicio": "2024-01-17T15:00:00",
+  "argumentos": [
+    {
+      "autor": "AI",
+      "tipo": "tecnico",
+      "conteudo": "Argumentos para manter e implementar: 1. Métricas ajudariam a entender o uso do sistema. 2. Alertas poderiam identificar problemas proativamente. 3. Dashboards facilitariam visualizar o estado dos embates. 4. Performance do embedding poderia ser monitorada.",
+      "data": "2024-01-17T15:05:00"
+    },
+    {
+      "autor": "AI",
+      "tipo": "tecnico",
+      "conteudo": "Argumentos para remover: 1. Adiciona complexidade desnecessária no momento. 2. Requer manutenção adicional. 3. Logging atual já fornece informações básicas. 4. Sistema ainda está em fase inicial de uso.",
+      "data": "2024-01-17T15:10:00"
+    },
+    {
+      "autor": "AI",
+      "tipo": "preferencia",
+      "conteudo": "Proposta de meio termo: 1. Remover configuração não utilizada do Prometheus/Grafana. 2. Manter apenas logging aprimorado. 3. Considerar reimplementar monitoramento quando houver necessidade real. 4. Focar em métricas básicas via logs.",
+      "data": "2024-01-17T15:15:00"
+    }
+  ],
+  "decisao": "Remover configuração não utilizada do Prometheus/Grafana e focar em logging aprimorado",
+  "razao": "O sistema está em fase inicial e o logging atual é suficiente. Monitoramento complexo pode ser reimplementado quando houver necessidade real.",
+  "tags": ["monitoramento", "prometheus", "grafana", "logging", "métricas"]
+}
