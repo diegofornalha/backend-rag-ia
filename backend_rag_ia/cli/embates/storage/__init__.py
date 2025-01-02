@@ -572,6 +572,178 @@ class MemoryStorage:
             
             embates.append(embate_priorizacao)
             
+            # Cria embate sobre análise de dependências
+            embate_deps = Embate(
+                titulo="Análise de Dependências entre Embates",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema de análise de dependências entre embates.
+                
+                Motivação:
+                1. Relações Complexas:
+                   - Embates interdependentes
+                   - Ordem de implementação
+                   - Impactos em cascata
+                
+                2. Benefícios Técnicos:
+                   - Melhor planejamento
+                   - Redução de retrabalho
+                   - Otimização de recursos
+                
+                3. Manutenibilidade:
+                   - Visualização clara
+                   - Decisões informadas
+                   - Histórico de relações
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_deps.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Tipos de Dependência:
+                   - Técnica (código/arquitetura)
+                   - Funcional (features)
+                   - Temporal (ordem)
+                   - Recursos (equipe/infra)
+                
+                2. Implementação:
+                   - Grafo de dependências
+                   - Análise de impacto
+                   - Visualização interativa
+                   - API de consulta
+                
+                3. Integração:
+                   - Sistema de priorização
+                   - CI/CD pipeline
+                   - Gemini para análise
+                   - Storage para histórico
+                """,
+                "data": now
+            })
+            
+            embate_deps.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Novo módulo de dependências
+                   - Integração com storage
+                   - Interface de visualização
+                   - APIs de análise
+                
+                2. Riscos:
+                   - Complexidade do grafo
+                   - Performance da análise
+                   - Manutenção do histórico
+                   - Precisão das relações
+                
+                3. Mitigação:
+                   - Algoritmos eficientes
+                   - Cache de análises
+                   - Validação manual
+                   - Documentação clara
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_deps)
+            
+            # E agora vou criar um embate sobre dashboard de métricas
+            embate_dashboard = Embate(
+                titulo="Dashboard de Métricas de Embates",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um dashboard para visualização e análise de métricas de embates.
+                
+                Motivação:
+                1. Visibilidade:
+                   - Status dos embates
+                   - Métricas de progresso
+                   - Tendências e padrões
+                
+                2. Benefícios Técnicos:
+                   - Monitoramento em tempo real
+                   - Análise de performance
+                   - Tomada de decisão
+                
+                3. Manutenibilidade:
+                   - Centralização de dados
+                   - Histórico de métricas
+                   - Relatórios automáticos
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_dashboard.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Métricas Principais:
+                   - Taxa de resolução
+                   - Tempo médio
+                   - Distribuição por tipo
+                   - Tendências temporais
+                
+                2. Implementação:
+                   - Frontend React
+                   - Gráficos D3.js
+                   - API de métricas
+                   - Cache Redis
+                
+                3. Integrações:
+                   - Sistema de embates
+                   - Análise de dependências
+                   - CI/CD pipeline
+                   - Alertas e notificações
+                """,
+                "data": now
+            })
+            
+            embate_dashboard.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Novo frontend
+                   - APIs de métricas
+                   - Coleta de dados
+                   - Cache layer
+                
+                2. Riscos:
+                   - Performance do frontend
+                   - Volume de dados
+                   - Manutenção de gráficos
+                   - Complexidade de queries
+                
+                3. Mitigação:
+                   - Otimização de queries
+                   - Agregação de dados
+                   - Componentização
+                   - Testes E2E
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_dashboard)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
