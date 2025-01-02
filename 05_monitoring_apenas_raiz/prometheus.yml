@@ -1,0 +1,71 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "embates"
+    static_configs:
+      - targets: ["localhost:9090"]
+    metrics_path: "/metrics"
+
+  - job_name: "node"
+    static_configs:
+      - targets: ["localhost:9100"]
+
+rule_files:
+  - "alerts.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "localhost:9093"
+
+# Regras de alerta
+groups:
+  - name: embates
+    rules:
+      - alert: AltoTempoResolucao
+        expr: resolucao_tempo > 72
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Embate com alto tempo de resolução"
+          description: "O embate está demorando mais que 72 horas para ser resolvido"
+
+      - alert: BaixaTaxaConcordancia
+        expr: concordancia_taxa < 0.7
+        for: 24h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Baixa taxa de concordância"
+          description: "A taxa de concordância está abaixo de 70%"
+
+      - alert: ProblemasEmbedding
+        expr: embedding_erros > 5
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Problemas no serviço de embedding"
+          description: "Muitos erros ocorrendo no serviço de embedding"
+
+      - alert: AltaLatenciaAPI
+        expr: api_latency > 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alta latência na API"
+          description: "A API está respondendo com latência maior que 1 segundo"
+
+      - alert: AltoUsoRecursos
+        expr: sistema_cpu > 80 or sistema_memoria > 80 or sistema_disco > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alto uso de recursos do sistema"
+          description: "CPU, memória ou disco com uso acima de 80%"
