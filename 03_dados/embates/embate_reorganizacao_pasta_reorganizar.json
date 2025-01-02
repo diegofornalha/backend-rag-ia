@@ -1,0 +1,33 @@
+{
+  "titulo": "Reorganização da Pasta 'reorganizar': Resolução de Conflitos de Nomenclatura",
+  "tipo": "arquitetura",
+  "contexto": "Existe uma pasta 'reorganizar' que contém arquivos e subpastas que precisam ser realocados seguindo as regras de nomenclatura do projeto, onde não pode haver números duplicados na raiz e todo conteúdo deve seguir a estrutura numérica definida.",
+  "status": "aberto",
+  "data_inicio": "2024-01-02T18:25:00",
+  "argumentos": [
+    {
+      "autor": "Arquiteto",
+      "tipo": "analise",
+      "conteudo": "Análise do conteúdo atual da pasta 'reorganizar':\n\n1. Arquivos:\n- reorganizacao_testes.txt\n- alteracoes_sintaxe.txt\n- fix_code_quality.py\n\n2. Diretórios:\n- embates/\n- fixtures/\n- 02_documentacao/\n\nProblemas identificados:\n1. Pasta '02_documentacao' conflita com a numeração já existente na raiz\n2. Conteúdo precisa ser distribuído seguindo a estrutura numérica existente\n3. Arquivos de documentação e qualidade de código misturados",
+      "data": "2024-01-02T18:25:30"
+    },
+    {
+      "autor": "Desenvolvedor",
+      "tipo": "proposta",
+      "conteudo": "Proposta de Reorganização:\n\n1. Mover arquivos de documentação para '02_documentacao/':\n- reorganizacao_testes.txt → 02_documentacao/docs/\n- alteracoes_sintaxe.txt → 02_documentacao/docs/\n\n2. Mover script de qualidade para '00_testes_apenas_raiz/':\n- fix_code_quality.py → 00_testes_apenas_raiz/utils/\n\n3. Mover dados para '03_dados/':\n- embates/ → 03_dados/embates/\n- fixtures/ → 03_dados/fixtures/\n\n4. Remover diretório '02_documentacao' da pasta reorganizar pois já existe na raiz\n\n5. Após a migração, remover a pasta 'reorganizar' completamente",
+      "data": "2024-01-02T18:26:00"
+    },
+    {
+      "autor": "QA",
+      "tipo": "validacao",
+      "conteudo": "Critérios de Validação:\n1. Nenhum arquivo deve ser perdido durante a migração\n2. Não deve haver conflitos de numeração na raiz\n3. Todos os arquivos devem estar em suas respectivas pastas por responsabilidade\n4. Manter histórico das alterações através deste embate\n5. Verificar se não há duplicidade de conteúdo nos destinos",
+      "data": "2024-01-02T18:26:30"
+    }
+  ],
+  "resolucao": null,
+  "metadata": {
+    "impacto": "baixo",
+    "prioridade": "alta",
+    "tags": ["organizacao", "diretorios", "limpeza"]
+  }
+}
