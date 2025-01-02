@@ -831,6 +831,94 @@ class MemoryStorage:
             
             embates.append(embate_external)
             
+            # Cria embate sobre segurança e autenticação
+            embate_security = Embate(
+                titulo="Segurança e Autenticação do Sistema",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema robusto de segurança e autenticação.
+                
+                Motivação:
+                1. Requisitos de Segurança:
+                   - Proteção de endpoints
+                   - Autenticação de usuários
+                   - Autorização de ações
+                   - Auditoria de acessos
+                
+                2. Benefícios Técnicos:
+                   - Controle de acesso
+                   - Rastreabilidade
+                   - Conformidade
+                   - Prevenção de ataques
+                
+                3. Manutenibilidade:
+                   - Padrões de segurança
+                   - Logs de auditoria
+                   - Documentação segura
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_security.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Componentes de Segurança:
+                   - JWT Authentication
+                   - Role-based Access Control
+                   - API Key Management
+                   - Rate Limiting
+                
+                2. Implementação:
+                   - Middleware de autenticação
+                   - Sistema de roles
+                   - Gestão de tokens
+                   - Logs de segurança
+                
+                3. Monitoramento:
+                   - Tentativas de acesso
+                   - Padrões suspeitos
+                   - Uso de recursos
+                   - Alertas de segurança
+                """,
+                "data": now
+            })
+            
+            embate_security.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Middleware de auth
+                   - Decorators de proteção
+                   - Sistema de roles
+                   - Logs de auditoria
+                
+                2. Riscos:
+                   - Complexidade adicional
+                   - Overhead de autenticação
+                   - Gestão de tokens
+                   - Manutenção de roles
+                
+                3. Mitigação:
+                   - Testes de segurança
+                   - Documentação clara
+                   - Monitoramento constante
+                   - Atualizações regulares
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_security)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
