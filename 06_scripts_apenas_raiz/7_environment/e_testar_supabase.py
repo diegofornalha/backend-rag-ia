@@ -1,39 +1,32 @@
-import logging
-import os
+"""Script para testar conexão com Supabase."""
 
-from dotenv import load_dotenv
+import os
 from supabase import create_client
 
-# Configurando logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Carregando variáveis de ambiente
-load_dotenv()
-
-def test_supabase_connection():
-    """Testa a conexão básica com o Supabase."""
+def testar_supabase():
+    """Testa conexão com Supabase."""
+    # Verifica variáveis de ambiente
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    
+    if not url or not key:
+        print("❌ Erro: Variáveis SUPABASE_URL e SUPABASE_KEY não definidas")
+        return False
+        
     try:
-        url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_KEY")
+        # Tenta conectar
         client = create_client(url, key)
         
-        # Tenta uma operação simples
-        response = client.table("documentos").select("id").limit(1).execute()
-        logger.info("✅ Conexão com Supabase estabelecida com sucesso - %d registros encontrados", len(response.data))
+        # Tenta fazer uma query simples
+        response = client.table("rag.documentos").select("id").limit(1).execute()
+        
+        print("✅ Conexão com Supabase OK")
+        print(f"Resposta: {response.data}")
         return True
+        
     except Exception as e:
-        logger.error("❌ Erro na conexão com Supabase: %s", str(e))
+        print(f"❌ Erro ao conectar: {e}")
         return False
-
-def main():
-    """Executa teste de conexão com Supabase."""
-    logger.info("🔍 Iniciando teste de conexão com Supabase...")
-    
-    if test_supabase_connection():
-        logger.info("✨ Teste de conexão completado com sucesso")
-    else:
-        logger.error("⚠️ Falha no teste de conexão")
-
+        
 if __name__ == "__main__":
-    main() 
+    testar_supabase() 
