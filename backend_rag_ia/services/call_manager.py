@@ -19,7 +19,7 @@ class ChamadasSequenciaisManager:
     """Gerencia chamadas sequenciais para evitar limites do Cursor."""
     
     def __init__(self, 
-                 limite_aviso: int = 20,
+                 limite_aviso: int = 15,
                  limite_maximo: int = 25,
                  tempo_reset: int = 60,
                  arquivo_estado: str = "chamadas_estado.json"):
@@ -27,7 +27,7 @@ class ChamadasSequenciaisManager:
         Inicializa o gerenciador.
         
         Args:
-            limite_aviso: Número de chamadas para gerar aviso
+            limite_aviso: Número de chamadas para gerar aviso (default: 15)
             limite_maximo: Número máximo de chamadas permitidas
             tempo_reset: Tempo em minutos para resetar contador
             arquivo_estado: Arquivo para persistir estado
@@ -78,7 +78,7 @@ class ChamadasSequenciaisManager:
         if len(self.chamadas) >= self.limite_aviso:
             return {
                 "status": "warning",
-                "message": f"Atingido {len(self.chamadas)} chamadas de {self.limite_maximo}",
+                "message": f"Atingido {len(self.chamadas)} chamadas de {self.limite_maximo}. Considere pausar para revisão.",
                 "sugestoes": self._gerar_sugestoes()
             }
             
@@ -132,7 +132,8 @@ class ChamadasSequenciaisManager:
             "Agrupe operações similares em uma única chamada",
             "Use cache para evitar chamadas repetidas",
             "Considere usar batch operations",
-            f"Aguarde {self.tempo_reset} minutos para o contador resetar"
+            f"Aguarde {self.tempo_reset} minutos para o contador resetar",
+            "Revise o progresso atual antes de continuar"
         ]
         
         # Analisa padrões nas chamadas
