@@ -1,6 +1,6 @@
 """API principal do Backend RAG IA."""
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 
@@ -36,13 +36,35 @@ app.middleware("http")(logging_middleware)
 async def global_exception_handler(request: Request, exc: Exception):
     return await error_handler(request, exc)
 
+# Middleware de validação de origem
+@app.middleware("http")
+async def validate_origin(request: Request, call_next):
+    """
+    Middleware para validar a origem das requisições.
+    Bloqueia requisições de origens não permitidas.
+    """
+    origin = request.headers.get("origin")
+    
+    # Se não houver origem (ex: requisição direta), permite
+    if not origin:
+        return await call_next(request)
+        
+    # Verifica se a origem está na lista de permitidas
+    if origin not in settings.cors_origins_list:
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "Origin not allowed"}
+        )
+        
+    return await call_next(request)
+
 # Configuração CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Métodos específicos em vez de "*"
+    allow_headers=["Authorization", "Content-Type"],  # Headers específicos em vez de "*"
 )
 
 # Incluir rotas
