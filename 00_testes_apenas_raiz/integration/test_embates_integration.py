@@ -21,6 +21,7 @@ def test_dir():
     yield path
     cleanup_test_files(path)
 
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_create_and_search_embate():
@@ -45,6 +46,7 @@ async def test_create_and_search_embate():
     # Assert - Verifica busca
     assert len(results) == 1
     assert results[0]["titulo"] == embate.titulo
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -80,5 +82,4 @@ async def test_update_and_export_embate():
     # Assert - Verifica exportação
     assert len(export_results) == 1
     assert export_results[0]["id"] == embate_id
-    assert export_results[0]["status"] == "resolvido"
-
+    assert export_results[0]["status"] == "resolvido" 
