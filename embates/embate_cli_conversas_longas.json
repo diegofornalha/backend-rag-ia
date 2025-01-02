@@ -1,0 +1,38 @@
+{
+  "titulo": "Melhoria no CLI para Continuidade de Conversas Longas",
+  "version_key": "cli_conversas_longas_v1",
+  "conteudo": "# Melhoria no CLI para Continuidade de Conversas Longas\n\n## Contexto\nQuando uma conversa fica muito longa no CLI, aparece a mensagem 'Conversation Too Long' e o usuário precisa criar uma nova conversa manualmente. Isso interrompe o fluxo de trabalho e pode causar perda de contexto.\n\n## Problema\n1. Interrupção do fluxo de trabalho\n2. Necessidade de ação manual do usuário\n3. Potencial perda de contexto\n4. Experiência do usuário prejudicada\n\n## Solução Proposta\n\n### 1. Detecção Automática\n```python
+def detect_conversation_too_long(response: str) -> bool:
+    return \"Conversation Too Long\" in response
+```\n\n### 2. Ação Automática\n```python
+def handle_long_conversation(cli_instance):
+    if detect_conversation_too_long(cli_instance.last_response):
+        # Simular Command+N
+        cli_instance.new_conversation()
+        # Transferir contexto relevante
+        cli_instance.transfer_context()
+        # Continuar execução
+        cli_instance.continue_from_last_point()
+```\n\n### 3. Preservação de Contexto\n- Manter histórico de comandos importantes\n- Preservar estado atual do embate\n- Transferir variáveis relevantes\n\n### 4. Implementação no CLI\n```python
+class CLIEnhancement:
+    def __init__(self):
+        self.context = {}\n
+    def auto_continue(self):
+        # Detectar mensagem de conversa longa
+        if self.is_conversation_too_long():
+            # Salvar contexto atual
+            self.save_context()
+            # Simular Command+N
+            self.simulate_new_conversation()
+            # Restaurar contexto
+            self.restore_context()
+            # Continuar execução
+            self.resume_operation()
+```\n\n## Benefícios\n\n1. **Continuidade**\n   - Fluxo de trabalho ininterrupto\n   - Preservação do contexto\n   - Menor fricção para o usuário\n\n2. **Automação**\n   - Sem necessidade de intervenção manual\n   - Processo mais eficiente\n   - Menor chance de erros\n\n3. **Experiência do Usuário**\n   - Mais fluida\n   - Mais profissional\n   - Menos frustrante\n\n## Próximos Passos\n\n1. **Desenvolvimento**\n   - Implementar detector de mensagem\n   - Criar sistema de preservação de contexto\n   - Desenvolver mecanismo de continuidade\n\n2. **Testes**\n   - Testar diferentes cenários\n   - Validar preservação de contexto\n   - Verificar performance\n\n3. **Documentação**\n   - Atualizar documentação do CLI\n   - Documentar comportamento automático\n   - Incluir exemplos de uso\n\n## Status\nEm análise - Aguardando revisão técnica e aprovação para implementação.",
+  "error_log": null,
+  "metadata": {
+    "status": "aberto",
+    "tipo": "tecnico",
+    "tags": ["cli", "ux", "automacao", "melhoria", "continuidade"]
+  }
+} 
