@@ -1,0 +1,34 @@
+{
+  "titulo": "Reorganização dos Diretórios de Embates",
+  "version_key": "organizacao_embates_v1",
+  "conteudo": "# Reorganização dos Diretórios de Embates\n\n## Contexto\nAtualmente existem embates sendo gerados em três locais diferentes:\n\n1. `/embates/`\n2. `/02_ferramentas_rag_apenas_raiz/dados_embates/`\n3. `/02_ferramentas_rag_apenas_raiz/cli/dados/embates/`\n\nIsto pode causar confusão, duplicidade e dificuldade de manutenção.\n\n## Análise da Situação Atual\n\n### 1. Diretório Principal (/embates/)\n- Contém embates principais do projeto\n- Usado para documentação de decisões\n- Versionado no git\n\n### 2. Diretório dados_embates\n- Localizado em ferramentas RAG\n- Contém dados temporários\n- Formato de data no nome (ex: embate_20250102_020153.json)\n\n### 3. Diretório cli/dados/embates\n- Dentro da estrutura CLI\n- Possivelmente usado para testes ou cache\n\n## Problemas Identificados\n\n1. **Duplicidade**\n   - Múltiplos locais para mesma finalidade\n   - Potencial confusão sobre onde salvar\n   - Dificuldade de busca\n\n2. **Manutenção**\n   - Necessidade de verificar múltiplos locais\n   - Complexidade desnecessária\n   - Risco de inconsistências\n\n3. **Versionamento**\n   - Diferentes políticas de backup\n   - Confusão sobre o que versionar\n\n## Solução Proposta\n\n### 1. Estrutura Unificada\n```\n/embates/\n  ├── principal/           # Embates principais do projeto\n  ├── temporario/          # Dados temporários (não versionados)\n  └── arquivado/           # Embates históricos\n```\n\n### 2. Regras de Organização\n```python
+class EmbateManager:
+    def __init__(self):
+        self.base_dir = \"embates\"
+        self.dirs = {
+            \"principal\": \"principal\",
+            \"temp\": \"temporario\",
+            \"arquivo\": \"arquivado\"
+        }
+
+    def save_embate(self, embate: dict, tipo: str):
+        \"\"\"Salva embate no diretório apropriado\"\"\"
+        dir_path = os.path.join(self.base_dir, self.dirs[tipo])
+        # Lógica de salvamento
+```\n\n### 3. Migração de Dados\n1. Mover embates existentes\n2. Atualizar referências no código\n3. Remover diretórios antigos\n\n### 4. Configuração .gitignore\n```gitignore
+# Ignorar diretórios temporários
+embates/temporario/
+embates/temporario/*\n
+# Manter diretório principal
+!embates/principal/
+!embates/principal/*\n
+# Manter arquivo
+embates/arquivado/
+```\n\n## Plano de Implementação\n\n1. **Preparação**\n   - Backup dos dados existentes\n   - Criar nova estrutura de diretórios\n   - Atualizar .gitignore\n\n2. **Migração**\n   - Mover embates principais\n   - Mover dados temporários\n   - Arquivar embates antigos\n\n3. **Código**\n   - Atualizar caminhos no código\n   - Implementar EmbateManager\n   - Atualizar documentação\n\n4. **Validação**\n   - Verificar integridade dos dados\n   - Testar funcionalidades\n   - Validar versionamento\n\n## Benefícios Esperados\n\n1. **Organização**\n   - Estrutura clara e única\n   - Fácil manutenção\n   - Melhor rastreabilidade\n\n2. **Performance**\n   - Menos overhead de I/O\n   - Busca mais eficiente\n   - Cache otimizado\n\n3. **Desenvolvimento**\n   - Código mais limpo\n   - Menos complexidade\n   - Manutenção simplificada\n\n## Status\nEm análise - Aguardando aprovação para início da implementação.",
+  "error_log": null,
+  "metadata": {
+    "status": "aberto",
+    "tipo": "tecnico",
+    "tags": ["organizacao", "diretorio", "embates", "estrutura", "migracao"]
+  }
+} 
