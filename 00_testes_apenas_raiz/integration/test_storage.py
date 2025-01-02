@@ -83,7 +83,7 @@ async def test_memory_storage_embate_trigger():
     )
     result3 = await storage.save(embate3)
     embates = await storage.list()
-    assert len(embates) == 11  # 3 embates originais + 8 embates técnicos
+    assert len(embates) == 12  # 3 embates originais + 9 embates técnicos
     
     # Encontra o embate técnico
     embate_tecnico = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Uso Intensivo" in e.titulo)
@@ -146,6 +146,14 @@ async def test_memory_storage_embate_trigger():
     assert "Análise Técnica" in embate_dashboard.argumentos[0]["conteudo"]
     assert "Impacto e Riscos" in embate_dashboard.argumentos[1]["conteudo"]
     
+    # Encontra o embate de sistemas externos
+    embate_external = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Sistemas Externos" in e.titulo)
+    assert embate_external.tipo == "tecnico"
+    assert "Integração com Sistemas Externos" in embate_external.titulo
+    assert len(embate_external.argumentos) == 2
+    assert "Análise Técnica" in embate_external.argumentos[0]["conteudo"]
+    assert "Impacto e Riscos" in embate_external.argumentos[1]["conteudo"]
+    
     # Deleta os embates técnicos e verifica se o contador é resetado
     await storage.delete(embate_tecnico.id)
     await storage.delete(embate_jsonb.id)
@@ -155,6 +163,7 @@ async def test_memory_storage_embate_trigger():
     await storage.delete(embate_priorizacao.id)
     await storage.delete(embate_deps.id)
     await storage.delete(embate_dashboard.id)
+    await storage.delete(embate_external.id)
     embates = await storage.list()
     assert len(embates) == 3  # Apenas os embates originais
     

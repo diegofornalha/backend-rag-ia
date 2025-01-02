@@ -744,6 +744,93 @@ class MemoryStorage:
             
             embates.append(embate_dashboard)
             
+            # Cria embate sobre integração com sistemas externos
+            embate_external = Embate(
+                titulo="Integração com Sistemas Externos",
+                tipo="tecnico",
+                contexto="""
+                Proposta de padronização e gerenciamento de integrações com sistemas externos.
+                
+                Motivação:
+                1. Dependências Externas:
+                   - Gemini para análise
+                   - GitHub para CI/CD
+                   - Redis para cache
+                   - Supabase para storage
+                
+                2. Benefícios Técnicos:
+                   - Resiliência do sistema
+                   - Gerenciamento de falhas
+                   - Performance otimizada
+                
+                3. Manutenibilidade:
+                   - Padrões consistentes
+                   - Monitoramento unificado
+                   - Documentação centralizada
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_external.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Pontos de Integração:
+                   - APIs externas
+                   - Sistemas de cache
+                   - Bancos de dados
+                   - Serviços de IA
+                
+                2. Implementação:
+                   - Camada de abstração
+                   - Retry policies
+                   - Circuit breakers
+                   - Rate limiting
+                
+                3. Monitoramento:
+                   - Health checks
+                   - Métricas de latência
+                   - Logs estruturados
+                   - Alertas automáticos
+                """,
+                "data": now
+            })
+            
+            embate_external.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Novos adaptadores
+                   - Configuração de retry
+                   - Implementação de fallbacks
+                   - Testes de integração
+                
+                2. Riscos:
+                   - Indisponibilidade externa
+                   - Custos de API
+                   - Complexidade adicional
+                   - Manutenção contínua
+                
+                3. Mitigação:
+                   - Fallbacks locais
+                   - Cache estratégico
+                   - Monitoramento proativo
+                   - Documentação detalhada
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_external)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
