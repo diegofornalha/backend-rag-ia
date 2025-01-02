@@ -1,10 +1,9 @@
 """
 Serviço para interagir com o Supabase Vector Store.
 """
-import json
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from dotenv import load_dotenv
 from supabase import Client, create_client
@@ -27,7 +26,7 @@ class VectorStore:
 
         self.supabase_client: Client = create_client(supabase_url, supabase_key)
 
-    def insert_document(self, titulo: str, conteudo: Dict[str, Any], document_hash: str, version_key: str) -> str:
+    def insert_document(self, titulo: str, conteudo: dict[str, Any], document_hash: str, version_key: str) -> str:
         """
         Insere um documento no Supabase.
 
@@ -54,10 +53,10 @@ class VectorStore:
             return response.data[0]['id']
 
         except Exception as e:
-            logger.error(f"Erro ao inserir documento: {e}")
+            logger.error("Erro ao inserir documento", extra={"error": str(e)})
             raise
 
-    def get_document(self, document_id: str) -> Optional[Dict[str, Any]]:
+    def get_document(self, document_id: str) -> dict[str, Any] | None:
         """
         Obtém um documento do Supabase.
 
@@ -72,10 +71,10 @@ class VectorStore:
             return response.data[0] if response.data else None
 
         except Exception as e:
-            logger.error(f"Erro ao obter documento: {e}")
+            logger.error("Erro ao obter documento", extra={"error": str(e)})
             raise
 
-    def update_document(self, document_id: str, titulo: str, conteudo: Dict[str, Any], document_hash: str, version_key: str) -> None:
+    def update_document(self, document_id: str, titulo: str, conteudo: dict[str, Any], document_hash: str, version_key: str) -> None:
         """
         Atualiza um documento no Supabase.
 
@@ -98,7 +97,7 @@ class VectorStore:
                 raise ValueError("Erro ao atualizar documento: resposta vazia")
 
         except Exception as e:
-            logger.error(f"Erro ao atualizar documento: {e}")
+            logger.error("Erro ao atualizar documento", extra={"error": str(e)})
             raise
 
     def delete_document(self, document_id: str) -> None:
@@ -114,10 +113,10 @@ class VectorStore:
                 raise ValueError("Erro ao deletar documento: resposta vazia")
 
         except Exception as e:
-            logger.error(f"Erro ao deletar documento: {e}")
+            logger.error("Erro ao deletar documento", extra={"error": str(e)})
             raise
 
-    def list_documents(self) -> List[Dict[str, Any]]:
+    def list_documents(self) -> list[dict[str, Any]]:
         """
         Lista todos os documentos do Supabase.
 
@@ -129,10 +128,10 @@ class VectorStore:
             return response.data if response.data else []
 
         except Exception as e:
-            logger.error(f"Erro ao listar documentos: {e}")
+            logger.error("Erro ao listar documentos", extra={"error": str(e)})
             raise
 
-    def search_similar_documents(self, query_embedding: List[float], match_count: int = 5) -> List[Tuple[Dict[str, Any], float]]:
+    def search_similar_documents(self, query_embedding: list[float], match_count: int = 5) -> list[tuple[dict[str, Any], float]]:
         """
         Busca documentos similares usando o embedding da query.
 
@@ -164,5 +163,5 @@ class VectorStore:
             return results
 
         except Exception as e:
-            logger.error(f"Erro ao buscar documentos similares: {e}")
+            logger.error("Erro ao buscar documentos similares", extra={"error": str(e)})
             raise

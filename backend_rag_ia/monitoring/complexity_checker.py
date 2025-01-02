@@ -2,10 +2,9 @@
 Módulo para verificação e controle de complexidade do sistema.
 """
 
-from typing import Dict, List, Optional
+import logging
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,7 @@ class ComplexityMetrics:
 class ComplexityChecker:
     """Classe para verificar e controlar a complexidade do sistema."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Inicializa o verificador de complexidade."""
         self.thresholds = {
             "max_dependencies": 20,  # Número máximo de dependências
@@ -31,8 +30,8 @@ class ComplexityChecker:
             "min_understanding_score": 0.7,  # Score mínimo de compreensão (0-1)
         }
         
-        self.warnings: List[Dict] = []
-        self.last_check: Optional[datetime] = None
+        self.warnings: list[dict[str, str | datetime]] = []
+        self.last_check: datetime | None = None
     
     async def check_complexity(self) -> ComplexityMetrics:
         """Verifica a complexidade atual do sistema."""
@@ -55,7 +54,7 @@ class ComplexityChecker:
             return metrics
             
         except Exception as e:
-            logger.error(f"Erro ao verificar complexidade: {e}")
+            logger.error("Erro ao verificar complexidade", extra={"error": str(e)})
             raise
     
     async def _count_dependencies(self) -> int:
@@ -120,7 +119,7 @@ class ComplexityChecker:
                 "timestamp": datetime.now()
             })
     
-    async def get_recommendations(self) -> List[str]:
+    async def get_recommendations(self) -> list[str]:
         """Gera recomendações baseadas nos warnings atuais."""
         recommendations = []
         

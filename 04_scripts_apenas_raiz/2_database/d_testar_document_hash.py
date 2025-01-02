@@ -1,7 +1,8 @@
-from backend_rag_ia.config.supabase_config import SupabaseConfig
 import hashlib
 import logging
 from datetime import datetime
+
+from backend_rag_ia.config.supabase_config import SupabaseConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ def testar_insercao_documento(supabase, titulo: str, conteudo: str) -> bool:
         return True
         
     except Exception as e:
-        logger.error(f'Erro ao inserir documento: {str(e)}')
+        logger.error(f'Erro ao inserir documento: {e!s}')
         return False
 
 def main():

@@ -2,9 +2,9 @@
 Script para testar a API direta do Supabase.
 """
 import os
-from dotenv import load_dotenv
+
 import requests
-import json
+from dotenv import load_dotenv
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -39,7 +39,7 @@ def test_select_authenticated():
         print(f"Documentos encontrados: {len(result)}")
         return True
     except Exception as e:
-        print(f"❌ SELECT negado: {str(e)}")
+        print(f"❌ SELECT negado: {e!s}")
         return False
 
 def test_insert_authenticated():
@@ -64,7 +64,7 @@ def test_insert_authenticated():
         print(f"Documento inserido: {result}")
         return True
     except Exception as e:
-        print(f"❌ INSERT negado: {str(e)}")
+        print(f"❌ INSERT negado: {e!s}")
         return False
 
 def test_update_service_role():
@@ -86,7 +86,7 @@ def test_update_service_role():
         print(f"Documento atualizado: {result}")
         return True
     except Exception as e:
-        print(f"❌ UPDATE negado: {str(e)}")
+        print(f"❌ UPDATE negado: {e!s}")
         return False
 
 def test_delete_service_role():
@@ -102,7 +102,7 @@ def test_delete_service_role():
         print(f"Documento deletado: {result}")
         return True
     except Exception as e:
-        print(f"❌ DELETE negado: {str(e)}")
+        print(f"❌ DELETE negado: {e!s}")
         return False
 
 def main():

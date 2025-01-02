@@ -1,7 +1,8 @@
-import os
 import logging
 from pathlib import Path
+
 from dotenv import load_dotenv
+
 from backend_rag_ia.config.supabase_config import SupabaseConfig
 
 # Configurando logging
@@ -14,7 +15,7 @@ load_dotenv()
 def read_sql_file(file_path):
     """Lê o conteúdo de um arquivo SQL."""
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path) as file:
             return file.read()
     except Exception as e:
         logger.error(f"❌ Erro ao ler arquivo {file_path}: {e}")

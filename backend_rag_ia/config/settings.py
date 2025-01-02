@@ -1,6 +1,8 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
-from typing import Literal, List
+from typing import Literal
+
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     """
@@ -48,7 +50,7 @@ class Settings(BaseSettings):
         return self.LOCAL_URL
         
     @property
-    def cors_origins_list(self) -> List[str]:
+    def cors_origins_list(self) -> list[str]:
         """
         Retorna a lista de origens permitidas baseada no ambiente.
         Em produção, usa apenas as origens explicitamente configuradas.
@@ -67,7 +69,7 @@ class Settings(BaseSettings):
             
         return list(set(origins))  # Remove duplicatas
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """
     Retorna as configurações da aplicação.

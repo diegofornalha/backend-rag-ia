@@ -1,12 +1,12 @@
 """Sistema base de monitoramento."""
 
+import json
+import logging
 import time
 from pathlib import Path
+from typing import Any
+
 import psutil
-import logging
-import requests
-from typing import Dict, Any, Optional
-import json
 import yaml
 
 # Configuração de logging
@@ -29,7 +29,7 @@ class Monitor:
         self.api_url = self.monitoring_config.get('api_url', 'http://localhost:10000')
         self.check_interval = self.monitoring_config.get('check_interval', 60)
     
-    def _load_config(self, config_path: str) -> Dict[str, Any]:
+    def _load_config(self, config_path: str) -> dict[str, Any]:
         """Carrega configurações do arquivo YAML."""
         try:
             with open(config_path) as f:

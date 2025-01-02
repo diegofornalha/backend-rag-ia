@@ -1,7 +1,8 @@
-import sys
-import pkg_resources
-import platform
 import logging
+import platform
+import sys
+
+import pkg_resources
 
 # Configurando logging
 logging.basicConfig(level=logging.INFO)

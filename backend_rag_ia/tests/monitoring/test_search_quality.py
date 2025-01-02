@@ -2,16 +2,19 @@
 Testes para qualidade das buscas e métricas relacionadas.
 """
 
+from datetime import timedelta
+
 import pytest
-from datetime import datetime, timedelta
+
 from backend_rag_ia.monitoring.search_quality import (
-    SearchQualityMonitor,
-    RelevanceMetric,
+    LatencyMetric,
     PrecisionMetric,
     RecallMetric,
-    LatencyMetric,
-    UserFeedbackMetric
+    RelevanceMetric,
+    SearchQualityMonitor,
+    UserFeedbackMetric,
 )
+
 
 @pytest.fixture
 def quality_monitor():

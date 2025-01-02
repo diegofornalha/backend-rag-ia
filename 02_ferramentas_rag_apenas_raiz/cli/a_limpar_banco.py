@@ -4,11 +4,11 @@ Ferramenta CLI para limpar a tabela de documentos no Supabase.
 """
 
 import os
-from typing import Optional
+
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.prompt import Confirm
-from supabase import create_client, Client
-from dotenv import load_dotenv
+from supabase import Client, create_client
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -16,7 +16,7 @@ load_dotenv()
 # Configura console
 console = Console()
 
-def get_supabase_client() -> Optional[Client]:
+def get_supabase_client() -> Client | None:
     """
     Inicializa cliente do Supabase.
     
@@ -36,7 +36,7 @@ def get_supabase_client() -> Optional[Client]:
         return create_client(url, key)
         
     except Exception as e:
-        console.print(f"\n[red]Erro ao conectar com Supabase: {str(e)}[/red]")
+        console.print("\n[red]Erro ao conectar com Supabase: %s[/red]", str(e))
         return None
 
 def clear_documents(client: Client) -> None:
@@ -58,7 +58,7 @@ def clear_documents(client: Client) -> None:
         console.print("\n[green]✅ Tabela limpa com sucesso![/green]")
         
     except Exception as e:
-        console.print(f"\n[red]Erro ao limpar tabela: {str(e)}[/red]")
+        console.print("\n[red]Erro ao limpar tabela: %s[/red]", str(e))
 
 def main() -> None:
     """Função principal."""
@@ -76,7 +76,7 @@ def main() -> None:
     except KeyboardInterrupt:
         console.print("\n\n[bold]👋 Operação cancelada![/bold]")
     except Exception as e:
-        console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
+        console.print("\n[red]Erro inesperado: %s[/red]", str(e))
 
 if __name__ == "__main__":
     main() 

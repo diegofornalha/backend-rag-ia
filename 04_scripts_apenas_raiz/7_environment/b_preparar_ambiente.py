@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
+import logging
 import subprocess
 import sys
-import os
-import logging
 from pathlib import Path
 
 # Configurando logging

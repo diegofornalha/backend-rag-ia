@@ -2,9 +2,9 @@
 Script para verificar o status das funções RPC no Supabase.
 """
 import os
-from dotenv import load_dotenv
+
 import requests
-import json
+from dotenv import load_dotenv
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -60,7 +60,7 @@ def check_function_exists(function_name):
             return False
             
     except Exception as e:
-        print(f"❌ Erro ao verificar função: {str(e)}")
+        print(f"❌ Erro ao verificar função: {e!s}")
         return False
 
 def check_table_exists(schema, table_name):
@@ -100,7 +100,7 @@ def check_table_exists(schema, table_name):
             return False
             
     except Exception as e:
-        print(f"❌ Erro ao verificar tabela: {str(e)}")
+        print(f"❌ Erro ao verificar tabela: {e!s}")
         return False
 
 def main():

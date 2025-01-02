@@ -2,18 +2,20 @@
 Comandos CLI para gerenciamento de embates.
 """
 
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
 import click
 from rich.console import Console
 from rich.progress import Progress
 from rich.prompt import Confirm
-from pathlib import Path
-import json
-from datetime import datetime
-from typing import Optional, Dict, Any
+
 from backend_rag_ia.utils.logging_config import logger
-from .models import Embate, Argumento
+
 from .manager import EmbateManager
-from .storage import SupabaseStorage
+from .models import Argumento, Embate
 
 # Configura console
 console = Console()
@@ -28,7 +30,7 @@ def cli():
 @click.option('--campo', help='Campo a ser editado')
 @click.option('--valor', help='Novo valor para o campo')
 @click.option('--excluir', is_flag=True, help='Exclui o embate')
-async def edit(arquivo: str, campo: str, valor: str, excluir: bool):
+async def edit(arquivo: str, campo: str | None, valor: str | None, excluir: bool):
     """Edita um embate existente."""
     try:
         if excluir:
@@ -36,10 +38,14 @@ async def edit(arquivo: str, campo: str, valor: str, excluir: bool):
                 Path(arquivo).unlink()
                 console.print("[green]Embate excluído com sucesso[/green]")
             return
-        
+
         # Carrega embate
         with open(arquivo) as f:
-            data = json.load(f)
+            embate_data = json.load(f)
+            
+        if not campo or not valor:
+            console.print("[red]Campo e valor são obrigatórios para edição[/red]")
+            return
         
         # Valida campos
         campos_validos = {
@@ -68,6 +74,11 @@ async def edit(arquivo: str, campo: str, valor: str, excluir: bool):
                 console.print("[red]Status inválido. Use 'aberto' ou 'resolvido'[/red]")
             return
         
+        # Verifica se o valor é diferente do atual
+        if campo in embate_data and embate_data[campo] == valor:
+            console.print("[yellow]O valor fornecido é igual ao valor atual[/yellow]")
+            return
+        
         # Atualiza embate
         manager = EmbateManager()
         updates = {campo: valor}
@@ -81,19 +92,19 @@ async def edit(arquivo: str, campo: str, valor: str, excluir: bool):
             extra={"error": str(e), "arquivo": arquivo},
             exc_info=True
         )
-        console.print(f"[red]Erro ao editar embate: {str(e)}[/red]")
+        console.print(f"[red]Erro ao editar embate: {e!s}[/red]")
 
 @cli.command()
 @click.option('--texto', help='Texto para buscar')
 @click.option('--tag', help='Tag para filtrar')
-async def search(texto: Optional[str], tag: Optional[str]):
+async def search(texto: str | None, tag: str | None):
     """Busca embates."""
     try:
         with Progress() as progress:
             task = progress.add_task("Buscando...", total=100)
             
             # Prepara filtros
-            filters: Dict[str, Any] = {}
+            filters: dict[str, Any] = {}
             if tag:
                 filters["tags"] = [tag]
             
@@ -120,14 +131,14 @@ async def search(texto: Optional[str], tag: Optional[str]):
             extra={"error": str(e)},
             exc_info=True
         )
-        console.print(f"[red]Erro ao buscar embates: {str(e)}[/red]")
+        console.print(f"[red]Erro ao buscar embates: {e!s}[/red]")
 
 @cli.command()
 @click.argument('arquivo', type=click.Path(exists=True))
 @click.option('--adicionar', help='Tag para adicionar')
 @click.option('--remover', help='Tag para remover')
 @click.option('--listar', is_flag=True, help='Lista as tags do embate')
-async def tags(arquivo: str, adicionar: Optional[str], remover: Optional[str], listar: bool):
+async def tags(arquivo: str, adicionar: str | None, remover: str | None, listar: bool):
     """Gerencia tags de um embate."""
     try:
         # Carrega embate
@@ -147,7 +158,7 @@ async def tags(arquivo: str, adicionar: Optional[str], remover: Optional[str], l
             return
         
         # Atualiza tags
-        updates: Dict[str, Any] = {"metadata": data["metadata"]}
+        updates: dict[str, Any] = {"metadata": data["metadata"]}
         if adicionar and adicionar not in data["metadata"]["tags"]:
             data["metadata"]["tags"].append(adicionar)
             console.print("[green]Tag adicionada com sucesso[/green]")
@@ -166,7 +177,7 @@ async def tags(arquivo: str, adicionar: Optional[str], remover: Optional[str], l
             extra={"error": str(e), "arquivo": arquivo},
             exc_info=True
         )
-        console.print(f"[red]Erro ao gerenciar tags: {str(e)}[/red]")
+        console.print(f"[red]Erro ao gerenciar tags: {e!s}[/red]")
 
 @cli.command()
 @click.argument('titulo')
@@ -208,7 +219,7 @@ async def create(titulo: str, tipo: str, contexto: str, autor: str, argumento: s
             extra={"error": str(e)},
             exc_info=True
         )
-        console.print(f"[red]Erro ao criar embate: {str(e)}[/red]")
+        console.print(f"[red]Erro ao criar embate: {e!s}[/red]")
 
 if __name__ == "__main__":
     cli() 

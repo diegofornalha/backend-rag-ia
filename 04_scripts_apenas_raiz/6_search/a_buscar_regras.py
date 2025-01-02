@@ -1,7 +1,8 @@
-from typing import List, Dict
+
 from supabase import Client
 
-def buscar_documentos(supabase: Client, query: str, k: int = 5) -> List[Dict]:
+
+def buscar_documentos(supabase: Client, query: str, k: int = 5) -> list[dict]:
     """Busca documentos por similaridade textual."""
     try:
         docs = supabase.table("rag.01_base_conhecimento_regras_geral").select("*").textSearch("conteudo", f"%{query}%").limit(k).execute()
@@ -10,7 +11,7 @@ def buscar_documentos(supabase: Client, query: str, k: int = 5) -> List[Dict]:
         print(f"Erro ao buscar documentos: {e}")
         return []
 
-def listar_tabelas(supabase: Client) -> List[str]:
+def listar_tabelas(supabase: Client) -> list[str]:
     """Lista todas as tabelas disponíveis."""
     try:
         tables = supabase.table("rag.01_base_conhecimento_regras_geral").select("*").limit(1).execute()

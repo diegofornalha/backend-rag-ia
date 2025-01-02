@@ -4,12 +4,11 @@ Script para auxiliar na reorganização das pastas raiz.
 Implementa as regras definidas em regras_md_apenas_raiz/1_core/l_transicao_pastas_raiz.md
 """
 
-import os
 import json
+import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
 
 # Configuração da nova hierarquia
 NOVA_HIERARQUIA = {
@@ -55,7 +54,7 @@ def validar_mudanca(pasta: str, novo_nome: str) -> bool:
             
     return True
 
-def carregar_historico() -> Dict:
+def carregar_historico() -> dict:
     """
     Carrega histórico de mudanças do arquivo JSON.
     
@@ -73,7 +72,7 @@ def carregar_historico() -> Dict:
         print(f"Erro ao carregar histórico: {e}")
         return {}
 
-def salvar_historico(historico: Dict) -> None:
+def salvar_historico(historico: dict) -> None:
     """
     Salva histórico de mudanças em arquivo JSON.
     

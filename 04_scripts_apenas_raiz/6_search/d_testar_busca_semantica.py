@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os
-import sys
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+
 import requests
 from rich.console import Console
 

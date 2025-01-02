@@ -3,25 +3,28 @@
 Ferramenta CLI para realizar buscas semânticas com processamento LLM e interface conversacional.
 """
 
-import os
 import json
-import requests
-from typing import List, Dict, Optional
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich.prompt import Prompt
-from rich.spinner import Spinner
-from rich.markdown import Markdown
+import logging
+import os
+from collections.abc import Sequence
 from contextlib import contextmanager
-from dotenv import load_dotenv
+from typing import Any
+
 import google.generativeai as genai
+import requests
+from dotenv import load_dotenv
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.prompt import Prompt
+from rich.table import Table
 
 # Carrega variáveis de ambiente
 load_dotenv()
 
 # Configura console
 console = Console()
+
+logger = logging.getLogger(__name__)
 
 def get_api_url(endpoint: str = "") -> str:
     """
@@ -99,10 +102,10 @@ class GeminiChat:
                 return response.text
             return "Desculpe, não consegui processar sua mensagem. Pode reformular?"
         except Exception as e:
-            console.print(f"\n[red]Erro ao processar com Gemini: {str(e)}[/red]")
+            console.print(f"\n[red]Erro ao processar com Gemini: {e!s}[/red]")
             return "Desculpe, ocorreu um erro ao processar sua mensagem."
     
-    def process_search_response(self, query: str, documents: List[Dict]) -> str:
+    def process_search_response(self, query: str, documents: list[dict[str, Any]]) -> str:
         """Processa resposta após busca nos documentos.
         
         Args:
@@ -127,7 +130,7 @@ class GeminiChat:
                     if isinstance(content, str):
                         try:
                             content = json.loads(content)
-                        except:
+                        except json.JSONDecodeError:
                             content = {"text": content}
                     
                     text = content.get("text", "").strip()
@@ -137,7 +140,7 @@ class GeminiChat:
                             text = text[:1000] + "..."
                         context += f"---\n{text}\n"
                 except Exception as e:
-                    console.print(f"\n[yellow]Aviso ao processar documento: {str(e)}[/yellow]")
+                    console.print(f"\n[yellow]Aviso ao processar documento: {e!s}[/yellow]")
                     continue
             
             # Se não houver documentos válidos
@@ -165,18 +168,18 @@ Lembre-se:
                 else:
                     return "Desculpe, não consegui gerar uma resposta adequada."
             except Exception as e:
-                console.print(f"\n[red]Erro ao gerar resposta: {str(e)}[/red]")
+                console.print("\n[red]Erro ao gerar resposta: %s[/red]", str(e))
                 return "Desculpe, ocorreu um erro ao gerar a resposta."
             
         except Exception as e:
-            console.print(f"\n[red]Erro ao processar com Gemini: {str(e)}[/red]")
+            console.print("\n[red]Erro ao processar com Gemini: %s[/red]", str(e))
             return "Desculpe, ocorreu um erro ao processar sua pergunta."
 
 class ChatHistory:
     """Gerencia o histórico da conversa."""
     
     def __init__(self, max_history: int = 5):
-        self.messages: List[Dict[str, str]] = []
+        self.messages: list[dict[str, str]] = []
         self.max_history = max_history
         
     def add_message(self, role: str, content: str) -> None:
@@ -198,15 +201,15 @@ class ChatHistory:
         self.messages.clear()
 
 @contextmanager
-def ChatSpinner():
-    """Context manager para mostrar spinner durante processamento."""
-    with console.status("[bold green]Processando...", spinner="dots") as status:
+def chat_spinner(text: str = "Processando..."):
+    """Mostra um spinner durante o processamento."""
+    with console.status(text) as status:
         try:
             yield status
         finally:
-            pass
+            status.stop()
 
-def search_documents(query: str, context: str = "") -> Optional[Dict]:
+def search_documents(query: str, context: str = "") -> dict[str, Any] | None:
     """Realiza busca semântica via API.
     
     Args:
@@ -254,14 +257,14 @@ def search_documents(query: str, context: str = "") -> Optional[Dict]:
             return None
         
     except requests.exceptions.RequestException as e:
-        console.print(f"\n[red]Erro ao conectar com a API: {str(e)}[/red]")
-        console.print(f"\n[yellow]Tentando conectar em: {search_endpoint}[/yellow]")
+        console.print("\n[red]Erro ao conectar com a API: %s[/red]", str(e))
+        console.print("\n[yellow]Tentando conectar em: %s[/yellow]", search_endpoint)
         return None
     except Exception as e:
-        console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
+        console.print("\n[red]Erro inesperado: %s[/red]", str(e))
         return None
 
-def format_response(response: str, docs: List[Dict]) -> None:
+def format_response(response: str, docs: Sequence[dict[str, Any]]) -> None:
     """Formata e exibe a resposta.
     
     Args:
@@ -286,9 +289,9 @@ def format_response(response: str, docs: List[Dict]) -> None:
         for doc in docs:
             similarity = doc.get("similarity", 0)
             table.add_row(
-                str(doc.get("id", ""))[:10],
+                f"{doc.get('id', '')!s}"[:10],
                 doc.get("titulo", ""),
-                f"{similarity*100:.0f}%"
+                f"{similarity * 100:.0f}%"
             )
             
         console.print(table)
@@ -296,67 +299,118 @@ def format_response(response: str, docs: List[Dict]) -> None:
 def main() -> None:
     """Função principal."""
     try:
+        console.print("\n[bold]🔍 Busca Semântica com IA[/bold]")
+        console.print("Digite 'sair' para encerrar.")
+        
         # Inicializa chat e histórico
         chat = GeminiChat()
         history = ChatHistory()
         
-        console.print("\n[bold]🤖 Assistente de Busca Semântica[/bold]")
-        console.print("Digite 'sair' para encerrar ou 'limpar' para reiniciar a conversa.")
-        
         while True:
             # Obtém query do usuário
-            query = Prompt.ask("\n[bold]Você[/bold]")
+            query = Prompt.ask("\n[bold]Buscar por[/bold]")
             
-            # Verifica comandos especiais
             if query.lower() == "sair":
                 console.print("\n[bold]👋 Até logo![/bold]")
                 break
-            elif query.lower() == "limpar":
-                history.clear()
-                chat = GeminiChat()
-                console.print("\n[bold]🔄 Conversa reiniciada![/bold]")
-                continue
-            
-            # Adiciona query ao histórico
-            history.add_message("user", query)
-            
-            with ChatSpinner():
-                # Processa query inicial
-                initial_response = chat.process_initial_response(query)
                 
-                # Verifica se deve realizar busca
-                if chat.should_search(initial_response):
-                    # Remove tag [BUSCAR] da resposta
-                    search_msg = initial_response.replace("[BUSCAR]", "").strip()
-                    if search_msg:
-                        console.print(f"\n[bold]🤖 Assistente:[/bold] {search_msg}")
-                    
+            with chat_spinner():
+                # Processa query inicial
+                response = chat.process_initial_response(query)
+                
+                # Adiciona ao histórico
+                history.add_message("user", query)
+                history.add_message("assistant", response)
+                
+                # Verifica se deve buscar
+                if chat.should_search(response):
                     # Realiza busca
                     results = search_documents(query, history.get_context())
                     
                     if results:
-                        # Processa documentos encontrados
+                        # Processa resposta com documentos
                         docs = results.get("results", [])
                         response = chat.process_search_response(query, docs)
                         
                         # Formata e exibe resposta
                         format_response(response, docs)
-                        
-                        # Adiciona resposta ao histórico
-                        history.add_message("assistant", response)
                     else:
                         console.print("\n[red]❌ Não foi possível realizar a busca[/red]")
                 else:
                     # Exibe resposta direta
-                    console.print(f"\n[bold]🤖 Assistente:[/bold] {initial_response}")
-                    
-                    # Adiciona resposta ao histórico
-                    history.add_message("assistant", initial_response)
+                    console.print("\n[bold]Resposta:[/bold]")
+                    console.print(Markdown(response))
                 
     except KeyboardInterrupt:
         console.print("\n\n[bold]👋 Até logo![/bold]")
     except Exception as e:
-        console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
+        console.print(f"\n[red]Erro inesperado: {e!s}[/red]")
+
+class SemanticSearchWithAI:
+    """Busca semântica com IA."""
+    
+    def handle_error(self, err: Exception, context: str) -> None:
+        """Trata erro de forma padronizada.
+        
+        Args:
+            err: Exceção ocorrida
+            context: Contexto do erro
+        """
+        console.print(f"\n[red]Erro ao realizar {context}: {err!s}[/red]")
+    
+    async def search(self, query: str) -> list[dict[str, Any]]:
+        """Realiza busca semântica.
+        
+        Args:
+            query: Termo de busca
+            
+        Returns:
+            Lista de documentos encontrados
+        """
+        try:
+            # Realiza busca
+            results = await self.search_documents(query)
+            
+            # Processa resultados
+            if results and "results" in results:
+                return results["results"]
+            return []
+            
+        except Exception as e:
+            self.handle_error(e, "busca semântica com IA")
+            return []
+
+def format_results(results: dict[str, Any], docs: Sequence[dict[str, Any]]) -> None:
+    """Formata e exibe os resultados da busca.
+    
+    Args:
+        results: Dicionário com resultados da busca
+        docs: Lista de documentos relevantes
+    """
+    # Exibe resposta principal
+    console.print("\n[bold]Resposta:[/bold]")
+    console.print(Markdown(f"{results!s}"))
+    
+    # Exibe documentos relevantes
+    if docs:
+        console.print(f"\n[bold]Documentos relevantes ({len(docs)} encontrados):[/bold]")
+        
+        # Cria tabela
+        table = Table(show_header=True, header_style="bold")
+        table.add_column("ID", style="dim")
+        table.add_column("Título")
+        table.add_column("Relevância", justify="right")
+        
+        # Adiciona resultados
+        for doc in docs:
+            similarity = doc.get("similarity", 0)
+            table.add_row(
+                f"{doc.get('id', '')!s}"[:10],
+                doc.get("titulo", ""),
+                f"{similarity * 100:.0f}%"
+            )
+            
+        console.print(table)
 
 if __name__ == "__main__":
     main() 

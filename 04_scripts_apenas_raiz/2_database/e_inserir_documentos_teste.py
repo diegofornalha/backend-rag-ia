@@ -1,8 +1,8 @@
-import os
 import logging
+
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
-import numpy as np
+
 from backend_rag_ia.config.supabase_config import SupabaseConfig
 
 # Configurando logging

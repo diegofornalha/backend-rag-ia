@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Ferramenta CLI para realizar buscas semânticas simples.
+Busca semântica simples.
 """
 
-import os
 import json
-import requests
-from typing import Dict, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt
-from rich.spinner import Spinner
+import os
 from contextlib import contextmanager
+from typing import Any
+
+import requests
 from dotenv import load_dotenv
+from rich.console import Console
+from rich.prompt import Prompt
+from rich.table import Table
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -36,15 +36,15 @@ def get_api_url(endpoint: str = "") -> str:
     return f"{base}/{endpoint.lstrip('/')}" if endpoint else base
 
 @contextmanager
-def SearchSpinner():
-    """Context manager para mostrar spinner durante a busca."""
-    with console.status("[bold green]Buscando...", spinner="dots") as status:
+def search_spinner(text: str = "Buscando..."):
+    """Mostra um spinner durante a busca."""
+    with console.status(text) as status:
         try:
             yield status
         finally:
-            pass
+            status.stop()
 
-def search_documents(query: str) -> Optional[Dict]:
+def search_documents(query: str) -> dict[str, Any] | None:
     """Realiza busca semântica via API.
     
     Args:
@@ -88,14 +88,14 @@ def search_documents(query: str) -> Optional[Dict]:
             return None
         
     except requests.exceptions.RequestException as e:
-        console.print(f"\n[red]Erro ao conectar com a API: {str(e)}[/red]")
-        console.print(f"\n[yellow]Tentando conectar em: {search_endpoint}[/yellow]")
+        console.print("\n[red]Erro ao conectar com a API: %s[/red]", str(e))
+        console.print("\n[yellow]Tentando conectar em: %s[/yellow]", search_endpoint)
         return None
     except Exception as e:
-        console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
+        console.print("\n[red]Erro inesperado: %s[/red]", str(e))
         return None
 
-def format_results(results: Dict) -> None:
+def format_results(results: dict[str, Any]) -> None:
     """Formata e exibe os resultados da busca.
     
     Args:
@@ -140,7 +140,7 @@ def main() -> None:
                 console.print("\n[bold]👋 Até logo![/bold]")
                 break
                 
-            with SearchSpinner():
+            with search_spinner():
                 # Realiza busca
                 results = search_documents(query)
                 
@@ -153,7 +153,7 @@ def main() -> None:
     except KeyboardInterrupt:
         console.print("\n\n[bold]👋 Até logo![/bold]")
     except Exception as e:
-        console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
+        console.print("\n[red]Erro inesperado: %s[/red]", str(e))
 
 if __name__ == "__main__":
     main() 

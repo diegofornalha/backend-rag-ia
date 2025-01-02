@@ -2,9 +2,12 @@
 Testes para o verificador de complexidade.
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from backend_rag_ia.monitoring.complexity_checker import ComplexityChecker, ComplexityMetrics
+
 
 @pytest.fixture
 def complexity_checker():
