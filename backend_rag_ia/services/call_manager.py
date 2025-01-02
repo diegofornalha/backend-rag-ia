@@ -9,6 +9,9 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
+from ..cli.embates.models import Embate
+from ..cli.embates.manager import EmbateManager
+
 class ChamadaSequencial(BaseModel):
     """Modelo para uma chamada sequencial."""
     timestamp: datetime
@@ -19,7 +22,7 @@ class ChamadasSequenciaisManager:
     """Gerencia chamadas sequenciais para evitar limites do Cursor."""
     
     def __init__(self, 
-                 limite_aviso: int = 15,
+                 limite_retomada: int = 15,
                  limite_maximo: int = 25,
                  tempo_reset: int = 60,
                  arquivo_estado: str = "chamadas_estado.json"):
@@ -27,20 +30,21 @@ class ChamadasSequenciaisManager:
         Inicializa o gerenciador.
         
         Args:
-            limite_aviso: Número de chamadas para gerar aviso (default: 15)
+            limite_retomada: Número de chamadas para criar embate de retomada (default: 15)
             limite_maximo: Número máximo de chamadas permitidas
             tempo_reset: Tempo em minutos para resetar contador
             arquivo_estado: Arquivo para persistir estado
         """
-        self.limite_aviso = limite_aviso
+        self.limite_retomada = limite_retomada
         self.limite_maximo = limite_maximo
         self.tempo_reset = tempo_reset
         self.arquivo_estado = Path(arquivo_estado)
+        self.embate_manager = EmbateManager()
         
         self.chamadas: List[ChamadaSequencial] = []
         self._carregar_estado()
         
-    def registrar_chamada(self, tipo: str, contexto: Optional[str] = None) -> Dict:
+    async def registrar_chamada(self, tipo: str, contexto: Optional[str] = None) -> Dict:
         """
         Registra uma nova chamada.
         
@@ -56,7 +60,7 @@ class ChamadasSequenciaisManager:
         # Remove chamadas antigas
         self._limpar_chamadas_antigas(agora)
         
-        # Verifica limite
+        # Verifica limite máximo
         if len(self.chamadas) >= self.limite_maximo:
             return {
                 "status": "error",
@@ -74,15 +78,39 @@ class ChamadasSequenciaisManager:
         # Persiste estado
         self._salvar_estado()
         
-        # Verifica necessidade de aviso
-        if len(self.chamadas) >= self.limite_aviso:
+        # Verifica necessidade de retomada
+        if len(self.chamadas) >= self.limite_retomada:
+            await self._criar_embate_retomada()
             return {
-                "status": "warning",
-                "message": f"Atingido {len(self.chamadas)} chamadas de {self.limite_maximo}. Considere pausar para revisão.",
-                "sugestoes": self._gerar_sugestoes()
+                "status": "retomada",
+                "message": f"Contamos {len(self.chamadas)} chamadas. Vamos retomar a execução.",
+                "chamadas_restantes": self.limite_maximo - len(self.chamadas)
             }
             
         return {"status": "success"}
+        
+    async def _criar_embate_retomada(self) -> None:
+        """Cria um embate simples para retomada."""
+        embate = Embate(
+            titulo=f"Retomada de Execução - {datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            tipo="sistema",
+            contexto=f"Atingido {len(self.chamadas)} chamadas. Criando ponto de retomada.",
+            status="aberto",
+            metadata={
+                "chamadas_registradas": len(self.chamadas),
+                "tipos_chamada": self._get_tipos_chamada(),
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+        
+        await self.embate_manager.create_embate(embate)
+        
+    def _get_tipos_chamada(self) -> Dict[str, int]:
+        """Retorna contagem de tipos de chamada."""
+        tipos = {}
+        for c in self.chamadas:
+            tipos[c.tipo] = tipos.get(c.tipo, 0) + 1
+        return tipos
         
     def reset(self) -> None:
         """Reseta o contador de chamadas."""
@@ -124,26 +152,4 @@ class ChamadasSequenciaisManager:
                 for c in self.chamadas
             ]
         }
-        self.arquivo_estado.write_text(json.dumps(dados, indent=2))
-        
-    def _gerar_sugestoes(self) -> List[str]:
-        """Gera sugestões para reduzir chamadas."""
-        sugestoes = [
-            "Agrupe operações similares em uma única chamada",
-            "Use cache para evitar chamadas repetidas",
-            "Considere usar batch operations",
-            f"Aguarde {self.tempo_reset} minutos para o contador resetar",
-            "Revise o progresso atual antes de continuar"
-        ]
-        
-        # Analisa padrões nas chamadas
-        tipos = {}
-        for c in self.chamadas:
-            tipos[c.tipo] = tipos.get(c.tipo, 0) + 1
-            
-        # Sugere otimizações baseadas nos tipos mais frequentes
-        for tipo, count in sorted(tipos.items(), key=lambda x: x[1], reverse=True):
-            if count > 5:
-                sugestoes.append(f"Otimize chamadas do tipo '{tipo}' ({count}x)")
-                
-        return sugestoes 
+        self.arquivo_estado.write_text(json.dumps(dados, indent=2)) 
