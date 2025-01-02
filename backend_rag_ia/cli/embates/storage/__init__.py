@@ -919,6 +919,95 @@ class MemoryStorage:
             
             embates.append(embate_security)
             
+            # Cria embate sobre documentação e API Docs
+            embate_docs = Embate(
+                titulo="Documentação e API Docs do Sistema",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema completo de documentação e API Docs.
+                
+                Motivação:
+                1. Necessidades de Documentação:
+                   - API Reference
+                   - Guias de integração
+                   - Exemplos de uso
+                   - Troubleshooting
+                
+                2. Benefícios Técnicos:
+                   - Facilita integrações
+                   - Reduz suporte
+                   - Melhora adoção
+                   - Garante qualidade
+                
+                3. Manutenibilidade:
+                   - Documentação viva
+                   - Testes de docs
+                   - Versionamento
+                   - Feedback loop
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_docs.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Componentes:
+                   - OpenAPI/Swagger
+                   - Markdown docs
+                   - Code examples
+                   - Integration guides
+                
+                2. Implementação:
+                   - FastAPI docs
+                   - MkDocs setup
+                   - Doc tests
+                   - CI/CD integration
+                
+                3. Monitoramento:
+                   - Doc coverage
+                   - Usage analytics
+                   - Feedback forms
+                   - Error tracking
+                """,
+                "data": now
+            })
+            
+            embate_docs.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - OpenAPI schemas
+                   - Doc strings
+                   - Example code
+                   - Test cases
+                
+                2. Riscos:
+                   - Docs desatualizados
+                   - Exemplos quebrados
+                   - Complexidade
+                   - Manutenção contínua
+                
+                3. Mitigação:
+                   - Doc tests
+                   - CI/CD checks
+                   - Review process
+                   - Feedback loop
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_docs)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
