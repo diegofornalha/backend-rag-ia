@@ -83,7 +83,7 @@ async def test_memory_storage_embate_trigger():
     )
     result3 = await storage.save(embate3)
     embates = await storage.list()
-    assert len(embates) == 6  # 3 embates originais + 1 embate técnico + 1 embate JSONB + 1 embate logs
+    assert len(embates) == 7  # 3 embates originais + 1 embate técnico + 1 embate JSONB + 1 embate logs + 1 embate Gemini
     
     # Encontra o embate técnico
     embate_tecnico = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Uso Intensivo" in e.titulo)
@@ -106,10 +106,19 @@ async def test_memory_storage_embate_trigger():
     assert "Análise Técnica" in embate_logs.argumentos[0]["conteudo"]
     assert "Impacto e Riscos" in embate_logs.argumentos[1]["conteudo"]
     
+    # Encontra o embate do Gemini
+    embate_gemini = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Gemini" in e.titulo)
+    assert embate_gemini.tipo == "tecnico"
+    assert "Integração do Gemini com Sistema de Embates" in embate_gemini.titulo
+    assert len(embate_gemini.argumentos) == 2
+    assert "Análise Técnica" in embate_gemini.argumentos[0]["conteudo"]
+    assert "Impacto e Riscos" in embate_gemini.argumentos[1]["conteudo"]
+    
     # Deleta os embates técnicos e verifica se o contador é resetado
     await storage.delete(embate_tecnico.id)
     await storage.delete(embate_jsonb.id)
     await storage.delete(embate_logs.id)
+    await storage.delete(embate_gemini.id)
     embates = await storage.list()
     assert len(embates) == 3  # Apenas os embates originais
     
