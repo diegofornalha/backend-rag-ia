@@ -14,43 +14,64 @@ BEGIN
     ) INTO table_exists;
     
     IF table_exists THEN
-        -- Remover políticas existentes
-        DROP POLICY IF EXISTS select_documentos ON rag."01_base_conhecimento_regras_geral";
-        DROP POLICY IF EXISTS insert_documentos ON rag."01_base_conhecimento_regras_geral";
-        DROP POLICY IF EXISTS update_documentos ON rag."01_base_conhecimento_regras_geral";
-        DROP POLICY IF EXISTS delete_documentos ON rag."01_base_conhecimento_regras_geral";
-        DROP POLICY IF EXISTS anon_select_documentos ON rag."01_base_conhecimento_regras_geral";
-
-        -- Habilitar RLS
+        -- Habilitar RLS para as tabelas
         ALTER TABLE IF EXISTS rag."01_base_conhecimento_regras_geral" ENABLE ROW LEVEL SECURITY;
+        ALTER TABLE IF EXISTS rag."02_embeddings_regras_geral" ENABLE ROW LEVEL SECURITY;
 
-        -- Política para leitura (anônimo e autenticado)
-        CREATE POLICY anon_select_documentos ON rag."01_base_conhecimento_regras_geral"
-            FOR SELECT
-            TO authenticated
-            USING (true);
+        -- Remover políticas existentes (caso existam)
+        DROP POLICY IF EXISTS "Permitir select para authenticated" ON rag."01_base_conhecimento_regras_geral";
+        DROP POLICY IF EXISTS "Permitir insert para authenticated e service_role" ON rag."01_base_conhecimento_regras_geral";
+        DROP POLICY IF EXISTS "Permitir update para service_role" ON rag."01_base_conhecimento_regras_geral";
+        DROP POLICY IF EXISTS "Permitir delete para service_role" ON rag."01_base_conhecimento_regras_geral";
 
-        -- Política para inserção (apenas usuários permanentes)
-        CREATE POLICY insert_documentos ON rag."01_base_conhecimento_regras_geral"
-            AS RESTRICTIVE
-            FOR INSERT
-            TO authenticated
-            WITH CHECK ((auth.jwt() ->> 'is_anonymous')::boolean IS FALSE);
+        DROP POLICY IF EXISTS "Permitir select para authenticated" ON rag."02_embeddings_regras_geral";
+        DROP POLICY IF EXISTS "Permitir insert para service_role" ON rag."02_embeddings_regras_geral";
+        DROP POLICY IF EXISTS "Permitir update para service_role" ON rag."02_embeddings_regras_geral";
+        DROP POLICY IF EXISTS "Permitir delete para service_role" ON rag."02_embeddings_regras_geral";
 
-        -- Política para atualização (apenas usuários permanentes)
-        CREATE POLICY update_documentos ON rag."01_base_conhecimento_regras_geral"
-            AS RESTRICTIVE
-            FOR UPDATE
-            TO authenticated
-            USING ((auth.jwt() ->> 'is_anonymous')::boolean IS FALSE)
-            WITH CHECK ((auth.jwt() ->> 'is_anonymous')::boolean IS FALSE);
+        -- Políticas para 01_base_conhecimento_regras_geral
+        CREATE POLICY "Permitir select para authenticated"
+        ON rag."01_base_conhecimento_regras_geral"
+        FOR SELECT
+        USING (auth.role() = 'authenticated');
 
-        -- Política para deleção (apenas usuários permanentes)
-        CREATE POLICY delete_documentos ON rag."01_base_conhecimento_regras_geral"
-            AS RESTRICTIVE
-            FOR DELETE
-            TO authenticated
-            USING ((auth.jwt() ->> 'is_anonymous')::boolean IS FALSE);
+        CREATE POLICY "Permitir insert para authenticated e service_role"
+        ON rag."01_base_conhecimento_regras_geral"
+        FOR INSERT
+        WITH CHECK (auth.role() IN ('authenticated', 'service_role'));
+
+        CREATE POLICY "Permitir update para service_role"
+        ON rag."01_base_conhecimento_regras_geral"
+        FOR UPDATE
+        USING (auth.role() = 'service_role')
+        WITH CHECK (auth.role() = 'service_role');
+
+        CREATE POLICY "Permitir delete para service_role"
+        ON rag."01_base_conhecimento_regras_geral"
+        FOR DELETE
+        USING (auth.role() = 'service_role');
+
+        -- Políticas para 02_embeddings_regras_geral
+        CREATE POLICY "Permitir select para authenticated"
+        ON rag."02_embeddings_regras_geral"
+        FOR SELECT
+        USING (auth.role() = 'authenticated');
+
+        CREATE POLICY "Permitir insert para service_role"
+        ON rag."02_embeddings_regras_geral"
+        FOR INSERT
+        WITH CHECK (auth.role() = 'service_role');
+
+        CREATE POLICY "Permitir update para service_role"
+        ON rag."02_embeddings_regras_geral"
+        FOR UPDATE
+        USING (auth.role() = 'service_role')
+        WITH CHECK (auth.role() = 'service_role');
+
+        CREATE POLICY "Permitir delete para service_role"
+        ON rag."02_embeddings_regras_geral"
+        FOR DELETE
+        USING (auth.role() = 'service_role');
 
         RAISE NOTICE 'Políticas aplicadas com sucesso';
     ELSE

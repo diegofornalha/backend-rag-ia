@@ -5,195 +5,120 @@ Ferramenta CLI para fazer upload de documentos para o Supabase.
 
 import os
 import json
-from typing import Dict, List, Optional
-from pathlib import Path
-from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.prompt import Confirm
-from supabase import create_client, Client
 from dotenv import load_dotenv
+from supabase import create_client, Client
 
 # Carrega variáveis de ambiente
 load_dotenv()
 
-# Configura console
-console = Console()
-
-def get_supabase_client() -> Optional[Client]:
-    """
-    Inicializa cliente do Supabase.
-    
-    Returns:
-        Client do Supabase ou None se houver erro
-    """
+def verificar_tabela(supabase: Client) -> bool:
+    """Verifica se a tabela existe no Supabase."""
     try:
-        # Obtém credenciais
-        url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_SERVICE_KEY")
+        # Verifica se a tabela existe usando RPC
+        result = supabase.rpc('executar_sql', {
+            'sql': """
+            SELECT EXISTS (
+                SELECT 1 
+                FROM information_schema.tables 
+                WHERE table_schema = 'rag'
+                AND table_name = '01_base_conhecimento_regras_geral'
+            )
+            """
+        }).execute()
         
-        if not url or not key:
-            console.print("\n[red]❌ Credenciais do Supabase não encontradas no .env[/red]")
-            return None
-            
-        # Cria cliente
-        return create_client(url, key)
-        
-    except Exception as e:
-        console.print(f"\n[red]Erro ao conectar com Supabase: {str(e)}[/red]")
-        return None
-
-def process_markdown_file(file_path: Path) -> Optional[Dict]:
-    """
-    Processa arquivo markdown.
-    
-    Args:
-        file_path: Caminho do arquivo
-        
-    Returns:
-        Dicionário com dados processados ou None se houver erro
-    """
-    try:
-        # Lê conteúdo do arquivo
-        content = file_path.read_text(encoding="utf-8")
-        
-        # Extrai título do arquivo (primeira linha após remover #)
-        title = file_path.stem
-        first_line = content.split("\n")[0].strip("# ").strip()
-        if first_line:
-            title = first_line
-            
-        # Prepara dados
-        return {
-            "titulo": title,
-            "conteudo": json.dumps({"text": content}),
-            "metadata": json.dumps({
-                "tipo": "markdown",
-                "fonte": str(file_path)
-            })
-        }
-        
-    except Exception as e:
-        console.print(f"\n[red]Erro ao processar {file_path}: {str(e)}[/red]")
-        return None
-
-def upload_documents(client: Client, docs_dir: str) -> None:
-    """
-    Faz upload dos documentos para o Supabase.
-    
-    Args:
-        client: Cliente do Supabase
-        docs_dir: Diretório com documentos
-    """
-    try:
-        # Verifica diretório
-        docs_path = Path(docs_dir)
-        if not docs_path.exists():
-            console.print(f"\n[red]❌ Diretório não encontrado: {docs_dir}[/red]")
-            return
-            
-        # Lista arquivos markdown
-        files = list(docs_path.rglob("*.md"))
-        if not files:
-            console.print(f"\n[yellow]Nenhum arquivo markdown encontrado em: {docs_dir}[/yellow]")
-            return
-            
-        # Confirma upload
-        if not Confirm.ask(f"\nEncontrados {len(files)} arquivos. Deseja fazer upload?"):
-            console.print("\n[yellow]Upload cancelado[/yellow]")
-            return
-            
-        # Processa e faz upload dos arquivos
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
-        ) as progress:
-            
-            task = progress.add_task("Processando arquivos...", total=len(files))
-            
-            for file_path in files:
-                # Atualiza progresso
-                progress.update(task, description=f"Processando {file_path.name}...")
-                
-                # Processa arquivo
-                doc_data = process_markdown_file(file_path)
-                if not doc_data:
-                    continue
-                    
-                try:
-                    # Faz upload
-                    result = client.table("rag.01_base_conhecimento_regras_geral").insert(doc_data).execute()
-                    response_data = result.data if hasattr(result, 'data') else result
-                    
-                    console.print(f"\nResposta do Supabase para {file_path.name}:")
-                    console.print(response_data)
-                    
-                    if isinstance(response_data, dict) and "error" in response_data:
-                        console.print(f"\n[red]Erro ao fazer upload de {file_path.name}: {response_data['error']}[/red]")
-                    elif not response_data:
-                        console.print(f"\n[red]Erro ao fazer upload de {file_path.name}: Resposta vazia[/red]")
-                    else:
-                        console.print(f"\n[green]✅ Upload de {file_path.name} concluído[/green]")
-                except Exception as e:
-                    console.print(f"\n[red]Erro ao fazer upload de {file_path.name}: {str(e)}[/red]")
-                    continue
-                    
-                # Atualiza progresso
-                progress.advance(task)
-            
-        console.print("\n[green]✅ Upload concluído com sucesso![/green]")
-        
-    except Exception as e:
-        console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
-
-def check_table_exists(client: Client) -> bool:
-    """
-    Verifica se a tabela base_conhecimento_regras_geral existe.
-    
-    Args:
-        client: Cliente do Supabase
-        
-    Returns:
-        True se a tabela existe, False caso contrário
-    """
-    try:
-        # Tenta fazer uma consulta simples
-        result = client.table("rag.01_base_conhecimento_regras_geral").select("*").limit(1).execute()
+        if not result.data or not result.data[0]['exists']:
+            return False
         return True
+        
     except Exception as e:
-        console.print(f"\n[red]Erro ao verificar tabela: {str(e)}[/red]")
+        print(f"\nErro ao verificar tabela: {e}")
+        if hasattr(e, 'details'):
+            print(f"Detalhes: {e.details}")
         return False
 
-def main() -> None:
-    """Função principal."""
+def upload_documentos(supabase: Client) -> None:
+    """Faz upload dos documentos para o Supabase."""
     try:
-        console.print("\n[bold]📤 Upload de Documentos para Supabase[/bold]")
-        
-        # Inicializa cliente
-        client = get_supabase_client()
-        if not client:
+        # Verifica se a tabela existe
+        if not verificar_tabela(supabase):
+            print("\n❌ Tabela 'rag.01_base_conhecimento_regras_geral' não encontrada no Supabase")
+            print("\nExecute primeiro os scripts SQL em sql_apenas_raiz/1_setup/:")
+            print("1. a_01_base_conhecimento_regras_geral.sql")
+            print("2. b_02_embeddings_regras_geral.sql")
+            print("3. c_setup_search.sql")
             return
-            
-        # Verifica tabela
-        console.print("\n[bold]Verificando tabela base_conhecimento_regras_geral...[/bold]")
-        if not check_table_exists(client):
-            console.print("\n[red]❌ Tabela 'rag.01_base_conhecimento_regras_geral' não encontrada no Supabase[/red]")
-            console.print("\nExecute primeiro os scripts SQL em sql_apenas_raiz/1_setup/:")
-            console.print("1. a_01_base_conhecimento_regras_geral.sql")
-            console.print("2. b_02_embeddings_regras_geral.sql")
-            console.print("3. c_setup_search.sql")
+        
+        print("\n✅ Tabela encontrada, iniciando upload...")
+        
+        # Lista os arquivos na pasta de documentos
+        documentos_dir = "documentos"
+        if not os.path.exists(documentos_dir):
+            print(f"\n❌ Pasta '{documentos_dir}' não encontrada")
             return
+        
+        arquivos = [f for f in os.listdir(documentos_dir) if f.endswith('.json')]
+        if not arquivos:
+            print(f"\n❌ Nenhum arquivo .json encontrado em '{documentos_dir}'")
+            return
+        
+        print(f"\nEncontrados {len(arquivos)} arquivos para upload:")
+        for arquivo in arquivos:
+            print(f"- {arquivo}")
+        
+        # Processa cada arquivo
+        for arquivo in arquivos:
+            print(f"\nProcessando {arquivo}...")
             
-        # Obtém diretório dos documentos
-        docs_dir = os.getenv("DOCS_DIR", "docs")
+            # Lê o arquivo
+            with open(os.path.join(documentos_dir, arquivo), 'r') as f:
+                documento = json.load(f)
+            
+            try:
+                # Insere o documento usando RPC
+                result = supabase.rpc('insert_into_rag', {
+                    'table_name': '01_base_conhecimento_regras_geral',
+                    'data': documento
+                }).execute()
+                
+                print(f"✅ Documento '{arquivo}' inserido com sucesso")
+                
+            except Exception as e:
+                print(f"❌ Erro ao inserir documento '{arquivo}': {e}")
+                if hasattr(e, 'details'):
+                    print(f"Detalhes: {e.details}")
+                continue
         
-        # Faz upload
-        upload_documents(client, docs_dir)
+        print("\n✅ Upload concluído!")
         
-    except KeyboardInterrupt:
-        console.print("\n\n[bold]👋 Upload cancelado![/bold]")
     except Exception as e:
-        console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
+        print(f"\n❌ Erro durante o upload: {e}")
+        if hasattr(e, 'details'):
+            print(f"Detalhes: {e.details}")
+
+def main():
+    """Função principal."""
+    print("\n📤 Upload de Documentos para Supabase")
+    
+    # Configuração do cliente Supabase
+    url: str = os.environ.get("SUPABASE_URL", "")
+    key: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+    
+    if not url or not key:
+        print("\n❌ Erro: Variáveis de ambiente SUPABASE_URL e/ou SUPABASE_SERVICE_ROLE_KEY não encontradas")
+        print("\nVerifique se as variáveis estão definidas no arquivo .env:")
+        print("SUPABASE_URL=<sua_url>")
+        print("SUPABASE_SERVICE_ROLE_KEY=<sua_chave>")
+        return
+    
+    try:
+        # Conecta ao Supabase
+        supabase: Client = create_client(url, key)
+        upload_documentos(supabase)
+        
+    except Exception as e:
+        print(f"\n❌ Erro ao conectar com Supabase: {e}")
+        if hasattr(e, 'message'):
+            print(f"Detalhes: {e.message}")
 
 if __name__ == "__main__":
     main()
