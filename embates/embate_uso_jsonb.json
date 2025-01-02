@@ -1,0 +1,11 @@
+{
+  "titulo": "Padronização do uso de JSONB no PostgreSQL",
+  "version_key": "padronizacao_jsonb_v1",
+  "conteudo": "# Padronização do uso de JSONB no PostgreSQL\n\n## Contexto\nRevisão do uso de tipos JSON/JSONB no banco de dados para garantir as melhores práticas de performance e eficiência.\n\n## Análise Atual\n\n### Uso de JSONB\nAtualmente o projeto já utiliza JSONB corretamente nas seguintes situações:\n\n1. Tabela `02_embeddings_regras_geral`:\n   - Coluna `metadata` como JSONB com valor padrão `'{}'::jsonb`\n\n2. Tabela `01_base_conhecimento_regras_geral`:\n   - Coluna `error_log` como JSONB com valor padrão `'{}'::jsonb`\n\n3. Funções RPC:\n   - Todas as funções que manipulam JSON fazem a conversão apropriada para JSONB\n\n4. Índices:\n   - Existem índices GIN apropriados para as colunas JSONB\n\n## Conformidade com Boas Práticas\n\n✅ Uso consistente de JSONB em vez de JSON\n✅ Valores padrão definidos corretamente\n✅ Conversões apropriadas nas funções\n✅ Índices GIN implementados\n\n## Conclusão\n\nO projeto já segue as melhores práticas recomendadas para uso de JSONB no PostgreSQL:\n\n1. Performance otimizada com JSONB\n2. Suporte a indexação implementado\n3. Armazenamento eficiente\n4. Processamento rápido\n5. Consultas avançadas habilitadas\n\nNão são necessárias alterações neste momento, pois a implementação atual já está alinhada com as melhores práticas.",
+  "error_log": null,
+  "metadata": {
+    "status": "resolvido",
+    "tipo": "tecnico",
+    "tags": ["postgresql", "jsonb", "performance", "boas-praticas"]
+  }
+}
