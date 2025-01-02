@@ -1,0 +1,76 @@
+{
+  "titulo": "Configuração de Realtime e Políticas RLS",
+  "version_key": "config_realtime_policies_v1",
+  "conteudo": {
+    "contexto": "Atualmente o realtime está habilitado nas tabelas do schema rag e não há políticas RLS configuradas. Isso pode impactar a segurança e performance do sistema.",
+
+    "análise": {
+      "realtime": {
+        "situação_atual": "Habilitado para todas as tabelas",
+        "problemas": [
+          "Consumo desnecessário de recursos",
+          "Possível impacto na performance",
+          "Não há necessidade de atualizações em tempo real para documentos"
+        ],
+        "recomendação": "Desabilitar o realtime para as tabelas 01_base_conhecimento_regras_geral e 02_embeddings_regras_geral"
+      },
+      "políticas_rls": {
+        "situação_atual": "Sem políticas configuradas",
+        "riscos": [
+          "Acesso irrestrito aos dados",
+          "Falta de controle granular",
+          "Possível exposição indevida de informações"
+        ],
+        "políticas_necessárias": [
+          "Leitura: permitir apenas para usuários autenticados",
+          "Escrita: permitir apenas para roles específicas (service_role, authenticated)",
+          "Deleção: restringir apenas para administradores"
+        ]
+      }
+    },
+
+    "recomendações": {
+      "1_realtime": {
+        "ação": "Desabilitar realtime",
+        "justificativa": "Os documentos e embeddings não necessitam de sincronização em tempo real, pois são atualizados em batch",
+        "benefícios": [
+          "Redução do consumo de recursos",
+          "Melhor performance",
+          "Simplificação da arquitetura"
+        ]
+      },
+      "2_políticas": {
+        "ação": "Implementar RLS",
+        "políticas_sugeridas": [
+          {
+            "tabela": "01_base_conhecimento_regras_geral",
+            "políticas": [
+              "SELECT: auth.role() = 'authenticated'",
+              "INSERT: auth.role() IN ('authenticated', 'service_role')",
+              "UPDATE: auth.role() = 'service_role'",
+              "DELETE: auth.role() = 'service_role'"
+            ]
+          },
+          {
+            "tabela": "02_embeddings_regras_geral",
+            "políticas": [
+              "SELECT: auth.role() = 'authenticated'",
+              "INSERT/UPDATE: auth.role() = 'service_role'",
+              "DELETE: auth.role() = 'service_role'"
+            ]
+          }
+        ]
+      }
+    },
+
+    "próximos_passos": [
+      "1. Desabilitar realtime em ambas as tabelas",
+      "2. Criar e aplicar políticas RLS conforme recomendado",
+      "3. Testar acesso com diferentes roles",
+      "4. Documentar as políticas implementadas",
+      "5. Monitorar performance após as mudanças"
+    ],
+
+    "conclusão": "Recomendo fortemente desabilitar o realtime e implementar as políticas RLS sugeridas. Isso irá melhorar a segurança e performance do sistema, além de estabelecer um controle adequado de acesso aos dados."
+  }
+}
