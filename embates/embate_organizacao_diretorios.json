@@ -1,34 +1,81 @@
 {
-  "titulo": "Reorganização dos Diretórios de Embates",
-  "version_key": "organizacao_embates_v1",
-  "conteudo": "# Reorganização dos Diretórios de Embates\n\n## Contexto\nAtualmente existem embates sendo gerados em três locais diferentes:\n\n1. `/embates/`\n2. `/02_ferramentas_rag_apenas_raiz/dados_embates/`\n3. `/02_ferramentas_rag_apenas_raiz/cli/dados/embates/`\n\nIsto pode causar confusão, duplicidade e dificuldade de manutenção.\n\n## Análise da Situação Atual\n\n### 1. Diretório Principal (/embates/)\n- Contém embates principais do projeto\n- Usado para documentação de decisões\n- Versionado no git\n\n### 2. Diretório dados_embates\n- Localizado em ferramentas RAG\n- Contém dados temporários\n- Formato de data no nome (ex: embate_20250102_020153.json)\n\n### 3. Diretório cli/dados/embates\n- Dentro da estrutura CLI\n- Possivelmente usado para testes ou cache\n\n## Problemas Identificados\n\n1. **Duplicidade**\n   - Múltiplos locais para mesma finalidade\n   - Potencial confusão sobre onde salvar\n   - Dificuldade de busca\n\n2. **Manutenção**\n   - Necessidade de verificar múltiplos locais\n   - Complexidade desnecessária\n   - Risco de inconsistências\n\n3. **Versionamento**\n   - Diferentes políticas de backup\n   - Confusão sobre o que versionar\n\n## Solução Proposta\n\n### 1. Estrutura Unificada\n```\n/embates/\n  ├── principal/           # Embates principais do projeto\n  ├── temporario/          # Dados temporários (não versionados)\n  └── arquivado/           # Embates históricos\n```\n\n### 2. Regras de Organização\n```python
+  "titulo": "Reorganização e Propósito dos Diretórios de Embates",
+  "version_key": "organizacao_embates_v2",
+  "conteudo": "# Reorganização e Propósito dos Diretórios de Embates\n\n## Contexto\nAtualmente existem embates sendo gerados em três locais diferentes, cada um com propósitos que precisam ser unificados:\n\n1. `/embates/` - Documentação principal\n2. `/02_ferramentas_rag_apenas_raiz/dados_embates/` - Dados temporários\n3. `/02_ferramentas_rag_apenas_raiz/cli/dados/embates/` - Cache do CLI\n\n## Análise dos Propósitos\n\n### 1. Diretório Principal (/embates/)\n**Propósito Atual:**\n- Documentação permanente de decisões\n- Versionamento no git\n- Histórico do projeto\n\n**Uso:**\n- Decisões arquiteturais\n- Mudanças significativas\n- Documentação técnica\n\n### 2. Diretório dados_embates\n**Propósito Atual:**\n- Armazenamento temporário\n- Dados de processamento\n- Cache de operações RAG\n\n**Uso:**\n- Resultados intermediários\n- Dados de análise\n- Logs temporários\n\n### 3. Diretório cli/dados/embates\n**Propósito Atual:**\n- Cache do CLI\n- Dados de sessão\n- Resultados temporários\n\n**Uso:**\n- Estado da sessão CLI\n- Cache de comandos\n- Dados de debug\n\n## Nova Estrutura Proposta\n\n### 1. Estrutura Unificada com Propósitos\n```\n/embates/\n  ├── principal/           # Decisões e documentação permanente\n  │   ├── tecnico/        # Decisões técnicas\n  │   ├── arquitetura/    # Decisões arquiteturais\n  │   └── processos/      # Decisões de processo\n  │\n  ├── temporario/         # Dados temporários e cache\n  │   ├── rag/           # Cache e dados do RAG\n  │   ├── cli/           # Cache do CLI\n  │   └── processamento/ # Dados intermediários\n  │\n  └── arquivado/         # Histórico e backup\n      ├── 2024/          # Organizado por ano\n      └── backup/        # Backups automáticos\n```\n\n### 2. Implementação do Gerenciador\n```python
 class EmbateManager:
     def __init__(self):
         self.base_dir = \"embates\"
         self.dirs = {
-            \"principal\": \"principal\",
-            \"temp\": \"temporario\",
-            \"arquivo\": \"arquivado\"
+            \"principal\": {
+                \"path\": \"principal\",
+                \"subdirs\": [\"tecnico\", \"arquitetura\", \"processos\"]
+            },
+            \"temp\": {
+                \"path\": \"temporario\",
+                \"subdirs\": [\"rag\", \"cli\", \"processamento\"]
+            },
+            \"arquivo\": {
+                \"path\": \"arquivado\",
+                \"subdirs\": [str(datetime.now().year), \"backup\"]
+            }
         }
 
-    def save_embate(self, embate: dict, tipo: str):
-        \"\"\"Salva embate no diretório apropriado\"\"\"
-        dir_path = os.path.join(self.base_dir, self.dirs[tipo])
-        # Lógica de salvamento
-```\n\n### 3. Migração de Dados\n1. Mover embates existentes\n2. Atualizar referências no código\n3. Remover diretórios antigos\n\n### 4. Configuração .gitignore\n```gitignore
-# Ignorar diretórios temporários
-embates/temporario/
-embates/temporario/*\n
-# Manter diretório principal
-!embates/principal/
-!embates/principal/*\n
-# Manter arquivo
-embates/arquivado/
-```\n\n## Plano de Implementação\n\n1. **Preparação**\n   - Backup dos dados existentes\n   - Criar nova estrutura de diretórios\n   - Atualizar .gitignore\n\n2. **Migração**\n   - Mover embates principais\n   - Mover dados temporários\n   - Arquivar embates antigos\n\n3. **Código**\n   - Atualizar caminhos no código\n   - Implementar EmbateManager\n   - Atualizar documentação\n\n4. **Validação**\n   - Verificar integridade dos dados\n   - Testar funcionalidades\n   - Validar versionamento\n\n## Benefícios Esperados\n\n1. **Organização**\n   - Estrutura clara e única\n   - Fácil manutenção\n   - Melhor rastreabilidade\n\n2. **Performance**\n   - Menos overhead de I/O\n   - Busca mais eficiente\n   - Cache otimizado\n\n3. **Desenvolvimento**\n   - Código mais limpo\n   - Menos complexidade\n   - Manutenção simplificada\n\n## Status\nEm análise - Aguardando aprovação para início da implementação.",
+    def save_embate(self, embate: dict, tipo: str, subdir: str = None):
+        \"\"\"Salva embate no diretório apropriado com propósito específico\"\"\"
+        base_path = os.path.join(self.base_dir, self.dirs[tipo][\"path\"])
+        if subdir and subdir in self.dirs[tipo][\"subdirs\"]:
+            dir_path = os.path.join(base_path, subdir)
+        else:
+            dir_path = base_path
+
+        os.makedirs(dir_path, exist_ok=True)
+        
+        # Definir nome do arquivo baseado no tipo
+        if tipo == \"temp\":
+            filename = f\"embate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json\"
+        else:
+            filename = f\"embate_{embate['version_key']}.json\"
+            
+        file_path = os.path.join(dir_path, filename)
+        
+        with open(file_path, 'w') as f:
+            json.dump(embate, f, indent=2)
+            
+        return file_path
+
+    def get_embate(self, tipo: str, identificador: str) -> dict:
+        \"\"\"Recupera embate específico\"\"\"
+        # Implementar busca inteligente
+        pass
+
+    def list_embates(self, tipo: str, subdir: str = None) -> list:
+        \"\"\"Lista embates de um tipo/subdiretório específico\"\"\"
+        # Implementar listagem
+        pass
+
+    def cleanup_temp(self, max_age_days: int = 7):
+        \"\"\"Limpa arquivos temporários antigos\"\"\"
+        # Implementar limpeza
+        pass
+```\n\n### 3. Configuração .gitignore Atualizada\n```gitignore
+# Ignorar diretórios temporários e cache
+embates/temporario/**
+embates/*/cache/**
+
+# Manter estrutura principal
+!embates/principal/**
+!embates/principal/tecnico/**
+!embates/principal/arquitetura/**
+!embates/principal/processos/**
+
+# Controle de arquivo
+embates/arquivado/**
+!embates/arquivado/.gitkeep
+```\n\n## Fluxo de Trabalho\n\n1. **Embates Principais**\n   - Decisões técnicas → `/principal/tecnico/`\n   - Decisões arquiteturais → `/principal/arquitetura/`\n   - Decisões de processo → `/principal/processos/`\n\n2. **Dados Temporários**\n   - Cache RAG → `/temporario/rag/`\n   - Cache CLI → `/temporario/cli/`\n   - Processamento → `/temporario/processamento/`\n\n3. **Arquivamento**\n   - Organizado por ano\n   - Backup automático\n   - Limpeza periódica\n\n## Plano de Migração\n\n1. **Fase 1: Preparação**\n   - Criar nova estrutura de diretórios\n   - Implementar EmbateManager\n   - Configurar .gitignore\n\n2. **Fase 2: Migração**\n   - Classificar embates existentes\n   - Mover para diretórios apropriados\n   - Atualizar referências\n\n3. **Fase 3: Limpeza**\n   - Remover diretórios antigos\n   - Validar integridade\n   - Atualizar documentação\n\n## Benefícios\n\n1. **Organização**\n   - Propósito claro para cada diretório\n   - Estrutura hierárquica lógica\n   - Fácil localização\n\n2. **Performance**\n   - Cache otimizado por tipo\n   - Limpeza automática\n   - Busca eficiente\n\n3. **Manutenção**\n   - Responsabilidades claras\n   - Backup automatizado\n   - Gestão simplificada\n\n## Status\nEm análise - Aguardando aprovação para início da implementação com foco em unificação de propósitos.",
   "error_log": null,
   "metadata": {
     "status": "aberto",
     "tipo": "tecnico",
-    "tags": ["organizacao", "diretorio", "embates", "estrutura", "migracao"]
+    "tags": ["organizacao", "diretorio", "embates", "estrutura", "migracao", "proposito"]
   }
 } 
