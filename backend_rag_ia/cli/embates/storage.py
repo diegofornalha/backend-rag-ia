@@ -1,120 +1,54 @@
 """
-Armazenamento de embates.
+Armazenamento de embates no Supabase.
 """
 
-import json
 from datetime import datetime
-from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
+
+from supabase import Client, create_client
 
 from .models import Embate
 
 class SupabaseStorage:
-    """Armazenamento de embates usando Supabase."""
+    """Classe para armazenamento de embates no Supabase."""
     
-    def __init__(self, client=None):
-        """
-        Inicializa o storage.
+    def __init__(self):
+        """Inicializa o cliente Supabase."""
+        self.client = create_client(
+            supabase_url="https://your-project.supabase.co",
+            supabase_key="your-anon-key"
+        )
         
-        Args:
-            client: Cliente Supabase opcional
-        """
-        self.client = client
-        
-    async def save_embate(self, embate: Embate) -> Dict:
-        """
-        Salva um embate.
-        
-        Args:
-            embate: Embate para salvar
-            
-        Returns:
-            Dados do embate salvo
-        """
-        if not self.client:
-            # Fallback para arquivo local
-            return self._save_local(embate)
-            
+    async def save_embate(self, embate: Embate) -> Dict[str, Any]:
+        """Salva um embate no Supabase."""
         data = embate.model_dump()
-        response = await self.client.table("rag.embates").insert(data).execute()
-        
-        return {
-            "id": response.data[0]["id"],
-            "status": "success",
-            "data": response.data[0]
-        }
-        
-    async def update_embate(self, embate_id: str, updates: Dict) -> Dict:
-        """
-        Atualiza um embate.
-        
-        Args:
-            embate_id: ID do embate
-            updates: Dados para atualizar
+        data["data_inicio"] = data["data_inicio"].isoformat()
+        if data.get("data_resolucao"):
+            data["data_resolucao"] = data["data_resolucao"].isoformat()
             
-        Returns:
-            Dados atualizados
-        """
-        if not self.client:
-            return {"status": "error", "message": "Cliente não configurado"}
+        result = await self.client.table("embates").insert(data).execute()
+        return result
+        
+    async def update_embate(self, embate_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+        """Atualiza um embate no Supabase."""
+        if "data_resolucao" in updates and isinstance(updates["data_resolucao"], datetime):
+            updates["data_resolucao"] = updates["data_resolucao"].isoformat()
             
-        response = await self.client.table("rag.embates").update(updates).eq("id", embate_id).execute()
+        result = await self.client.table("embates").update(updates).eq("id", embate_id).execute()
+        return result
         
-        return {
-            "id": embate_id,
-            "status": "success",
-            "data": response.data[0]
-        }
+    async def search_embates(self, query: str) -> List[Dict[str, Any]]:
+        """Busca embates no Supabase."""
+        result = await self.client.table("embates").select("*").textSearch("titulo", query).execute()
+        return result.data
         
-    async def search_embates(self, query: str) -> List[Dict]:
-        """
-        Busca embates.
-        
-        Args:
-            query: Texto para buscar
-            
-        Returns:
-            Lista de embates encontrados
-        """
-        if not self.client:
-            return []
-            
-        response = await self.client.table("rag.embates").select("*").textSearch("titulo", query).execute()
-        
-        return response.data
-        
-    async def export_embates(self, filters: Optional[Dict] = None) -> List[Dict]:
-        """
-        Exporta embates.
-        
-        Args:
-            filters: Filtros opcionais
-            
-        Returns:
-            Lista de embates
-        """
-        if not self.client:
-            return []
-            
-        query = self.client.table("rag.embates").select("*")
+    async def export_embates(self, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+        """Exporta embates do Supabase."""
+        query = self.client.table("embates").select("*")
         
         if filters:
             for key, value in filters.items():
                 query = query.eq(key, value)
                 
-        response = await query.execute()
-        
-        return response.data
-        
-    def _save_local(self, embate: Embate) -> Dict:
-        """Salva embate localmente quando não há cliente."""
-        if not embate.arquivo:
-            embate.arquivo = f"embate_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            
-        path = Path(embate.arquivo)
-        path.write_text(embate.model_dump_json(indent=2))
-        
-        return {
-            "status": "success",
-            "data": embate.model_dump()
-        } 
+        result = await query.execute()
+        return result.data 
