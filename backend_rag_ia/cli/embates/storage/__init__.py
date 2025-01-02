@@ -1097,6 +1097,95 @@ class MemoryStorage:
             
             embates.append(embate_tests)
             
+            # Cria embate sobre gerenciamento de versões
+            embate_versions = Embate(
+                titulo="Gerenciamento de Versões e Releases",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema completo de gerenciamento de versões e releases.
+                
+                Motivação:
+                1. Necessidades de Versionamento:
+                   - Controle de versões
+                   - Release automation
+                   - Change tracking
+                   - Version tagging
+                
+                2. Benefícios Técnicos:
+                   - Release control
+                   - Version history
+                   - Rollback support
+                   - Dependency management
+                
+                3. Manutenibilidade:
+                   - Release notes
+                   - Version docs
+                   - Migration guides
+                   - Breaking changes
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_versions.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Componentes:
+                   - Semantic versioning
+                   - Release scripts
+                   - Version control
+                   - Change tracking
+                
+                2. Implementação:
+                   - Version system
+                   - Release process
+                   - CI/CD pipeline
+                   - Documentation
+                
+                3. Monitoramento:
+                   - Release metrics
+                   - Version stats
+                   - Usage tracking
+                   - Feedback loop
+                """,
+                "data": now
+            })
+            
+            embate_versions.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Version tags
+                   - Release notes
+                   - Migration code
+                   - Documentation
+                
+                2. Riscos:
+                   - Breaking changes
+                   - Migration issues
+                   - Version conflicts
+                   - Dependency hell
+                
+                3. Mitigação:
+                   - Version tests
+                   - Migration tests
+                   - Release checks
+                   - Rollback plan
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_versions)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
