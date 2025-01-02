@@ -1,32 +1,29 @@
--- Cria a tabela de embeddings
-DROP TABLE IF EXISTS rag."02_embeddings_regras_geral" CASCADE;
+-- Criar extensão se não existir
+CREATE EXTENSION IF NOT EXISTS vector;
 
--- Cria a tabela
-CREATE TABLE rag."02_embeddings_regras_geral" (
+-- Criar tabela
+CREATE TABLE IF NOT EXISTS rag."02_embeddings_regras_geral" (
     id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
-    document_id uuid NOT NULL REFERENCES rag."01_base_conhecimento_regras_geral"(id) ON DELETE CASCADE,
+    document_id uuid REFERENCES rag."01_base_conhecimento_regras_geral"(id) ON DELETE CASCADE,
     embedding vector(1536),
-    processing_status text NOT NULL DEFAULT 'pending',
-    content_hash text NOT NULL,
-    last_embedding_update timestamp with time zone,
-    embedding_attempts integer DEFAULT 0,
-    created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
--- Habilita RLS
-ALTER TABLE rag."02_embeddings_regras_geral" ENABLE ROW LEVEL SECURITY;
-
--- Cria índices
+-- Criar índices
 CREATE INDEX IF NOT EXISTS idx_02_embeddings_regras_geral_document_id 
-ON rag."02_embeddings_regras_geral" (document_id);
+ON rag."02_embeddings_regras_geral"(document_id);
 
-CREATE INDEX IF NOT EXISTS idx_02_embeddings_regras_geral_content_hash
-ON rag."02_embeddings_regras_geral" (content_hash);
+-- Criar trigger para atualizar updated_at
+DROP TRIGGER IF EXISTS update_02_embeddings_regras_geral_updated_at 
+ON rag."02_embeddings_regras_geral";
 
--- Cria trigger para updated_at
 CREATE TRIGGER update_02_embeddings_regras_geral_updated_at
-    BEFORE UPDATE
-    ON rag."02_embeddings_regras_geral"
+    BEFORE UPDATE ON rag."02_embeddings_regras_geral"
     FOR EACH ROW
-    EXECUTE FUNCTION rag.update_updated_at_column(); 
+    EXECUTE PROCEDURE update_updated_at_column();
+
+-- Conceder permissões
+GRANT ALL ON TABLE rag."02_embeddings_regras_geral" TO postgres, service_role;
+GRANT SELECT ON TABLE rag."02_embeddings_regras_geral" TO authenticated;
+GRANT SELECT ON TABLE rag."02_embeddings_regras_geral" TO anon; 
