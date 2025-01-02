@@ -53,7 +53,7 @@ def clear_documents(client: Client) -> None:
             return
             
         # Deleta todos os documentos
-        client.table("documentos").delete().execute()
+        client.table("rag.01_base_conhecimento_regras_geral").delete().execute()
         
         console.print("\n[green]✅ Tabela limpa com sucesso![/green]")
         
@@ -63,7 +63,7 @@ def clear_documents(client: Client) -> None:
 def main() -> None:
     """Função principal."""
     try:
-        console.print("\n[bold]🗑️ Limpar Tabela de Documentos[/bold]")
+        console.print("\n[bold]🗑️ Limpeza da Base de Conhecimento[/bold]")
         
         # Inicializa cliente
         client = get_supabase_client()
