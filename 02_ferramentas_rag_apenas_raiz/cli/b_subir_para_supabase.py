@@ -122,7 +122,7 @@ def upload_documents(client: Client, docs_dir: str) -> None:
                     
                 try:
                     # Faz upload
-                    result = client.table("01_base_conhecimento_regras_geral").insert(doc_data).execute()
+                    result = client.table("rag.01_base_conhecimento_regras_geral").insert(doc_data).execute()
                     response_data = result.data if hasattr(result, 'data') else result
                     
                     console.print(f"\nResposta do Supabase para {file_path.name}:")
@@ -158,7 +158,7 @@ def check_table_exists(client: Client) -> bool:
     """
     try:
         # Tenta fazer uma consulta simples
-        result = client.table("01_base_conhecimento_regras_geral").select("*").limit(1).execute()
+        result = client.table("rag.01_base_conhecimento_regras_geral").select("*").limit(1).execute()
         return True
     except Exception as e:
         console.print(f"\n[red]Erro ao verificar tabela: {str(e)}[/red]")
@@ -177,7 +177,7 @@ def main() -> None:
         # Verifica tabela
         console.print("\n[bold]Verificando tabela base_conhecimento_regras_geral...[/bold]")
         if not check_table_exists(client):
-            console.print("\n[red]❌ Tabela '01_base_conhecimento_regras_geral' não encontrada no Supabase[/red]")
+            console.print("\n[red]❌ Tabela 'rag.01_base_conhecimento_regras_geral' não encontrada no Supabase[/red]")
             console.print("\nExecute primeiro os scripts SQL em sql_apenas_raiz/1_setup/:")
             console.print("1. a_01_base_conhecimento_regras_geral.sql")
             console.print("2. b_02_embeddings_regras_geral.sql")

@@ -1,5 +1,5 @@
 -- Define o schema padrão
-SET search_path TO public;
+SET search_path TO rag;
 
 -- Cria schema rag se não existir
 CREATE SCHEMA IF NOT EXISTS rag;
@@ -21,7 +21,9 @@ CREATE OR REPLACE FUNCTION rag.buscar_documentos(
 RETURNS TABLE (
     id uuid,
     titulo text,
-    conteudo jsonb
+    conteudo jsonb,
+    version_key text,
+    error_log jsonb
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -32,7 +34,9 @@ BEGIN
     SELECT
         d.id,
         d.titulo,
-        d.conteudo
+        d.conteudo,
+        d.version_key,
+        d.error_log
     FROM "01_base_conhecimento_regras_geral" d
     WHERE 
         d.titulo ILIKE '%' || termo_busca || '%'
@@ -41,31 +45,18 @@ BEGIN
 END;
 $$;
 
--- Função para gerar embeddings
-CREATE OR REPLACE FUNCTION rag.generate_embedding(text text)
-RETURNS float[]
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = rag
-AS $$
-BEGIN
-    -- Por enquanto retorna um array de 384 zeros
-    -- Isso será substituído pela chamada real ao modelo
-    RETURN array_fill(0::float, ARRAY[384]);
-END;
-$$;
-
--- Função para buscar documentos similares
-CREATE OR REPLACE FUNCTION rag.match_documents(
-    query_embedding float[],
-    match_threshold float DEFAULT 0.3,
-    match_count int DEFAULT 5
+-- Função para buscar embeddings
+CREATE OR REPLACE FUNCTION rag.buscar_embeddings(
+    termo_busca text,
+    limite int DEFAULT 5
 )
 RETURNS TABLE (
     id uuid,
     documento_id uuid,
-    content jsonb,
-    similarity float
+    processing_status text,
+    content_hash text,
+    last_embedding_update timestamptz,
+    embedding_attempts int4
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -76,11 +67,49 @@ BEGIN
     SELECT
         e.id,
         e.documento_id,
-        d.conteudo as content,
-        1 - (e.embedding <=> query_embedding::vector) as similarity
-    FROM rag."02_embeddings_regras_geral" e
-    JOIN rag."01_base_conhecimento_regras_geral" d ON e.documento_id = d.id
-    WHERE 1 - (e.embedding <=> query_embedding::vector) > match_threshold
+        e.processing_status,
+        e.content_hash,
+        e.last_embedding_update,
+        e.embedding_attempts
+    FROM "02_embeddings_regras_geral" e
+    JOIN "01_base_conhecimento_regras_geral" d ON e.documento_id = d.id
+    WHERE 
+        d.titulo ILIKE '%' || termo_busca || '%'
+        OR d.conteudo::text ILIKE '%' || termo_busca || '%'
+    LIMIT limite;
+END;
+$$;
+
+-- Função para busca semântica
+CREATE OR REPLACE FUNCTION rag.match_documents_v2(
+    query_embedding vector(384),
+    match_threshold float,
+    match_count int
+)
+RETURNS TABLE (
+    id uuid,
+    documento_id uuid,
+    content text,
+    similarity float,
+    processing_status text,
+    embedding_attempts int4
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = rag
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        e.id,
+        e.documento_id,
+        d.conteudo->>'text' as content,
+        1 - (e.embedding <=> query_embedding) as similarity,
+        e.processing_status,
+        e.embedding_attempts
+    FROM "02_embeddings_regras_geral" e
+    JOIN "01_base_conhecimento_regras_geral" d ON e.documento_id = d.id
+    WHERE 1 - (e.embedding <=> query_embedding) > match_threshold
     ORDER BY similarity DESC
     LIMIT match_count;
 END;

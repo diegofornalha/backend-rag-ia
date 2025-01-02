@@ -1,110 +1,168 @@
-"""Serviço de armazenamento de vetores."""
+"""
+Serviço para interagir com o Supabase Vector Store.
+"""
+import json
+import logging
+import os
+from typing import Any, Dict, List, Optional, Tuple
 
-from typing import Any, List
-from supabase import Client as SupabaseClient
-from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
+from supabase import Client, create_client
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+
 
 class VectorStore:
-    """Armazenamento de documentos com embeddings."""
+    """Classe para interagir com o Supabase Vector Store."""
 
-    def __init__(self, supabase_client: SupabaseClient) -> None:
-        """Inicializa o armazenamento.
+    def __init__(self) -> None:
+        """Inicializa o cliente Supabase."""
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_KEY")
 
-        Args:
-            supabase_client: Cliente do Supabase
+        if not supabase_url or not supabase_key:
+            raise ValueError("SUPABASE_URL e SUPABASE_KEY devem estar definidos no .env")
+
+        self.supabase_client: Client = create_client(supabase_url, supabase_key)
+
+    def insert_document(self, titulo: str, conteudo: Dict[str, Any], document_hash: str, version_key: str) -> str:
         """
-        self.supabase_client = supabase_client
-        self.table = "documents"
-
-    def create_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Cria embeddings para uma lista de textos usando o modelo all-MiniLM-L6-v2.
+        Insere um documento no Supabase.
 
         Args:
-            texts: Lista de textos para gerar embeddings
+            titulo: Título do documento
+            conteudo: Conteúdo do documento
+            document_hash: Hash do documento
+            version_key: Chave de versão
 
         Returns:
-            Lista de embeddings
+            ID do documento inserido
         """
-        model = SentenceTransformer('all-MiniLM-L6-v2')
-        embeddings = model.encode(texts)
-        return embeddings.tolist()
+        try:
+            response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').insert({
+                'titulo': titulo,
+                'conteudo': conteudo,
+                'document_hash': document_hash,
+                'version_key': version_key
+            }).execute()
 
-    def insert_documents(self, documents: List[dict[str, Any]]) -> None:
-        """Insere documentos no Supabase com seus embeddings.
+            if not response.data:
+                raise ValueError("Erro ao inserir documento: resposta vazia")
+
+            return response.data[0]['id']
+
+        except Exception as e:
+            logger.error(f"Erro ao inserir documento: {e}")
+            raise
+
+    def get_document(self, document_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Obtém um documento do Supabase.
 
         Args:
-            documents: Lista de documentos para inserir
-        """
-        for doc in documents:
-            embedding = self.create_embeddings([doc['content']])[0]
-            doc['embedding'] = embedding
-            self.supabase_client.table('documents').insert(doc).execute()
-
-    def search_documents(self, query: str, match_count: int = 3) -> List[dict[str, Any]]:
-        """Realiza uma busca semântica por documentos similares à query.
-
-        Args:
-            query: Texto para buscar
-            match_count: Número máximo de resultados
+            document_id: ID do documento
 
         Returns:
-            Lista de documentos similares
+            Documento ou None se não encontrado
         """
-        query_embedding = self.create_embeddings([query])[0]
+        try:
+            response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').select('*').eq('id', document_id).execute()
+            return response.data[0] if response.data else None
 
-        rpc_response = self.supabase_client.rpc(
-            'match_documents',
-            {
-                'query_embedding': query_embedding,
-                'match_count': match_count
-            }
-        ).execute()
+        except Exception as e:
+            logger.error(f"Erro ao obter documento: {e}")
+            raise
 
-        return rpc_response.data
+    def update_document(self, document_id: str, titulo: str, conteudo: Dict[str, Any], document_hash: str, version_key: str) -> None:
+        """
+        Atualiza um documento no Supabase.
+
+        Args:
+            document_id: ID do documento
+            titulo: Título do documento
+            conteudo: Conteúdo do documento
+            document_hash: Hash do documento
+            version_key: Chave de versão
+        """
+        try:
+            response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').update({
+                'titulo': titulo,
+                'conteudo': conteudo,
+                'document_hash': document_hash,
+                'version_key': version_key
+            }).eq('id', document_id).execute()
+
+            if not response.data:
+                raise ValueError("Erro ao atualizar documento: resposta vazia")
+
+        except Exception as e:
+            logger.error(f"Erro ao atualizar documento: {e}")
+            raise
 
     def delete_document(self, document_id: str) -> None:
-        """Remove um documento específico do Supabase.
+        """
+        Remove um documento do Supabase.
 
         Args:
-            document_id: ID do documento para remover
+            document_id: ID do documento
         """
-        self.supabase_client.table('documents').delete().eq('id', document_id).execute()
+        try:
+            response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').delete().eq('id', document_id).execute()
+            if not response.data:
+                raise ValueError("Erro ao deletar documento: resposta vazia")
 
-    def update_document(self, document_id: str, new_content: str) -> None:
-        """Atualiza o conteúdo e embedding de um documento existente.
+        except Exception as e:
+            logger.error(f"Erro ao deletar documento: {e}")
+            raise
 
-        Args:
-            document_id: ID do documento para atualizar
-            new_content: Novo conteúdo do documento
+    def list_documents(self) -> List[Dict[str, Any]]:
         """
-        new_embedding = self.create_embeddings([new_content])[0]
-
-        self.supabase_client.table('documents').update({
-            'content': new_content,
-            'embedding': new_embedding
-        }).eq('id', document_id).execute()
-
-    def get_document(self, document_id: str) -> dict[str, Any]:
-        """Recupera um documento específico do Supabase.
-
-        Args:
-            document_id: ID do documento para recuperar
-
-        Returns:
-            Documento encontrado ou None
-        """
-        response = self.supabase_client.table('documents').select('*').eq('id', document_id).execute()
-        return response.data[0] if response.data else None
-
-    def list_documents(self) -> List[dict[str, Any]]:
-        """Lista todos os documentos armazenados no Supabase.
+        Lista todos os documentos do Supabase.
 
         Returns:
             Lista de documentos
         """
-        response = self.supabase_client.table('documents').select('*').execute()
-        return response.data
+        try:
+            response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').select('*').execute()
+            return response.data if response.data else []
 
-    def clear_documents(self) -> None:
-        """Remove todos os documentos do Supabase."""
-        self.supabase_client.table('documents').delete().neq('id', '').execute()
+        except Exception as e:
+            logger.error(f"Erro ao listar documentos: {e}")
+            raise
+
+    def search_similar_documents(self, query_embedding: List[float], match_count: int = 5) -> List[Tuple[Dict[str, Any], float]]:
+        """
+        Busca documentos similares usando o embedding da query.
+
+        Args:
+            query_embedding: Embedding da query
+            match_count: Número de documentos para retornar
+
+        Returns:
+            Lista de tuplas (documento, similaridade)
+        """
+        try:
+            response = self.supabase_client.rpc(
+                'match_documents',
+                {
+                    'query_embedding': query_embedding,
+                    'match_count': match_count
+                }
+            ).execute()
+
+            if not response.data:
+                return []
+
+            results = []
+            for item in response.data:
+                doc = item.get('document', {})
+                similarity = item.get('similarity', 0.0)
+                results.append((doc, similarity))
+
+            return results
+
+        except Exception as e:
+            logger.error(f"Erro ao buscar documentos similares: {e}")
+            raise

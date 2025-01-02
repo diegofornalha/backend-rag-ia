@@ -38,7 +38,7 @@ def upload_documento(supabase, documento: dict) -> bool:
         document_hash = gerar_hash(documento['conteudo'])
         
         # Verifica se já existe documento com mesmo hash
-        response = supabase.table('base_conhecimento_regras_geral') \
+        response = supabase.table('rag.01_base_conhecimento_regras_geral') \
             .select('document_hash') \
             .eq('document_hash', document_hash) \
             .execute()
@@ -48,7 +48,7 @@ def upload_documento(supabase, documento: dict) -> bool:
             return False
             
         # Insere novo documento
-        response = supabase.table('base_conhecimento_regras_geral').insert({
+        response = supabase.table('rag.01_base_conhecimento_regras_geral').insert({
             'titulo': documento['titulo'],
             'conteudo': documento['conteudo'],
             'metadata': documento['metadata'],
