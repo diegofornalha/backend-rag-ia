@@ -28,6 +28,12 @@
       "conteudo": "Expansão do monitoramento é crucial:\n1. Novas métricas necessárias:\n   - Qualidade dos embeddings\n   - Eficiência do chunking\n   - Performance do reranking\n   - Eficácia da busca híbrida\n2. Dashboards específicos:\n   - Visão geral de performance\n   - Análise de qualidade\n   - Métricas de cache\n   - Alertas inteligentes\n3. Integração com observabilidade:\n   - Traces distribuídos\n   - Logs estruturados\n   - Métricas em tempo real",
       "tipo": "tecnico",
       "data": "2024-01-17T16:30:00"
+    },
+    {
+      "autor": "AI",
+      "conteudo": "É fundamental estabelecer limites claros e saber reconhecer quando parar:\n1. Critérios para avaliar complexidade:\n   - Desvio do propósito original\n   - Aumento exponencial de dependências\n   - Complexidade de manutenção\n   - Impacto na estabilidade do sistema\n2. Sinais de alerta:\n   - Quando otimizações trazem pouco benefício marginal\n   - Quando melhorias afetam negativamente outras partes do sistema\n   - Quando o custo de manutenção supera os benefícios\n   - Quando a complexidade dificulta o entendimento da equipe\n3. Estratégia de contenção:\n   - Definir escopo claro no início\n   - Estabelecer métricas de sucesso realistas\n   - Criar checkpoints de avaliação\n   - Documentar decisões de não prosseguir\n4. Priorização inteligente:\n   - Focar em melhorias com maior impacto\n   - Evitar over-engineering\n   - Manter o sistema sustentável\n   - Preservar a simplicidade quando possível",
+      "tipo": "tecnico",
+      "data": "2024-01-17T17:00:00"
     }
   ],
   "decisao": null,
@@ -42,7 +48,9 @@
       "cache",
       "monitoramento",
       "performance",
-      "qualidade"
+      "qualidade",
+      "limites",
+      "escopo"
     ]
   }
 }
