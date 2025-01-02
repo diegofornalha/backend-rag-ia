@@ -1,0 +1,32 @@
+test_settings:
+  auto_proceed: true # Avança automaticamente nos testes
+  skip_confirmations: true # Pula confirmações de testes
+  verbose_output: false # Reduz output verboso
+  fail_fast: false # Continua mesmo com falhas
+
+monitoring:
+  check_interval: 60
+  prometheus_port: 9090
+  embates_dir: "embates"
+  api_url: "http://localhost:10000"
+
+  metrics:
+    business:
+      enabled: true
+      resolution_threshold: 72 # horas
+      concordance_threshold: 0.7
+
+    embedding:
+      enabled: true
+      latency_threshold: 1.0 # segundos
+      error_threshold: 5
+
+    system:
+      enabled: true
+      cpu_threshold: 80
+      memory_threshold: 80
+      disk_threshold: 80
+
+  alerts:
+    webhook_url: "" # URL para notificações
+    notification_channel: "slack" # Canal de notificação
