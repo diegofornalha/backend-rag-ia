@@ -1186,6 +1186,95 @@ class MemoryStorage:
             
             embates.append(embate_versions)
             
+            # Cria embate sobre otimização de performance
+            embate_perf = Embate(
+                titulo="Otimização de Performance e Escalabilidade",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema completo de otimização de performance e escalabilidade.
+                
+                Motivação:
+                1. Necessidades de Performance:
+                   - Response time
+                   - Throughput
+                   - Resource usage
+                   - Scalability
+                
+                2. Benefícios Técnicos:
+                   - Better UX
+                   - Cost savings
+                   - Reliability
+                   - Maintainability
+                
+                3. Escalabilidade:
+                   - Load balancing
+                   - Auto scaling
+                   - Caching
+                   - Optimization
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_perf.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Componentes:
+                   - Load testing
+                   - Profiling tools
+                   - Monitoring
+                   - Analytics
+                
+                2. Implementação:
+                   - Code optimization
+                   - Cache strategy
+                   - DB tuning
+                   - Infrastructure
+                
+                3. Monitoramento:
+                   - Performance KPIs
+                   - Resource usage
+                   - Error rates
+                   - Response times
+                """,
+                "data": now
+            })
+            
+            embate_perf.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Optimization
+                   - Refactoring
+                   - Architecture
+                   - Infrastructure
+                
+                2. Riscos:
+                   - Complexity
+                   - Side effects
+                   - Tech debt
+                   - Resource costs
+                
+                3. Mitigação:
+                   - Testing
+                   - Monitoring
+                   - Documentation
+                   - Rollback plan
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_perf)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
