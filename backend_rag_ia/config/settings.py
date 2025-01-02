@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     API_TITLE: str = "RAG API"
     API_DESCRIPTION: str = "API para busca semântica de documentos"
     
+    # CORS - Lista branca de origens por ambiente
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:8000"  # Default para desenvolvimento
+    
     # Supabase
     SUPABASE_URL: str
     SUPABASE_KEY: str
@@ -43,6 +46,26 @@ class Settings(BaseSettings):
             return self.LOCAL_URL
         # Modo auto - tenta local primeiro, depois Render
         return self.LOCAL_URL
+        
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """
+        Retorna a lista de origens permitidas baseada no ambiente.
+        Em produção, usa apenas as origens explicitamente configuradas.
+        Em desenvolvimento, inclui origens locais adicionais.
+        """
+        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+        
+        # Em modo debug, adiciona origens locais comuns
+        if self.DEBUG:
+            origins.extend([
+                "http://localhost:3000",  # React
+                "http://localhost:8000",  # Django
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:8000"
+            ])
+            
+        return list(set(origins))  # Remove duplicatas
 
 @lru_cache()
 def get_settings() -> Settings:

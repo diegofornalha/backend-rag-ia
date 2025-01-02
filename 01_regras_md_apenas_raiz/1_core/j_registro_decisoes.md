@@ -79,3 +79,42 @@ Mover o diretório de embates para '02_ferramentas_rag_apenas_raiz/dados_embates
 
 ### Razão
 A nova localização é mais apropriada pois mantém os dados próximos da ferramenta que os utiliza, segue o padrão de nomenclatura do projeto, facilita o versionamento e evita confusão com outros tipos de dados. Além disso, a mudança melhora a organização lógica do projeto ao agrupar funcionalidades relacionadas.
+
+
+## Decisão: Configuração CORS da API
+
+- Tipo: tecnico
+- Contexto: Discutir a melhor abordagem para configuração CORS da API, considerando segurança, flexibilidade e manutenibilidade
+- Data Início: 2025-01-02 01:59:03.695901
+- Data Resolução: 2025-01-02T01:59:25.634524
+
+### Argumentos:
+
+- **AI** (tecnico): A solução atual de usar CORS_ORIGINS_LIST=['*'] não é a melhor prática pois: 1) Permite acesso de qualquer origem sem restrições, 2) Não diferencia ambientes (dev/prod), 3) Não segue princípios de segurança Zero Trust
+- **AI** (tecnico): Uma abordagem mais segura seria: 1) Definir origens específicas por ambiente no .env, 2) Implementar uma lista branca de domínios permitidos, 3) Adicionar validação de origem nas requisições
+
+### Decisão Final
+Implementar configuração CORS baseada em ambiente com lista branca de origens
+
+### Razão
+A solução atual de permitir todas as origens (*) é insegura e não segue boas práticas. Devemos implementar uma configuração mais restritiva que: 1) Use variáveis de ambiente para definir origens permitidas por ambiente, 2) Implemente uma lista branca de domínios confiáveis, 3) Adicione validação de origem nas requisições. Isso melhora a segurança sem comprometer a funcionalidade.
+
+
+## Decisão: Estrutura de Testes para Sistema de Embates
+
+- Tipo: tecnico
+- Contexto: Definir a melhor estrutura e abordagem para implementação dos testes unitários e de integração do sistema de embates, considerando cobertura, manutenibilidade e confiabilidade
+- Data Início: 2025-01-02 02:01:53.612152
+- Data Resolução: 2025-01-02T02:02:26.721150
+
+### Argumentos:
+
+- **AI** (tecnico): Para os testes unitários, proponho a seguinte estrutura em 06_testes_apenas_raiz/1_unit/: 1) test_condensador.py para testar cada método da classe CondensadorEmbates isoladamente com mocks, 2) test_similarity.py para testar funções de similaridade com casos conhecidos, 3) test_schemas.py para validar os schemas Pydantic com casos válidos e inválidos
+- **AI** (tecnico): Para os testes de integração em 06_testes_apenas_raiz/2_integration/: 1) test_embates_flow.py para testar o fluxo completo de criar, adicionar argumentos e resolver embates, 2) test_supabase_sync.py para testar a sincronização com Supabase usando mocks, 3) test_rules_generation.py para validar a geração e formatação das regras MD
+- **AI** (tecnico): Para fixtures e utilidades em 06_testes_apenas_raiz/4_fixtures/ e 5_utils/: 1) conftest.py com fixtures compartilhadas como mock_supabase e sample_embates, 2) test_utils.py com funções auxiliares para criar dados de teste, 3) test_data/ com arquivos JSON e MD de exemplo para testes
+
+### Decisão Final
+Implementar estrutura completa de testes seguindo as divisões propostas
+
+### Razão
+A estrutura proposta oferece uma cobertura completa e organizada dos testes, separando claramente testes unitários, de integração e fixtures. A divisão em arquivos específicos facilita a manutenção e compreensão, enquanto as fixtures compartilhadas reduzem duplicação de código. Esta abordagem permite testar todos os aspectos críticos do sistema de embates de forma isolada e integrada.
