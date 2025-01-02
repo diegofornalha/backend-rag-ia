@@ -400,6 +400,178 @@ class MemoryStorage:
             
             embates.append(embate_gemini)
             
+            # Cria embate sobre integração com CI/CD
+            embate_cicd = Embate(
+                titulo="Integração com CI/CD para Validação de Embates",
+                tipo="tecnico",
+                contexto="""
+                Proposta de integração do sistema de embates com CI/CD para validação e automação.
+                
+                Motivação:
+                1. Automação de Validações:
+                   - Verificação de conformidade
+                   - Testes automáticos
+                   - Métricas de qualidade
+                
+                2. Benefícios Técnicos:
+                   - Detecção precoce de problemas
+                   - Garantia de qualidade
+                   - Feedback rápido
+                
+                3. Manutenibilidade:
+                   - Processos padronizados
+                   - Histórico de validações
+                   - Rastreabilidade
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_cicd.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Pontos de Integração:
+                   - GitHub Actions para validação
+                   - Testes automatizados
+                   - Métricas de cobertura
+                   - Análise estática
+                
+                2. Implementação:
+                   - Workflow de validação
+                   - Scripts de teste
+                   - Relatórios automáticos
+                   - Notificações de status
+                
+                3. Monitoramento:
+                   - Status das validações
+                   - Tempo de execução
+                   - Taxa de sucesso
+                   - Cobertura de testes
+                """,
+                "data": now
+            })
+            
+            embate_cicd.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Configuração de workflows
+                   - Scripts de validação
+                   - Integração com GitHub
+                   - Ajustes nos testes
+                
+                2. Riscos:
+                   - Falsos positivos
+                   - Tempo de execução
+                   - Recursos de CI
+                   - Complexidade
+                
+                3. Mitigação:
+                   - Testes bem definidos
+                   - Cache de dependências
+                   - Execução paralela
+                   - Timeouts adequados
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_cicd)
+            
+            # Agora vou criar um embate sobre sistema de priorização
+            embate_priorizacao = Embate(
+                titulo="Sistema de Priorização de Embates",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema inteligente de priorização de embates.
+                
+                Motivação:
+                1. Necessidade de Foco:
+                   - Múltiplos embates ativos
+                   - Recursos limitados
+                   - Impactos diferentes
+                
+                2. Benefícios Técnicos:
+                   - Melhor alocação de recursos
+                   - Decisões mais embasadas
+                   - Resultados otimizados
+                
+                3. Manutenibilidade:
+                   - Processo estruturado
+                   - Critérios claros
+                   - Histórico de decisões
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_priorizacao.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Critérios de Priorização:
+                   - Impacto no sistema
+                   - Urgência da solução
+                   - Complexidade técnica
+                   - Dependências
+                
+                2. Implementação:
+                   - Algoritmo de scoring
+                   - Matriz de priorização
+                   - Dashboard de status
+                   - API de consulta
+                
+                3. Monitoramento:
+                   - Eficácia das decisões
+                   - Tempo de resolução
+                   - Satisfação da equipe
+                   - ROI das mudanças
+                """,
+                "data": now
+            })
+            
+            embate_priorizacao.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Novo módulo de priorização
+                   - Integração com storage
+                   - Interface de usuário
+                   - APIs de consulta
+                
+                2. Riscos:
+                   - Complexidade do algoritmo
+                   - Viés nas decisões
+                   - Overhead de análise
+                   - Resistência da equipe
+                
+                3. Mitigação:
+                   - Algoritmo transparente
+                   - Feedback contínuo
+                   - Ajustes iterativos
+                   - Documentação clara
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_priorizacao)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
