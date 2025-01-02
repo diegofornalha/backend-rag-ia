@@ -83,7 +83,7 @@ async def test_memory_storage_embate_trigger():
     )
     result3 = await storage.save(embate3)
     embates = await storage.list()
-    assert len(embates) == 7  # 3 embates originais + 1 embate técnico + 1 embate JSONB + 1 embate logs + 1 embate Gemini
+    assert len(embates) == 9  # 3 embates originais + 6 embates técnicos
     
     # Encontra o embate técnico
     embate_tecnico = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Uso Intensivo" in e.titulo)
@@ -114,11 +114,29 @@ async def test_memory_storage_embate_trigger():
     assert "Análise Técnica" in embate_gemini.argumentos[0]["conteudo"]
     assert "Impacto e Riscos" in embate_gemini.argumentos[1]["conteudo"]
     
+    # Encontra o embate de CI/CD
+    embate_cicd = next(e for e in embates if e.metadata.get("is_trigger_embate") and "CI/CD" in e.titulo)
+    assert embate_cicd.tipo == "tecnico"
+    assert "Integração com CI/CD para Validação de Embates" in embate_cicd.titulo
+    assert len(embate_cicd.argumentos) == 2
+    assert "Análise Técnica" in embate_cicd.argumentos[0]["conteudo"]
+    assert "Impacto e Riscos" in embate_cicd.argumentos[1]["conteudo"]
+    
+    # Encontra o embate de priorização
+    embate_priorizacao = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Priorização" in e.titulo)
+    assert embate_priorizacao.tipo == "tecnico"
+    assert "Sistema de Priorização de Embates" in embate_priorizacao.titulo
+    assert len(embate_priorizacao.argumentos) == 2
+    assert "Análise Técnica" in embate_priorizacao.argumentos[0]["conteudo"]
+    assert "Impacto e Riscos" in embate_priorizacao.argumentos[1]["conteudo"]
+    
     # Deleta os embates técnicos e verifica se o contador é resetado
     await storage.delete(embate_tecnico.id)
     await storage.delete(embate_jsonb.id)
     await storage.delete(embate_logs.id)
     await storage.delete(embate_gemini.id)
+    await storage.delete(embate_cicd.id)
+    await storage.delete(embate_priorizacao.id)
     embates = await storage.list()
     assert len(embates) == 3  # Apenas os embates originais
     
