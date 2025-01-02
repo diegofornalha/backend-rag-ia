@@ -1008,6 +1008,95 @@ class MemoryStorage:
             
             embates.append(embate_docs)
             
+            # Cria embate sobre testes automatizados
+            embate_tests = Embate(
+                titulo="Testes Automatizados e Cobertura de Código",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema completo de testes automatizados e cobertura de código.
+                
+                Motivação:
+                1. Necessidades de Testes:
+                   - Testes unitários
+                   - Testes de integração
+                   - Testes end-to-end
+                   - Testes de performance
+                
+                2. Benefícios Técnicos:
+                   - Qualidade do código
+                   - Detecção de bugs
+                   - Refatoração segura
+                   - Documentação viva
+                
+                3. Manutenibilidade:
+                   - Cobertura de código
+                   - Testes automatizados
+                   - CI/CD integration
+                   - Feedback rápido
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_tests.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Componentes:
+                   - PyTest framework
+                   - Coverage.py
+                   - Mocking tools
+                   - Test fixtures
+                
+                2. Implementação:
+                   - Test structure
+                   - Coverage reports
+                   - CI/CD pipeline
+                   - Test automation
+                
+                3. Monitoramento:
+                   - Coverage metrics
+                   - Test results
+                   - Performance stats
+                   - Quality gates
+                """,
+                "data": now
+            })
+            
+            embate_tests.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Test files
+                   - Coverage config
+                   - CI/CD changes
+                   - Documentation
+                
+                2. Riscos:
+                   - Test maintenance
+                   - False positives
+                   - Performance impact
+                   - Coverage gaps
+                
+                3. Mitigação:
+                   - Test reviews
+                   - Quality metrics
+                   - Regular updates
+                   - Team training
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_tests)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
