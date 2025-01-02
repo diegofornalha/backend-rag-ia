@@ -30,7 +30,7 @@ def cleanup():
 def test_init():
     """Testa inicialização do gerenciador."""
     manager = ChamadasSequenciaisManager()
-    assert manager.limite_aviso == 20
+    assert manager.limite_aviso == 15
     assert manager.limite_maximo == 25
     assert manager.tempo_reset == 60
     assert manager.chamadas == []
@@ -51,6 +51,7 @@ def test_registrar_chamada_warning(manager):
     assert result["status"] == "warning"
     assert "sugestoes" in result
     assert len(result["sugestoes"]) > 0
+    assert "Considere pausar para revisão" in result["message"]
 
 def test_registrar_chamada_erro(manager):
     """Testa erro ao atingir limite máximo."""
@@ -100,4 +101,5 @@ def test_sugestoes(manager):
         
     result = manager.registrar_chamada("outro")
     assert "sugestoes" in result
-    assert any("repetido" in s for s in result["sugestoes"]) 
+    assert any("repetido" in s for s in result["sugestoes"])
+    assert "Revise o progresso atual" in result["sugestoes"] 
