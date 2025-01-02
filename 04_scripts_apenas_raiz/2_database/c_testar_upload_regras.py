@@ -1,16 +1,16 @@
-from backend_rag_ia.config.supabase_config import SupabaseConfig
 import hashlib
-import json
 import logging
 from datetime import datetime
 from pathlib import Path
+
+from backend_rag_ia.config.supabase_config import SupabaseConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def converter_md_para_json(arquivo_md: Path) -> dict:
     """Converte um arquivo markdown para formato JSON."""
-    with open(arquivo_md, 'r', encoding='utf-8') as f:
+    with open(arquivo_md, encoding='utf-8') as f:
         conteudo = f.read()
     
     # Extrai título do arquivo (primeira linha H1)
@@ -61,7 +61,7 @@ def upload_documento(supabase, documento: dict) -> bool:
         return True
         
     except Exception as e:
-        logger.error(f'Erro ao inserir documento: {str(e)}')
+        logger.error(f'Erro ao inserir documento: {e!s}')
         return False
 
 def main():

@@ -1,7 +1,8 @@
-import os
 import logging
+import os
+
 from dotenv import load_dotenv
-from supabase import create_client, Client
+from supabase import create_client
 
 # Configurando logging
 logging.basicConfig(level=logging.INFO)
@@ -19,10 +20,10 @@ def test_supabase_connection():
         
         # Tenta uma operação simples
         response = client.table("documentos").select("id").limit(1).execute()
-        logger.info("✅ Conexão com Supabase estabelecida com sucesso")
+        logger.info("✅ Conexão com Supabase estabelecida com sucesso - %d registros encontrados", len(response.data))
         return True
     except Exception as e:
-        logger.error(f"❌ Erro na conexão com Supabase: {e}")
+        logger.error("❌ Erro na conexão com Supabase: %s", str(e))
         return False
 
 def main():

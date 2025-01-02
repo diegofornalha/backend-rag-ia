@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import os
-from dotenv import load_dotenv
+
 import requests
+from dotenv import load_dotenv
 from rich.console import Console
 
 console = Console()
@@ -15,7 +16,7 @@ def verificar_url(url: str, descricao: str) -> bool:
         return True
     except Exception as e:
         console.print(f"[yellow]⚠️ {descricao} não está acessível: {url}[/yellow]")
-        console.print(f"[red]Erro: {str(e)}[/red]")
+        console.print(f"[red]Erro: {e!s}[/red]")
         return False
 
 def main():
@@ -27,7 +28,7 @@ def main():
     render_url = os.getenv("SEMANTIC_SEARCH_RENDER_URL", "https://api.coflow.com.br")
     mode = os.getenv("SEMANTIC_SEARCH_MODE", "auto")
     
-    console.print(f"\n[bold]Configuração Atual:[/bold]")
+    console.print("\n[bold]Configuração Atual:[/bold]")
     console.print(f"Modo: {mode}")
     console.print(f"URL Docker: {docker_url}")
     console.print(f"URL Render: {render_url}")

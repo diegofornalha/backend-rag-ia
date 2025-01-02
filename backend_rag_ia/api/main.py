@@ -1,21 +1,12 @@
 """API principal do Backend RAG IA."""
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from .routes import (
-    search_router,
-    health_router,
-    documents_router,
-    statistics_router
-)
-from .middleware import (
-    logging_middleware,
-    error_handler,
-    environment_middleware
-)
 from ..config.settings import get_settings
+from .middleware import environment_middleware, error_handler, logging_middleware
+from .routes import documents_router, health_router, search_router, statistics_router
 
 settings = get_settings()
 

@@ -2,14 +2,16 @@
 Testes para fluxo de commit e integração com git.
 """
 
+
 import pytest
-from pathlib import Path
+
 from backend_rag_ia.monitoring.git_flow import (
-    GitManager,
-    CommitValidator,
     BranchManager,
-    ChangelogGenerator
+    ChangelogGenerator,
+    CommitValidator,
+    GitManager,
 )
+
 
 @pytest.fixture
 def git_manager():

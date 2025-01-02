@@ -1,10 +1,11 @@
 """
 Script para executar SQL via API do Supabase.
 """
-import os
-from dotenv import load_dotenv
-import requests
 import json
+import os
+
+import requests
+from dotenv import load_dotenv
 
 # Carregar variáveis de ambiente
 load_dotenv()
@@ -27,7 +28,7 @@ def execute_sql_file(file_path):
     print(f"\n📝 Executando arquivo SQL: {file_path}")
     try:
         # Ler o arquivo SQL
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             sql = f.read()
         
         # Dividir o SQL em comandos individuais
@@ -62,7 +63,7 @@ def execute_sql_file(file_path):
                 print(response.text)
                 
     except Exception as e:
-        print(f"❌ Erro ao executar arquivo SQL: {str(e)}")
+        print(f"❌ Erro ao executar arquivo SQL: {e!s}")
 
 def main():
     """Função principal"""

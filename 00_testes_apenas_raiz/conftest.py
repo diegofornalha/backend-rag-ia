@@ -2,11 +2,18 @@
 Configuração global para testes.
 """
 
-import pytest
 import asyncio
-from pathlib import Path
+import os
 import shutil
-from typing import Generator
+from collections.abc import Generator
+from pathlib import Path
+
+import pytest
+
+# Configuração de ambiente para testes
+os.environ["SUPABASE_URL"] = "https://test.supabase.co"
+os.environ["SUPABASE_KEY"] = "test-key"
+os.environ["SUPABASE_JWT"] = "test-jwt"
 
 @pytest.fixture(scope="session")
 def event_loop() -> Generator:
@@ -41,7 +48,7 @@ def test_data_dir(test_root: Path) -> Path:
     Returns:
         Path do diretório de dados
     """
-    return test_root / "4_fixtures"
+    return test_root / "fixtures"
 
 @pytest.fixture(autouse=True)
 def cleanup_test_files(request):

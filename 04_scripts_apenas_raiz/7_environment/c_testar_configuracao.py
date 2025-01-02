@@ -1,7 +1,6 @@
-import sys
-from pathlib import Path
 import logging
 import os
+
 from dotenv import load_dotenv
 
 # Configurando logging básico

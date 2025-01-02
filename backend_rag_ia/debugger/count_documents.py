@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Any, Dict, List
+from typing import Any
 
 from dotenv import load_dotenv
 from rich.console import Console
@@ -35,7 +35,7 @@ def check_supabase_connection() -> tuple[bool, Client]:
         return False, None
 
 
-def get_documents_count(supabase: Client) -> Dict[str, Any]:
+def get_documents_count(supabase: Client) -> dict[str, Any]:
     """Obtém a contagem e lista de documentos."""
     try:
         # Busca documentos na tabela
@@ -54,7 +54,7 @@ def get_documents_count(supabase: Client) -> Dict[str, Any]:
         return {"count": 0, "documents": []}
 
 
-def display_documents_table(documents: List[Dict]) -> None:
+def display_documents_table(documents: list[dict]) -> None:
     """Exibe uma tabela formatada com os documentos."""
     table = Table(title="Documentos no Supabase")
 

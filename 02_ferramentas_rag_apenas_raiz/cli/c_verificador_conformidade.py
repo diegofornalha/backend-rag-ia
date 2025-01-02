@@ -4,18 +4,15 @@ Ferramenta CLI para verificar a conformidade do projeto.
 Analisa código fonte, SQL e configurações em busca de inconsistências.
 """
 
-import os
 import json
 import re
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
 from pathlib import Path
-from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.prompt import Confirm
-from supabase import create_client, Client
+
 from dotenv import load_dotenv
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -28,7 +25,7 @@ class VerificadorConformidade:
     
     def __init__(self):
         """Inicializa o verificador."""
-        self.problemas: List[Dict] = []
+        self.problemas: list[dict] = []
         self.arquivos_verificados = 0
         self.diretorios_verificados = 0
         
@@ -46,7 +43,7 @@ class VerificadorConformidade:
         # Extensões a verificar
         self.extensoes = {'.py', '.sql', '.json', '.yml', '.yaml', '.md'}
     
-    def verificar_arquivo(self, arquivo: Path) -> List[Dict]:
+    def verificar_arquivo(self, arquivo: Path) -> list[dict]:
         """Verifica um arquivo em busca de problemas de conformidade."""
         problemas = []
         
@@ -82,7 +79,7 @@ class VerificadorConformidade:
         
         return problemas
     
-    def verificar_json(self, arquivo: Path, conteudo: str, problemas: List[Dict]) -> None:
+    def verificar_json(self, arquivo: Path, conteudo: str, problemas: list[dict]) -> None:
         """Verifica problemas específicos em arquivos JSON."""
         try:
             dados = json.loads(conteudo)
@@ -100,7 +97,7 @@ class VerificadorConformidade:
                 'contexto': 'JSON inválido'
             })
     
-    def verificar_yaml(self, arquivo: Path, conteudo: str, problemas: List[Dict]) -> None:
+    def verificar_yaml(self, arquivo: Path, conteudo: str, problemas: list[dict]) -> None:
         """Verifica problemas específicos em arquivos YAML."""
         try:
             import yaml
@@ -119,7 +116,7 @@ class VerificadorConformidade:
                 'contexto': 'YAML inválido'
             })
     
-    def _verificar_dict_recursivo(self, dados: Dict, arquivo: Path, problemas: List[Dict]) -> None:
+    def _verificar_dict_recursivo(self, dados: dict, arquivo: Path, problemas: list[dict]) -> None:
         """Verifica recursivamente um dicionário em busca de problemas."""
         for chave, valor in dados.items():
             # Verifica referências a tabelas/schemas nas chaves
@@ -157,7 +154,7 @@ class VerificadorConformidade:
                     self.problemas.extend(problemas)
                     
         except Exception as e:
-            console.print(f"\n[red]Erro ao verificar diretório {diretorio}: {str(e)}[/red]")
+            console.print("\n[red]Erro ao verificar diretório %s: %s[/red]", diretorio, str(e))
     
     def exibir_relatorio(self) -> None:
         """Exibe relatório dos problemas encontrados."""
@@ -171,7 +168,7 @@ class VerificadorConformidade:
             return
         
         # Agrupa problemas por tipo
-        problemas_por_tipo: Dict[str, List[Dict]] = {}
+        problemas_por_tipo = {}
         for problema in self.problemas:
             tipo = problema['tipo']
             if tipo not in problemas_por_tipo:
@@ -199,9 +196,9 @@ class VerificadorConformidade:
         
         console.print(table)
     
-    def gerar_embate(self) -> Dict:
+    def gerar_embate(self) -> dict:
         """Gera um embate com os problemas encontrados e recomendações."""
-        tipos_problemas = set(p['tipo'] for p in self.problemas)
+        tipos_problemas = {p['tipo'] for p in self.problemas}
         
         # Mapeamento de recomendações por tipo de problema
         recomendacoes = {
@@ -250,77 +247,30 @@ class VerificadorConformidade:
             "contexto": (
                 "Verificação automática de conformidade do projeto, "
                 "buscando inconsistências no uso de schemas, tabelas e configurações.\n\n"
-                "Este embate serve como documentação histórica dos problemas encontrados "
-                "e como guia para evitar problemas similares no futuro."
-            ),
-            "argumentos": [
-                {
-                    "autor": "verificador",
-                    "tipo": "analise",
-                    "conteudo": (
-                        f"Análise realizada em {self.diretorios_verificados} diretórios "
-                        f"e {self.arquivos_verificados} arquivos.\n"
-                        f"Foram encontrados {len(self.problemas)} problemas de conformidade "
-                        f"nos seguintes aspectos: {', '.join(tipos_problemas)}."
-                    )
-                }
-            ],
-            "decisao": (
-                "Necessário corrigir as inconsistências encontradas" 
-                if self.problemas else 
-                "Projeto está em conformidade"
-            ),
-            "razao": (
-                "Foram encontrados problemas que podem afetar a consistência do projeto"
-                if self.problemas else
-                "Todos os arquivos verificados estão seguindo os padrões estabelecidos"
+                "Foram verificados:\n"
+                f"- {self.diretorios_verificados} diretórios\n"
+                f"- {self.arquivos_verificados} arquivos\n"
+                f"- Encontrados {len(self.problemas)} problemas\n\n"
+                "Tipos de problemas encontrados:\n"
+                + "\n".join(f"- {tipo}" for tipo in tipos_problemas)
             ),
             "data_inicio": datetime.now().isoformat(),
-            "tags": ["conformidade", "verificacao", "qualidade", "schema_rag"],
-            "recomendacoes_gerais": [
-                "1. Sempre use o schema 'rag' para todas as operações no Supabase",
-                "2. Mantenha um padrão consistente de nomenclatura de tabelas",
-                "3. Documente alterações de schema em migrations",
-                "4. Use ferramentas de lint e formatação de código",
-                "5. Execute esta verificação de conformidade regularmente",
-                "6. Revise as políticas RLS ao fazer alterações no schema",
-                "7. Mantenha backups antes de alterações significativas",
-                "8. Teste queries e operações em ambiente de desenvolvimento"
-            ]
+            "argumentos": [],
+            "arquivo": f"embate_conformidade_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         }
         
-        # Adiciona detalhes dos problemas e recomendações específicas
-        if self.problemas:
-            detalhes = []
-            recomendacoes_especificas = set()
-            
-            for p in self.problemas:
-                detalhes.append(
-                    f"- Arquivo: {p['arquivo']}\n"
-                    f"  Linha: {p['linha']}\n"
-                    f"  Tipo: {p['tipo']}\n"
-                    f"  Trecho: {p['trecho']}\n"
-                    f"  Contexto: {p['contexto']}"
-                )
-                
-                # Adiciona recomendações específicas para o tipo de problema
-                if p['tipo'] in recomendacoes:
-                    recomendacoes_especificas.add(recomendacoes[p['tipo']])
-            
-            embate["argumentos"].append({
-                "autor": "verificador",
-                "tipo": "detalhes",
-                "conteudo": "\n".join(detalhes)
-            })
-            
-            embate["argumentos"].append({
-                "autor": "verificador",
-                "tipo": "recomendacoes",
-                "conteudo": (
-                    "Recomendações específicas para os problemas encontrados:\n\n" +
-                    "\n\n".join(recomendacoes_especificas)
-                )
-            })
+        # Adiciona argumentos com recomendações
+        for tipo in tipos_problemas:
+            if tipo in recomendacoes:
+                embate["argumentos"].append({
+                    "autor": "verificador_conformidade",
+                    "tipo": "tecnico",
+                    "conteudo": (
+                        f"Recomendações para correção de problemas do tipo '{tipo}':\n\n"
+                        f"{recomendacoes[tipo]}"
+                    ),
+                    "data": datetime.now().isoformat()
+                })
         
         return embate
 
@@ -332,40 +282,37 @@ def main() -> None:
         # Inicializa verificador
         verificador = VerificadorConformidade()
         
-        # Obtém diretório raiz do projeto
-        raiz = Path(os.getenv("PROJECT_ROOT", "."))
+        # Obtém diretório atual
+        diretorio = Path.cwd()
         
-        console.print(f"\nIniciando verificação em: {raiz}")
-        
-        # Executa verificação
+        # Inicia verificação com spinner
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
-            console=console
+            console=console,
+            transient=True
         ) as progress:
-            task = progress.add_task("Verificando conformidade...", total=None)
-            verificador.verificar_diretorio(raiz)
-            progress.update(task, completed=True)
+            progress.add_task(description="Verificando projeto...", total=None)
+            verificador.verificar_diretorio(diretorio)
         
         # Exibe relatório
         verificador.exibir_relatorio()
         
-        # Gera embate automaticamente
-        console.print("\n[bold]📝 Gerando embate com resultados e recomendações...[/bold]")
-        embate = verificador.gerar_embate()
-        arquivo_embate = raiz / "embates" / "embate_conformidade.json"
-        arquivo_embate.parent.mkdir(exist_ok=True)
-        
-        with open(arquivo_embate, 'w', encoding='utf-8') as f:
-            json.dump(embate, f, indent=2, ensure_ascii=False)
-        
-        console.print(f"\n[green]✅ Embate gerado em: {arquivo_embate}[/green]")
-        console.print("\n[bold]ℹ️ O embate inclui recomendações para prevenir problemas similares no futuro[/bold]")
+        # Gera embate se houver problemas
+        if verificador.problemas:
+            embate = verificador.gerar_embate()
+            
+            # Salva embate
+            arquivo_embate = Path(embate["arquivo"])
+            with open(arquivo_embate, "w") as f:
+                json.dump(embate, f, indent=2)
+                
+            console.print(f"\n[green]✅ Embate salvo em: {arquivo_embate}[/green]")
         
     except KeyboardInterrupt:
         console.print("\n\n[bold]👋 Verificação cancelada![/bold]")
     except Exception as e:
-        console.print(f"\n[red]Erro inesperado: {str(e)}[/red]")
+        console.print("\n[red]Erro inesperado: %s[/red]", str(e))
 
 if __name__ == "__main__":
     main() 
