@@ -20,7 +20,7 @@ def config_file(temp_dir):
         "max_iterations": 3,
         "min_impact_per_change": 0.2,
         "max_consolidated_ratio": 0.8,
-        "diminishing_returns_threshold": 0.3,
+        "diminishing_returns_threshold": 0.5,
         "max_complexity": 10,
         "min_cohesion": 0.6,
         "max_coupling": 0.5,
@@ -91,13 +91,24 @@ def test_max_iterations(checker):
 
 def test_excessive_consolidation(checker):
     """Testa detecção de consolidação excessiva."""
+    # Primeira iteração normal
+    checker.should_continue_refactoring({
+        "removed": 2,
+        "simplified": 3,
+        "consolidated": 1,
+        "updated": 4,
+        "total_changes": 10,
+        "iterations": 1
+    })
+    
+    # Segunda iteração com consolidação excessiva
     metrics = {
         "removed": 1,
         "simplified": 1,
         "consolidated": 9,  # 90% consolidação
         "updated": 1,
         "total_changes": 10,
-        "iterations": 1
+        "iterations": 2  # Mantém abaixo do limite de iterações
     }
     
     result = checker.should_continue_refactoring(metrics)
@@ -137,7 +148,7 @@ def test_diminishing_returns(checker):
         "consolidated": 1,
         "updated": 2,
         "total_changes": 5,
-        "iterations": 3,
+        "iterations": 2,  # Mantém abaixo do limite
         "complexity": 7,
         "cohesion": 0.65
     })
@@ -155,19 +166,25 @@ def test_code_metrics_violation(checker):
         loc=100
     )
     
-    event = {
-        "type": "code",
-        "content": "test content",
-        "metrics": {
+    result = checker.process_event(
+        event_type="code",
+        content="test content",
+        metrics={
             "file_path": "test.py"
         }
-    }
+    )
     
     with patch('pathlib.Path.open'), \
          patch('ast.parse'), \
          patch.object(checker.metrics_analyzer, 'analyze_file', return_value=code_metrics):
         
-        result = checker.process_event(**event)
+        result = checker.process_event(
+            event_type="code",
+            content="test content",
+            metrics={
+                "file_path": "test.py"
+            }
+        )
         assert result["continue"] is False
         assert all(x in result["reason"].lower() for x in ["complexidade", "coesão", "acoplamento"])
 
@@ -182,24 +199,22 @@ def test_semantic_changes_violation(checker):
         }
     }
     
-    event = {
-        "type": "code",
-        "content": "test content",
-        "metrics": {
-            "file_path": "test.py",
-            "old_content": "old code",
-            "new_content": "new code"
-        }
-    }
-    
     with patch('pathlib.Path.open'), \
          patch('ast.parse'), \
-         patch.object(checker.metrics_analyzer, 'analyze_file', 
+         patch.object(checker.metrics_analyzer, 'analyze_file',
                      return_value=CodeMetrics(5, 0.7, 0.3, set(), 100)), \
-         patch.object(checker.semantic_analyzer, 'analyze_changes', 
+         patch.object(checker.semantic_analyzer, 'analyze_changes',
                      return_value=semantic_changes):
         
-        result = checker.process_event(**event)
+        result = checker.process_event(
+            event_type="code",
+            content="test content",
+            metrics={
+                "file_path": "test.py",
+                "old_content": "old code",
+                "new_content": "new code"
+            }
+        )
         assert result["continue"] is False
         assert "complexidade" in result["reason"].lower()
         assert "breaking changes" in result["reason"].lower()
