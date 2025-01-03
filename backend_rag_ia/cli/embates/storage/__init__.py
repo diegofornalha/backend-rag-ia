@@ -1631,6 +1631,95 @@ class MemoryStorage:
             
             embates.append(embate_config)
             
+            # Cria embate sobre análise de código
+            embate_code = Embate(
+                titulo="Análise de Código e Qualidade",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema completo de análise de código e qualidade.
+                
+                Motivação:
+                1. Necessidades de Qualidade:
+                   - Código limpo
+                   - Manutenibilidade
+                   - Padrões
+                   - Evolução
+                
+                2. Benefícios Técnicos:
+                   - Detecção de problemas
+                   - Consistência
+                   - Documentação
+                   - Refatoração
+                
+                3. Manutenibilidade:
+                   - Análise automática
+                   - Métricas
+                   - Histórico
+                   - Tendências
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_code.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Componentes:
+                   - Linters
+                   - Code analyzers
+                   - Style checkers
+                   - Metrics collectors
+                
+                2. Implementação:
+                   - Tool integration
+                   - Rule configuration
+                   - CI/CD pipeline
+                   - Documentation
+                
+                3. Monitoramento:
+                   - Quality metrics
+                   - Trend analysis
+                   - Issue tracking
+                   - Team feedback
+                """,
+                "data": now
+            })
+            
+            embate_code.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Sistema:
+                   - Tool setup
+                   - Rule config
+                   - CI/CD changes
+                   - Documentation
+                
+                2. Riscos:
+                   - False positives
+                   - Performance impact
+                   - Team resistance
+                   - Over-engineering
+                
+                3. Mitigação:
+                   - Rule tuning
+                   - Performance tests
+                   - Team training
+                   - Gradual adoption
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_code)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
