@@ -21,9 +21,9 @@ services:
         value: render
       - key: IS_RENDER
         value: true
-      - key: SUPABASE_KEY
-        sync: false
       - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
         sync: false
       - key: GEMINI_API_KEY
         sync: false
