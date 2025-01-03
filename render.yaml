@@ -5,13 +5,28 @@ services:
     env: docker
     region: oregon
     plan: starter
-    healthCheckPath: /api/v1/health
+    healthCheckPath: /
     buildCommand: ./build.sh
-    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    startCommand: uvicorn backend_rag_ia.api.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: PYTHONPATH
         value: /app
-    dockerCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: OPERATION_MODE
+        value: render
+      - key: IS_RENDER
+        value: true
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+    autoDeploy: true
+    dockerfilePath: ./Dockerfile
 version: "1"
