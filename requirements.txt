@@ -31,7 +31,7 @@ pgvector>=0.2.4  # Para busca vetorial no Postgres
 pydantic>=2.5.3
 pydantic-settings==2.1.0
 python-multipart>=0.0.9
-httpx>=0.23.0,<0.24.0
+httpx>=0.23.0,<0.29.0
 
 # Cache e Performance
 cachetools>=5.3.2
