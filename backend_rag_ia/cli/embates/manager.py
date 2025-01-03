@@ -8,6 +8,7 @@ import json
 
 from .models import Embate
 from .storage import SupabaseStorage
+from core.refactoring_limits_checker import RefactoringLimitsChecker
 
 class ConflictResolver:
     """Resolve conflitos entre embates."""
@@ -406,3 +407,35 @@ class EmbateManager:
         })
         
         return await self.create_embate(embate) 
+
+class RefactoringManager:
+    def __init__(self):
+        self.limits_checker = RefactoringLimitsChecker()
+        
+    async def analyze_directory(self, directory: str) -> Dict[str, Any]:
+        """Analisa um diretório e retorna recomendações"""
+        
+        metrics = {
+            "iterations": self.current_iteration,
+            "total_changes": len(self.changes),
+            "removed": len(self.removed_items),
+            "simplified": len(self.simplified_items),
+            "consolidated": len(self.consolidated_items),
+            "updated": len(self.updated_items),
+            "complexity": self.calculate_complexity(),
+            "cohesion": self.calculate_cohesion()
+        }
+        
+        result = self.limits_checker.should_continue_refactoring(metrics)
+        
+        if not result["continue"]:
+            return {
+                "status": "stop",
+                "reason": result["reason"],
+                "recommendations": self.limits_checker.get_recommendations()
+            }
+            
+        return {
+            "status": "continue",
+            "recommendations": self.limits_checker.get_recommendations()
+        } 

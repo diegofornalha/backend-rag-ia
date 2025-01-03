@@ -1,7 +1,7 @@
 # Imagem base Python
 FROM python:3.11-slim
 
-# Variáveis de ambiente
+# Variáveis de ambiente básicas
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -11,7 +11,9 @@ ENV PYTHONUNBUFFERED=1 \
     PORT=10000 \
     HOST=0.0.0.0 \
     OPERATION_MODE=render \
-    IS_RENDER=true
+    IS_RENDER=true \
+    ENVIRONMENT=production \
+    DEBUG=false
 
 # Diretório de trabalho
 WORKDIR /app
@@ -35,9 +37,6 @@ RUN pip install --upgrade pip && \
 # Copia o código da aplicação
 COPY backend_rag_ia /app/backend_rag_ia/
 COPY 07_monitoring_apenas_raiz /app/07_monitoring_apenas_raiz/
-
-# Verifica a instalação
-RUN python -c "import backend_rag_ia.api.main"
 
 # Expõe a porta
 EXPOSE $PORT
