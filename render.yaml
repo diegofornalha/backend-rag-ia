@@ -5,7 +5,10 @@ services:
     env: docker
     region: oregon
     plan: starter
-    healthCheckPath: /
+    # Configuração otimizada do health check
+    healthCheckPath: /api/v1/health
+    healthCheckTimeout: 5
+    healthCheckInterval: 10
     buildCommand: ./build.sh
     startCommand: uvicorn backend_rag_ia.api.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -21,12 +24,32 @@ services:
         value: render
       - key: IS_RENDER
         value: true
+      - key: ENVIRONMENT
+        value: preview
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-    autoDeploy: true
-    dockerfilePath: ./Dockerfile
+    dockerCommand: uvicorn backend_rag_ia.api.main:app --host 0.0.0.0 --port $PORT
+    autoDeploy: false
+
+# Configuração de previews
+previews:
+  # Habilita previews automáticos para todos os PRs
+  enable: true
+  # Configurações específicas para os previews
+  spec:
+    # Usa as mesmas configurações do serviço principal
+    inheritEnvVars: true
+    # Adiciona variáveis específicas para ambiente de preview
+    envVars:
+      - key: ENVIRONMENT
+        value: preview
+      - key: DEBUG
+        value: true
+    # Configurações de recursos para os previews
+    plan: starter
+
 version: "1"
