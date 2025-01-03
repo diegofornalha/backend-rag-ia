@@ -6,11 +6,5 @@
   "max_complexity": 15,
   "min_cohesion": 0.5,
   "max_coupling": 0.7,
-  "max_dependencies": 20,
-  "custom_rules": {
-    "code_removal_ratio": 0.3,
-    "consolidation_warning_threshold": 0.6,
-    "complexity_increase_limit": 5,
-    "breaking_changes_limit": 2
-  }
+  "max_dependencies": 20
 }
