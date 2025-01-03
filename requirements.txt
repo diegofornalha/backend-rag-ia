@@ -16,7 +16,7 @@ gunicorn>=21.2.0
 
 # Machine Learning e IA
 langchain>=0.1.0
-numpy==1.24.3
+numpy==2.2.1
 sentence-transformers==2.2.2
 huggingface-hub==0.16.4
 torch==2.0.1
