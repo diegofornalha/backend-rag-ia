@@ -86,7 +86,7 @@ class SemanticSearchManager:
         Returns:
             Lista de resultados para cada query
         """
-        results = []
+            results = []
         for query in queries:
             results.append(self.search(query, documents, k))
         return results
