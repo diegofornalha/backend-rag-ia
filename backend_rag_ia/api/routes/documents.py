@@ -1,16 +1,10 @@
 """Rotas de documentos."""
 
 from datetime import UTC, datetime
-from typing import Any, List
-from fastapi import APIRouter, HTTPException, Path
-from pydantic import BaseModel
 
-from backend_rag_ia.models.database import (
-    Document,
-    DocumentCreate,
-    DocumentResponse
-)
-from backend_rag_ia.services.vector_store import VectorStore
+from fastapi import APIRouter, HTTPException, Path
+
+from backend_rag_ia.models.database import DocumentCreate, DocumentResponse
 from backend_rag_ia.utils.logging_config import logger
 
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
@@ -34,12 +28,12 @@ async def add_document(document: DocumentCreate) -> DocumentResponse:
             metadata=document.metadata,
             created_at=datetime.now(UTC).isoformat()
         )
-    except Exception as e:
-        logger.exception("Erro ao adicionar documento: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as err:
+        logger.exception("Erro ao adicionar documento: %s", err)
+        raise HTTPException(status_code=500, detail=str(err)) from err
 
-@router.get("", response_model=List[DocumentResponse])
-async def list_documents() -> List[DocumentResponse]:
+@router.get("", response_model=list[DocumentResponse])
+async def list_documents() -> list[DocumentResponse]:
     """Lista todos os documentos.
     
     Returns:
@@ -48,9 +42,9 @@ async def list_documents() -> List[DocumentResponse]:
     try:
         # TODO: Implementar lógica de listar documentos usando VectorStore
         return []
-    except Exception as e:
-        logger.exception("Erro ao listar documentos: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as err:
+        logger.exception("Erro ao listar documentos: %s", err)
+        raise HTTPException(status_code=500, detail=str(err)) from err
 
 @router.get("/{doc_id}", response_model=DocumentResponse)
 async def get_document(doc_id: str) -> DocumentResponse:
@@ -70,9 +64,9 @@ async def get_document(doc_id: str) -> DocumentResponse:
             metadata={},
             created_at=datetime.now(UTC).isoformat()
         )
-    except Exception as e:
-        logger.exception("Erro ao obter documento: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as err:
+        logger.exception("Erro ao obter documento: %s", err)
+        raise HTTPException(status_code=500, detail=str(err)) from err
 
 @router.put("/{doc_id}", response_model=DocumentResponse)
 async def update_document(doc_id: str, document: DocumentCreate) -> DocumentResponse:
@@ -93,9 +87,9 @@ async def update_document(doc_id: str, document: DocumentCreate) -> DocumentResp
             metadata=document.metadata,
             created_at=datetime.now(UTC).isoformat()
         )
-    except Exception as e:
-        logger.exception("Erro ao atualizar documento: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as err:
+        logger.exception("Erro ao atualizar documento: %s", err)
+        raise HTTPException(status_code=500, detail=str(err)) from err
 
 @router.delete("/{doc_id}")
 async def delete_document(doc_id: str) -> dict[str, str]:
@@ -110,14 +104,14 @@ async def delete_document(doc_id: str) -> dict[str, str]:
     try:
         # TODO: Implementar lógica de remover documento usando VectorStore
         return {"message": f"Documento {doc_id} removido com sucesso"}
-    except Exception as e:
-        logger.exception("Erro ao remover documento: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as err:
+        logger.exception("Erro ao remover documento: %s", err)
+        raise HTTPException(status_code=500, detail=str(err)) from err
 
-@router.get("/history/{hours}", response_model=List[DocumentResponse])
+@router.get("/history/{hours}", response_model=list[DocumentResponse])
 async def get_documents_history(
     hours: int = Path(..., gt=0, description="Número de horas para buscar histórico")
-) -> List[DocumentResponse]:
+) -> list[DocumentResponse]:
     """Obtém histórico de documentos.
     
     Args:
@@ -129,9 +123,9 @@ async def get_documents_history(
     try:
         # TODO: Implementar lógica de histórico usando VectorStore
         return []
-    except Exception as e:
-        logger.exception("Erro ao obter histórico: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as err:
+        logger.exception("Erro ao obter histórico: %s", err)
+        raise HTTPException(status_code=500, detail=str(err)) from err
 
 @router.get("/count")
 async def count_documents() -> dict[str, int]:
@@ -143,6 +137,6 @@ async def count_documents() -> dict[str, int]:
     try:
         # TODO: Implementar lógica de contagem usando VectorStore
         return {"count": 0}
-    except Exception as e:
-        logger.exception("Erro ao contar documentos: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) 
+    except Exception as err:
+        logger.exception("Erro ao contar documentos: %s", err)
+        raise HTTPException(status_code=500, detail=str(err)) from err 

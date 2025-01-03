@@ -205,12 +205,37 @@ SELECT * FROM pg_stat_activity;
    ```
 
 2. **Logs**
+
    ```sql
-   CREATE TABLE error_log (
-       id SERIAL PRIMARY KEY,
-       error_message TEXT,
-       timestamp TIMESTAMPTZ DEFAULT NOW()
+   CREATE TABLE rag.error_log (
+       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+       tipo TEXT NOT NULL,
+       mensagem TEXT NOT NULL,
+       detalhes JSONB,
+       criado_em TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
    );
+
+   -- Habilitar RLS
+   ALTER TABLE rag.error_log ENABLE ROW LEVEL SECURITY;
+
+   -- Criar políticas de acesso
+   CREATE POLICY "Permitir select para authenticated"
+   ON rag.error_log
+   FOR SELECT
+   TO authenticated
+   USING (true);
+
+   CREATE POLICY "Permitir insert para service_role"
+   ON rag.error_log
+   FOR INSERT
+   TO service_role
+   WITH CHECK (true);
+
+   CREATE POLICY "Permitir delete para service_role"
+   ON rag.error_log
+   FOR DELETE
+   TO service_role
+   USING (true);
    ```
 
 ## 🔄 Manutenção SQL
