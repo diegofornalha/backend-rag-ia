@@ -1,25 +1,13 @@
 """Rotas de health check."""
 
-from datetime import UTC, datetime
-from typing import Dict
-from fastapi import APIRouter
-from backend_rag_ia.models.schemas import HealthResponse
-from backend_rag_ia.config.settings import get_settings
+from fastapi import APIRouter, Response
 
 router = APIRouter(tags=["health"])
 
-settings = get_settings()
-
-@router.get("/health", response_model=HealthResponse)
-async def health_check() -> Dict[str, str]:
+@router.get("/health")
+async def health_check() -> Response:
     """
-    Endpoint para verificar a saúde da API.
-    Retorna status e informações do sistema.
+    Endpoint leve para verificar a saúde da API.
+    Retorna 200 OK se a API estiver funcionando.
     """
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now(UTC).isoformat(),
-        "version": settings.API_VERSION,
-        "environment": settings.ENVIRONMENT,
-        "uptime": 0.0  # TODO: Implementar cálculo de uptime
-    } 
+    return Response(status_code=200) 
