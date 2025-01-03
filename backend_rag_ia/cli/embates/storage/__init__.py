@@ -1275,6 +1275,184 @@ class MemoryStorage:
             
             embates.append(embate_perf)
             
+            # Cria embate sobre arquitetura
+            embate_arch = Embate(
+                titulo="Arquitetura e Design Patterns",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de uma arquitetura robusta e padrões de design.
+                
+                Motivação:
+                1. Necessidades de Arquitetura:
+                   - Clean architecture
+                   - Design patterns
+                   - SOLID principles
+                   - Best practices
+                
+                2. Benefícios Técnicos:
+                   - Maintainability
+                   - Scalability
+                   - Testability
+                   - Flexibility
+                
+                3. Padrões:
+                   - Repository pattern
+                   - Factory pattern
+                   - Strategy pattern
+                   - Observer pattern
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_arch.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Componentes:
+                   - Domain models
+                   - Use cases
+                   - Interfaces
+                   - Infrastructure
+                
+                2. Implementação:
+                   - Clean arch layers
+                   - Design patterns
+                   - Dependency injection
+                   - Interface segregation
+                
+                3. Monitoramento:
+                   - Code quality
+                   - Architecture rules
+                   - Pattern usage
+                   - Dependencies
+                """,
+                "data": now
+            })
+            
+            embate_arch.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - Refactoring
+                   - New patterns
+                   - Architecture
+                   - Dependencies
+                
+                2. Riscos:
+                   - Complexity
+                   - Learning curve
+                   - Over-engineering
+                   - Tech debt
+                
+                3. Mitigação:
+                   - Documentation
+                   - Training
+                   - Code reviews
+                   - Gradual changes
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_arch)
+            
+            # Cria embate sobre internacionalização
+            embate_i18n = Embate(
+                titulo="Internacionalização e Localização",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema completo de internacionalização e localização.
+                
+                Motivação:
+                1. Necessidades de I18n/L10n:
+                   - Múltiplos idiomas
+                   - Formatos regionais
+                   - Conteúdo localizado
+                   - Acessibilidade
+                
+                2. Benefícios Técnicos:
+                   - Expansão global
+                   - Melhor UX
+                   - Conformidade
+                   - Flexibilidade
+                
+                3. Manutenibilidade:
+                   - Strings externalizadas
+                   - Traduções gerenciadas
+                   - Formatos padronizados
+                   - Updates simplificados
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_i18n.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Componentes:
+                   - Sistema de traduções
+                   - Formatação regional
+                   - RTL support
+                   - Unicode handling
+                
+                2. Implementação:
+                   - Gettext setup
+                   - Translation files
+                   - Format handlers
+                   - Language detection
+                
+                3. Monitoramento:
+                   - Coverage de traduções
+                   - Qualidade de traduções
+                   - Usage analytics
+                   - User feedback
+                """,
+                "data": now
+            })
+            
+            embate_i18n.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Código:
+                   - String extraction
+                   - Format handling
+                   - UI adjustments
+                   - Testing setup
+                
+                2. Riscos:
+                   - Missing translations
+                   - Format errors
+                   - Context issues
+                   - Performance impact
+                
+                3. Mitigação:
+                   - Translation review
+                   - Automated tests
+                   - Context docs
+                   - Performance monitoring
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_i18n)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
