@@ -3,8 +3,9 @@
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
 import networkx as nx
+import re
 
 @dataclass
 class CodeMetrics:
@@ -181,3 +182,38 @@ class SemanticAnalyzer:
                     ]
                     
         return api 
+
+@dataclass
+class ConfigMetrics:
+    """Métricas para análise de configurações."""
+    campos_obrigatorios: List[str]
+    campos_opcionais: List[str]
+    campos_faltantes: List[str]
+    campos_invalidos: List[str]
+    
+class ConfigAnalyzer:
+    """Analisador de configurações."""
+    
+    def analyze_config(self, config_dict: Dict, required_fields: List[str]) -> ConfigMetrics:
+        """Analisa configurações e retorna métricas."""
+        campos_presentes = set(config_dict.keys())
+        campos_obrigatorios = set(required_fields)
+        
+        # Identifica campos faltantes
+        campos_faltantes = list(campos_obrigatorios - campos_presentes)
+        
+        # Identifica campos opcionais
+        campos_opcionais = list(campos_presentes - campos_obrigatorios)
+        
+        # Verifica campos inválidos (vazios ou None)
+        campos_invalidos = []
+        for campo, valor in config_dict.items():
+            if valor is None or (isinstance(valor, str) and not valor.strip()):
+                campos_invalidos.append(campo)
+                
+        return ConfigMetrics(
+            campos_obrigatorios=list(campos_obrigatorios),
+            campos_opcionais=campos_opcionais,
+            campos_faltantes=campos_faltantes,
+            campos_invalidos=campos_invalidos
+        ) 

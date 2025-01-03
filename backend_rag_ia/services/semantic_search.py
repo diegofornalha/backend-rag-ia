@@ -39,12 +39,12 @@ class SemanticSearchManager:
         # Recupera embeddings dos documentos
         doc_embeddings = []
         for doc in documents:
-            embedding = doc.get('embedding')
+            embedding = doc.get("embedding")
             if embedding:
                 doc_embeddings.append(embedding)
             else:
                 # Gera embedding se não existir
-                doc_embeddings.append(self.get_embedding(doc['content']))
+                doc_embeddings.append(self.get_embedding(doc["content"]))
         
         # Calcula similaridade
         similarities = cosine_similarity(
@@ -86,7 +86,7 @@ class SemanticSearchManager:
         Returns:
             Lista de resultados para cada query
         """
-            results = []
+        results = []
         for query in queries:
             results.append(self.search(query, documents, k))
         return results
@@ -102,6 +102,6 @@ class SemanticSearchManager:
             Documentos com embeddings adicionados
         """
         for doc in documents:
-            if 'embedding' not in doc:
-                doc['embedding'] = self.get_embedding(doc['content'])
+            if "embedding" not in doc:
+                doc["embedding"] = self.get_embedding(doc["content"])
         return documents
