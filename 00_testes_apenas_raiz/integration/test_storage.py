@@ -251,6 +251,9 @@ async def test_memory_storage_embate_trigger():
     await storage.delete(embate_code.id)
     
     embates = await storage.list()
+    print("\nEmbates restantes:")
+    for e in embates:
+        print(f"- {e.titulo} (metadata: {e.metadata})")
     assert len(embates) == 3  # Apenas os embates originais
 
 @pytest.mark.asyncio
