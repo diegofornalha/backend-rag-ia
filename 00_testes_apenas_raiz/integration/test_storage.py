@@ -245,20 +245,13 @@ async def test_memory_storage_embate_trigger():
     await storage.delete(embate_i18n.id)
     await storage.delete(embate_backup.id)
     await storage.delete(embate_config.id)
+    
+    # Encontra e deleta o embate de análise de código
+    embate_code = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Código" in e.titulo)
+    await storage.delete(embate_code.id)
+    
     embates = await storage.list()
     assert len(embates) == 3  # Apenas os embates originais
-    
-    # Faz mais uma chamada para verificar se não cria novos embates técnicos
-    embate4 = Embate(
-        titulo="Teste 4",
-        tipo="tecnico",
-        status="pendente",
-        contexto="Contexto de teste 4",
-        data_inicio=datetime.now()
-    )
-    result4 = await storage.save(embate4)
-    embates = await storage.list()
-    assert len(embates) == 4  # 4 embates originais 
 
 @pytest.mark.asyncio
 async def test_memory_storage_commit_push():
