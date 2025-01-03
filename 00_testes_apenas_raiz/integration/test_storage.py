@@ -247,7 +247,7 @@ async def test_memory_storage_embate_trigger():
     await storage.delete(embate_config.id)
     
     # Encontra e deleta o embate de análise de código
-    embate_code = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Código" in e.titulo)
+    embate_code = next(e for e in embates if e.metadata.get("is_trigger_embate") and "Análise de Código" in e.titulo)
     await storage.delete(embate_code.id)
     
     embates = await storage.list()
