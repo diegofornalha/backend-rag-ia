@@ -226,7 +226,8 @@ class EmbateManager:
         hallucination_indicators = {
             "inconsistencias": [],
             "duplicidades": [],
-            "score": 0.0
+            "score": 0.0,
+            "loop_indicators": []
         }
         
         try:
@@ -282,6 +283,16 @@ class EmbateManager:
                         )
                         hallucination_indicators["score"] += 0.4
                         
+            # Verificar embates relacionados não implementados
+            related_embates = await self.find_related_embates(embate.titulo)
+            pending_implementations = [e for e in related_embates if not e.implementado]
+            
+            if len(pending_implementations) > 2:
+                hallucination_indicators["loop_indicators"].append(
+                    "Múltiplos embates relacionados pendentes de implementação"
+                )
+                hallucination_indicators["score"] += 0.4
+                
             return {
                 "status": "success",
                 "indicators": hallucination_indicators,
