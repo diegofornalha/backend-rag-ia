@@ -1453,6 +1453,95 @@ class MemoryStorage:
             
             embates.append(embate_i18n)
             
+            # Cria embate sobre backup
+            embate_backup = Embate(
+                titulo="Backup e Recuperação de Dados",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema completo de backup e recuperação de dados.
+                
+                Motivação:
+                1. Necessidades de Backup:
+                   - Dados críticos
+                   - Recuperação de desastres
+                   - Conformidade legal
+                   - Continuidade
+                
+                2. Benefícios Técnicos:
+                   - Segurança de dados
+                   - Recuperação rápida
+                   - Auditoria
+                   - Compliance
+                
+                3. Manutenibilidade:
+                   - Backups automáticos
+                   - Verificação periódica
+                   - Rotação de backups
+                   - Documentação
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_backup.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Componentes:
+                   - Backup system
+                   - Recovery tools
+                   - Monitoring
+                   - Verification
+                
+                2. Implementação:
+                   - Backup strategy
+                   - Recovery process
+                   - Testing plan
+                   - Documentation
+                
+                3. Monitoramento:
+                   - Backup status
+                   - Recovery tests
+                   - Storage usage
+                   - Performance impact
+                """,
+                "data": now
+            })
+            
+            embate_backup.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Sistema:
+                   - Storage usage
+                   - Network traffic
+                   - Processing load
+                   - Recovery time
+                
+                2. Riscos:
+                   - Backup failures
+                   - Recovery issues
+                   - Data corruption
+                   - Performance impact
+                
+                3. Mitigação:
+                   - Monitoring
+                   - Regular tests
+                   - Documentation
+                   - Training
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_backup)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
