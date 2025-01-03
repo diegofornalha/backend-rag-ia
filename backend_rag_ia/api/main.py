@@ -1,71 +1,139 @@
-"""API principal do Backend RAG IA."""
+"""
+API principal do sistema.
 
-from fastapi import FastAPI, Request
+Este módulo configura e inicializa a API FastAPI com:
+- Rotas para documentos
+- Rotas para busca semântica
+- Rotas para estatísticas
+- Documentação interativa
+"""
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from .routes import documents_router, search_router, statistics_router
 
-from ..config.settings import get_settings
-from .middleware import environment_middleware, error_handler, logging_middleware
-from .routes import documents_router, health_router, search_router, statistics_router
-
-settings = get_settings()
-
+# Configuração da API
 app = FastAPI(
-    title=settings.API_TITLE,
-    description=settings.API_DESCRIPTION,
-    version=settings.API_VERSION,
+    title="Backend RAG IA",
+    description="""
+    API para busca semântica em documentos usando RAG (Retrieval Augmented Generation).
+    
+    ## Funcionalidades
+    
+    ### Documentos
+    - Upload de documentos (PDF, TXT, DOC)
+    - Listagem e busca de documentos
+    - Atualização e remoção de documentos
+    
+    ### Busca Semântica
+    - Busca por similaridade semântica
+    - Busca com filtros avançados
+    - Recomendação de documentos similares
+    
+    ### Estatísticas
+    - Métricas de uso do sistema
+    - Análise de performance
+    - Histórico de operações
+    
+    ## Autenticação
+    
+    A API usa autenticação via token JWT. Para usar a API:
+    1. Obtenha um token de acesso
+    2. Inclua o token no header Authorization
+    
+    ## Exemplos
+    
+    ### Python
+    ```python
+    import requests
+    
+    # Configuração
+    BASE_URL = "http://localhost:10000"
+    headers = {"Authorization": "Bearer seu-token"}
+    
+    # Upload de documento
+    files = {"file": open("documento.pdf", "rb")}
+    response = requests.post(f"{BASE_URL}/documents", files=files, headers=headers)
+    
+    # Busca semântica
+    query = "como usar python para análise de dados"
+    response = requests.get(
+        f"{BASE_URL}/search",
+        params={"query": query},
+        headers=headers
+    )
+    
+    # Estatísticas
+    response = requests.get(f"{BASE_URL}/statistics/system", headers=headers)
+    ```
+    
+    ### Curl
+    ```bash
+    # Upload de documento
+    curl -X POST "http://localhost:10000/documents" \\
+         -H "Authorization: Bearer seu-token" \\
+         -F "file=@documento.pdf"
+    
+    # Busca semântica
+    curl "http://localhost:10000/search?query=python" \\
+         -H "Authorization: Bearer seu-token"
+    
+    # Estatísticas
+    curl "http://localhost:10000/statistics/system" \\
+         -H "Authorization: Bearer seu-token"
+    ```
+    
+    ## Suporte
+    
+    Para dúvidas e suporte:
+    - Email: suporte@exemplo.com
+    - Documentação: https://docs.exemplo.com
+    - GitHub: https://github.com/exemplo/backend-rag-ia
+    """,
+    version="1.0.0",
     docs_url="/docs",
-    redoc_url=None  # Desabilitando ReDoc para evitar confusão
+    redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "Documentos",
+            "description": "Operações com documentos: upload, listagem, busca, atualização e remoção"
+        },
+        {
+            "name": "Busca",
+            "description": "Operações de busca semântica e recomendação de documentos similares"
+        },
+        {
+            "name": "Estatísticas",
+            "description": "Métricas de uso, performance e histórico do sistema"
+        }
+    ]
 )
 
-# Middlewares
-app.middleware("http")(environment_middleware)
-app.middleware("http")(logging_middleware)
-
-# Handler global de erros
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    return await error_handler(request, exc)
-
-# Middleware de validação de origem
-@app.middleware("http")
-async def validate_origin(request: Request, call_next):
-    """
-    Middleware para validar a origem das requisições.
-    Bloqueia requisições de origens não permitidas.
-    """
-    origin = request.headers.get("origin")
-    
-    # Se não houver origem (ex: requisição direta), permite
-    if not origin:
-        return await call_next(request)
-        
-    # Verifica se a origem está na lista de permitidas
-    if origin not in settings.cors_origins_list:
-        return JSONResponse(
-            status_code=403,
-            content={"detail": "Origin not allowed"}
-        )
-        
-    return await call_next(request)
-
-# Configuração CORS
+# Configuração de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Métodos específicos em vez de "*"
-    allow_headers=["Authorization", "Content-Type"],  # Headers específicos em vez de "*"
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Incluir rotas
-app.include_router(search_router, prefix="/api/v1", tags=["search"])
-app.include_router(health_router, prefix="/api/v1", tags=["health"])
-app.include_router(documents_router, prefix="/api/v1", tags=["documents"])
-app.include_router(statistics_router, prefix="/api/v1", tags=["statistics"])
+# Registro das rotas
+app.include_router(documents_router)
+app.include_router(search_router)
+app.include_router(statistics_router)
 
-# Rota raiz com redirecionamento para /docs
-@app.get("/")
+@app.get("/", tags=["Root"])
 async def root():
-    """Redireciona para a documentação da API."""
-    return RedirectResponse(url="/docs") 
+    """
+    Rota raiz da API.
+    
+    Retorna informações básicas sobre a API e links úteis.
+    """
+    return {
+        "name": "Backend RAG IA",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "status": "online"
+    } 
