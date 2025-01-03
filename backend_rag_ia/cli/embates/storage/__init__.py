@@ -1542,6 +1542,95 @@ class MemoryStorage:
             
             embates.append(embate_backup)
             
+            # Cria embate sobre configurações
+            embate_config = Embate(
+                titulo="Gestão de Configurações",
+                tipo="tecnico",
+                contexto="""
+                Proposta de implementação de um sistema completo de gestão de configurações.
+                
+                Motivação:
+                1. Necessidades de Configuração:
+                   - Múltiplos ambientes
+                   - Segurança de dados
+                   - Flexibilidade
+                   - Manutenibilidade
+                
+                2. Benefícios Técnicos:
+                   - Configuração centralizada
+                   - Versionamento
+                   - Auditoria
+                   - Segurança
+                
+                3. Manutenibilidade:
+                   - Gestão simplificada
+                   - Documentação automática
+                   - Validação
+                   - Histórico
+                """,
+                status="aberto",
+                data_inicio=now,
+                metadata={"is_trigger_embate": True},
+                argumentos=[]
+            )
+            
+            # Adiciona argumentos técnicos
+            embate_config.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Análise Técnica:
+                
+                1. Componentes:
+                   - Config manager
+                   - Secret storage
+                   - Environment handling
+                   - Validation system
+                
+                2. Implementação:
+                   - Config structure
+                   - Secret management
+                   - Environment setup
+                   - Documentation
+                
+                3. Monitoramento:
+                   - Config changes
+                   - Access logs
+                   - Validation status
+                   - Usage patterns
+                """,
+                "data": now
+            })
+            
+            embate_config.argumentos.append({
+                "autor": "Sistema",
+                "tipo": "tecnico",
+                "conteudo": """
+                Impacto e Riscos:
+                
+                1. Impacto no Sistema:
+                   - Code changes
+                   - Security setup
+                   - Environment config
+                   - Documentation
+                
+                2. Riscos:
+                   - Security exposure
+                   - Config conflicts
+                   - Migration issues
+                   - Performance impact
+                
+                3. Mitigação:
+                   - Security review
+                   - Testing strategy
+                   - Documentation
+                   - Monitoring
+                """,
+                "data": now
+            })
+            
+            embates.append(embate_config)
+            
         return embates
         
     async def save(self, embate: Embate) -> Dict:
