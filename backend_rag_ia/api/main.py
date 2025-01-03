@@ -10,7 +10,7 @@ Este módulo configura e inicializa a API FastAPI com:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import documents_router, search_router, statistics_router
+from .routes import documents_router, search_router, statistics_router, health_router
 
 # Configuração da API
 app = FastAPI(
@@ -122,6 +122,7 @@ app.add_middleware(
 app.include_router(documents_router)
 app.include_router(search_router)
 app.include_router(statistics_router)
+app.include_router(health_router)
 
 @app.get("/", tags=["Root"])
 async def root():
