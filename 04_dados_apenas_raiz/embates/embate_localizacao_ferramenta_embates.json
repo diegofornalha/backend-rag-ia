@@ -1,0 +1,39 @@
+{
+  "titulo": "Definição da Localização da Ferramenta de Embates",
+  "tipo": "arquitetura",
+  "contexto": "A ferramenta de embates está atualmente distribuída entre o core (backend_rag_ia/cli) e as ferramentas auxiliares (03_ferramentas_rag_apenas_raiz/cli). Isso viola o princípio de ter uma única fonte de verdade e pode causar confusão sobre onde implementar novas funcionalidades.",
+  "status": "aberto",
+  "data_inicio": "2024-01-02T19:30:00",
+  "argumentos": [
+    {
+      "autor": "Arquiteto",
+      "tipo": "problema",
+      "conteudo": "Problemas Identificados:\n1. Ferramenta de embates em múltiplos locais\n2. Possível duplicação de código\n3. Confusão sobre onde implementar novas features\n4. Dificuldade de manutenção\n5. Violação do princípio de responsabilidade única",
+      "data": "2024-01-02T19:30:30"
+    },
+    {
+      "autor": "Desenvolvedor",
+      "tipo": "analise",
+      "conteudo": "Análise das Opções:\n\n1. Manter no Core (backend_rag_ia/cli):\nPrós:\n- Centraliza lógica de negócio\n- Melhor integração com outros serviços\n- Mais coeso com a arquitetura\nContras:\n- Mistura ferramentas com core\n\n2. Mover para Ferramentas (03_ferramentas_rag_apenas_raiz):\nPrós:\n- Separa claramente ferramentas do core\n- Mais fácil de manter\n- Melhor para testes\nContras:\n- Pode duplicar código\n- Precisa importar do core",
+      "data": "2024-01-02T19:31:00"
+    },
+    {
+      "autor": "Tech Lead",
+      "tipo": "solucao",
+      "conteudo": "Proposta de Solução:\n\n1. Mover toda a ferramenta de embates para 03_ferramentas_rag_apenas_raiz/cli/embates/\n2. Manter no core apenas:\n   - Models (backend_rag_ia/models/embates.py)\n   - Services (backend_rag_ia/services/embates.py)\n   - API endpoints (backend_rag_ia/api/routes/embates.py)\n\n3. Estrutura proposta:\n03_ferramentas_rag_apenas_raiz/\n└── cli/\n    └── embates/\n        ├── commands/       # Comandos CLI\n        ├── handlers/       # Handlers de comandos\n        └── utils/          # Utilitários específicos\n\n4. O CLI importará e usará os models/services do core\n5. Isso mantém a separação de responsabilidades clara:\n   - Core: Lógica de negócio\n   - Ferramentas: Interface com usuário",
+      "data": "2024-01-02T19:31:30"
+    },
+    {
+      "autor": "QA",
+      "tipo": "validacao",
+      "conteudo": "Critérios de Validação:\n1. Todos os comandos CLI devem continuar funcionando\n2. Imports devem ser atualizados\n3. Testes devem passar\n4. Documentação deve ser atualizada\n5. Não deve haver código duplicado",
+      "data": "2024-01-02T19:32:00"
+    }
+  ],
+  "resolucao": null,
+  "metadata": {
+    "impacto": "médio",
+    "prioridade": "alta",
+    "tags": ["arquitetura", "organizacao", "cli", "embates"]
+  }
+}

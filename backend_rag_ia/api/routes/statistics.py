@@ -1,16 +1,16 @@
 """Rotas de estatísticas."""
 
 from datetime import UTC, datetime
-from typing import Dict, Any
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 
-from backend_rag_ia.services.vector_store import VectorStore
 from backend_rag_ia.utils.logging_config import logger
 
 router = APIRouter(prefix="/api/v1", tags=["statistics"])
 
 @router.get("/statistics")
-async def get_statistics() -> Dict[str, Any]:
+async def get_statistics() -> dict[str, Any]:
     """Retorna estatísticas gerais do sistema.
     
     Returns:
@@ -28,6 +28,6 @@ async def get_statistics() -> Dict[str, Any]:
             "average_document_size": 0,
             "last_update": datetime.now(UTC).isoformat()
         }
-    except Exception as e:
-        logger.exception("Erro ao obter estatísticas: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) 
+    except Exception as err:
+        logger.exception("Erro ao obter estatísticas: %s", err)
+        raise HTTPException(status_code=500, detail=str(err)) from err 

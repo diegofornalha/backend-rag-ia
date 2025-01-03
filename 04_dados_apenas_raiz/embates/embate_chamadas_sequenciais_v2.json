@@ -1,0 +1,67 @@
+{
+  "titulo": "Melhorias no Gerenciador de Chamadas Sequenciais",
+  "tipo": "tecnico",
+  "contexto": "O ChamadasSequenciaisManager foi implementado para controlar o limite de 25 chamadas do Cursor. Precisamos avaliar se a implementação atual atende todos os requisitos e identificar possíveis melhorias.",
+  "status": "aberto",
+  "data_inicio": "2024-01-02T21:00:00",
+  "argumentos": [
+    {
+      "autor": "Desenvolvedor",
+      "tipo": "analise",
+      "conteudo": "Pontos Positivos da Implementação Atual:\n\n1. Persistência de Estado:\n   - Salva em arquivo local\n   - Recupera entre sessões\n   - Tratamento de erros\n\n2. Gestão de Tempo:\n   - Reset após 5 minutos\n   - Timestamp das chamadas\n   - Controle automático\n\n3. Integração com Embates:\n   - Avisos via embates\n   - Sugestões claras\n   - Metadata específica\n\n4. Testes Abrangentes:\n   - Unitários\n   - Async\n   - Fixtures\n   - Mocks",
+      "data": "2024-01-02T21:00:30"
+    },
+    {
+      "autor": "Arquiteto",
+      "tipo": "problema",
+      "conteudo": "Pontos de Melhoria Identificados:\n\n1. Configuração:\n   - Limites hardcoded (20 e 25)\n   - Tempo de reset fixo (5 min)\n   - Path do storage fixo\n\n2. Monitoramento:\n   - Falta logging das operações\n   - Sem métricas de uso\n   - Sem telemetria\n\n3. Recuperação:\n   - Sem backup do estado\n   - Sem migração de versão\n   - Sem limpeza automática\n\n4. UX:\n   - Aviso único no limite\n   - Sem níveis de alerta\n   - Sem feedback visual",
+      "data": "2024-01-02T21:01:00"
+    },
+    {
+      "autor": "Tech Lead",
+      "tipo": "solucao",
+      "conteudo": "Proposta de Melhorias:\n\n1. Configuração Flexível:\n```python
+class Config:
+    LIMITE_AVISO: int = 20
+    LIMITE_MAXIMO: int = 25
+    TEMPO_RESET: int = 300  # 5 min
+    STORAGE_PATH: str = '~/.rag_sequential_calls'
+    NIVEIS_ALERTA: List[int] = [10, 15, 20, 23]
+```\n\n2. Logging e Métricas:\n```python
+def registrar_chamada(self) -> Optional[Dict]:
+    self.logger.info(f'Chamada registrada: {self.contador + 1}')
+    self.metrics.increment('chamadas_sequenciais')
+    # ... resto do código
+```\n\n3. Sistema de Alertas Graduais:\n```python
+def _verificar_alertas(self) -> Optional[Dict]:
+    for nivel in reversed(self.config.NIVEIS_ALERTA):
+        if self.contador >= nivel:
+            return self._criar_alerta(nivel)
+    return None
+```\n\n4. Backup e Migração:\n```python
+def _backup_estado(self) -> None:
+    backup_path = f'{self.storage_path}.bak'
+    shutil.copy2(self.storage_path, backup_path)
+```",
+      "data": "2024-01-02T21:01:30"
+    },
+    {
+      "autor": "QA",
+      "tipo": "validacao",
+      "conteudo": "Critérios de Validação para V2:\n\n1. Funcionalidades Básicas:\n   - Todos os testes atuais passam\n   - Backward compatibility\n   - Sem regressões\n\n2. Novas Features:\n   - Configuração via env/arquivo\n   - Logs estruturados\n   - Métricas em Prometheus\n   - Alertas graduais funcionam\n\n3. Resiliência:\n   - Backup funciona\n   - Recuperação de erros\n   - Migração de versões\n   - Limpeza automática\n\n4. Performance:\n   - Sem degradação\n   - Baixo uso de memória\n   - I/O otimizado",
+      "data": "2024-01-02T21:02:00"
+    },
+    {
+      "autor": "UX",
+      "tipo": "beneficio",
+      "conteudo": "Benefícios das Melhorias:\n\n1. Para Usuários:\n   - Alertas mais graduais e menos intrusivos\n   - Melhor feedback do sistema\n   - Mais opções de configuração\n   - Experiência mais suave\n\n2. Para Desenvolvedores:\n   - Código mais flexível\n   - Melhor observabilidade\n   - Mais fácil de debugar\n   - Mais fácil de manter\n\n3. Para Operação:\n   - Monitoramento completo\n   - Métricas em tempo real\n   - Backup e recuperação\n   - Manutenção automática",
+      "data": "2024-01-02T21:02:30"
+    }
+  ],
+  "metadata": {
+    "impacto": "médio",
+    "prioridade": "alta",
+    "tags": ["chamadas_sequenciais", "melhorias", "v2", "monitoramento"],
+    "version": "2.0.0"
+  }
+} 

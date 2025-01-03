@@ -1,0 +1,39 @@
+{
+  "titulo": "Resolução de Duplicidade: Diretórios de Testes e Monitoramento",
+  "tipo": "arquitetura",
+  "contexto": "Existem diretórios duplicados na estrutura atual que violam a regra de numeração única na raiz. Especificamente:\n1. Testes em '00_testes_apenas_raiz' e 'backend_rag_ia/tests'\n2. Monitoramento em '05_monitoring_apenas_raiz' e 'backend_rag_ia/monitoring'",
+  "status": "aberto",
+  "data_inicio": "2024-01-02T18:30:00",
+  "argumentos": [
+    {
+      "autor": "Arquiteto",
+      "tipo": "problema",
+      "conteudo": "Problemas Identificados:\n1. Duplicidade de testes viola o princípio de ter um único local para testes\n2. Monitoramento dividido em dois locais diferentes\n3. Violação da regra de numeração única na raiz\n4. Possível confusão sobre onde adicionar novos testes/monitoramento",
+      "data": "2024-01-02T18:30:30"
+    },
+    {
+      "autor": "Desenvolvedor",
+      "tipo": "solucao",
+      "conteudo": "Proposta de Solução:\n\n1. Testes:\n- Manter apenas '00_testes_apenas_raiz'\n- Mover testes do core para '00_testes_apenas_raiz/core'\n- Remover diretório 'tests' do backend_rag_ia\n\n2. Monitoramento:\n- Consolidar em '05_monitoring_apenas_raiz'\n- Mover conteúdo de 'backend_rag_ia/monitoring' para '05_monitoring_apenas_raiz/core'\n- Remover diretório 'monitoring' do backend_rag_ia\n\nEstrutura Final:\n00_testes_apenas_raiz/\n  ├── core/          # Testes do core\n  ├── unit/          # Testes unitários gerais\n  └── integration/   # Testes de integração gerais\n\n05_monitoring_apenas_raiz/\n  ├── core/          # Monitoramento do core\n  └── external/      # Monitoramento de sistemas externos",
+      "data": "2024-01-02T18:31:00"
+    },
+    {
+      "autor": "QA",
+      "tipo": "validacao",
+      "conteudo": "Critérios de Validação:\n1. Todos os testes devem continuar funcionando após a migração\n2. Monitoramento não deve ter interrupção\n3. Imports devem ser atualizados\n4. Documentação deve refletir nova estrutura\n5. CI/CD deve ser atualizado se necessário",
+      "data": "2024-01-02T18:31:30"
+    },
+    {
+      "autor": "DevOps",
+      "tipo": "impacto",
+      "conteudo": "Impactos e Mitigações:\n1. Temporariamente manter imports antigos com deprecation warnings\n2. Atualizar documentação de contribuição\n3. Comunicar equipe sobre nova estrutura\n4. Criar scripts de migração automática",
+      "data": "2024-01-02T18:32:00"
+    }
+  ],
+  "resolucao": null,
+  "metadata": {
+    "impacto": "médio",
+    "prioridade": "alta",
+    "tags": ["arquitetura", "organizacao", "testes", "monitoramento"]
+  }
+}
