@@ -1,3 +1,5 @@
+"""Testes de inserção de embates."""
+
 import hashlib
 import json
 
@@ -29,66 +31,66 @@ def main():
     print("\nPreparando embate...")
     
     # Prepara o conteúdo do embate
-    embate_content = """# Migração para Pinecone Turbopuffer
+    embate_content = """# Unificação dos Diretórios de Testes de Integração
 
 ## Contexto
-O Pinecone anunciou que os índices vetoriais não-turbopuffer foram descontinuados. Como nossa aplicação utiliza o Pinecone para armazenamento de embeddings, precisamos migrar para a nova tecnologia Turbopuffer.
+Atualmente existem dois diretórios com testes de integração:
+1. `/00_testes_apenas_raiz/integration/`
+2. `/00_testes_apenas_raiz/core/integration/`
 
-## Decisão
-Migrar todos os índices vetoriais para o formato Turbopuffer do Pinecone. Esta decisão é necessária pois:
-- Os índices antigos foram descontinuados
-- O Turbopuffer é a nova tecnologia padrão
-- Precisamos manter o suporte e atualizações
-
-## Benefícios
-- Melhor performance na busca vetorial
-- Maior eficiência no uso de recursos
-- Suporte contínuo da plataforma
-- Acesso a recursos mais modernos
-
-## Plano de Implementação
-1. Backup dos dados existentes
-2. Criação de novos índices com Turbopuffer
-3. Migração dos dados para os novos índices
-4. Atualização das referências no código
-5. Testes de performance e validação
-
-## Código de Exemplo
-```python
-import pinecone
-
-# Inicialização com Turbopuffer
-pinecone.init(api_key='sua_api_key')
-pinecone.create_index(
-    name='seu_indice',
-    dimension=1536,  # dimensão dos embeddings
-    metric='cosine'
-)
-
-# Verificação do status
-index_description = pinecone.describe_index('seu_indice')
-print(index_description)
-```
-
-## Status
-Pendente de implementação
+Esta duplicação viola a regra de não repetir nomes de diretórios para evitar confusão.
 
 ## Impacto
-- Necessidade de downtime durante a migração
-- Possível necessidade de ajustes no código de busca vetorial
-- Melhoria esperada na performance após a migração"""
+- Confusão sobre onde adicionar novos testes
+- Dificuldade de manutenção
+- Possível duplicação de testes
+- Violação das regras de organização do projeto
+
+## Análise Técnica
+1. O diretório `/00_testes_apenas_raiz/integration/` contém a maioria dos testes
+2. O diretório `/00_testes_apenas_raiz/core/integration/` tem apenas:
+   - test_embates_integration.py (vazio)
+   - __init__.py (vazio)
+
+## Decisão
+Unificar os diretórios de teste movendo todo o conteúdo para `/00_testes_apenas_raiz/integration/` e remover o diretório `/00_testes_apenas_raiz/core/integration/`.
+
+## Plano de Implementação
+1. Verificar se há conteúdo relevante em `/core/integration/`
+2. Mover qualquer conteúdo necessário para `/integration/`
+3. Remover o diretório `/core/integration/`
+4. Atualizar documentação e referências se necessário
+
+## Status
+Resolvido
+
+## Implementação Realizada
+1. Verificado conteúdo dos arquivos em `/core/integration/`:
+   - test_embates_integration.py estava vazio
+   - __init__.py estava vazio
+2. Não foi necessário mover conteúdo pois os arquivos estavam vazios
+3. Removidos os arquivos:
+   - /00_testes_apenas_raiz/core/integration/test_embates_integration.py
+   - /00_testes_apenas_raiz/core/integration/__init__.py
+4. Diretório `/core/integration/` removido
+5. Todos os testes de integração agora estão unificados em `/00_testes_apenas_raiz/integration/`
+
+## Impacto da Mudança
+- Melhor organização do código
+- Conformidade com as regras do projeto
+- Facilita manutenção e adição de novos testes"""
     
     # Calcula o hash do documento
     document_hash = calculate_hash(embate_content)
     
-    # Prepara os dados para inserção no formato esperado pela API
+    # Prepara os dados para inserção
     document_data = {
         "content": embate_content,
         "metadata": {
-            "titulo": "Migração para Pinecone Turbopuffer",
-            "version_key": "migracao_turbopuffer_v1",
+            "titulo": "Unificação dos Diretórios de Testes de Integração",
+            "version_key": "unificacao_testes_integracao_v1",
             "tipo": "embate",
-            "status": "pending"
+            "status": "resolvido"
         },
         "document_hash": document_hash
     }

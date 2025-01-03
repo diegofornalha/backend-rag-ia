@@ -26,6 +26,9 @@ class EmbateHooks:
         
         Args:
             embate: Embate a ser criado
+            
+        Raises:
+            ValueError: Se campos obrigatórios estiverem faltando ou se detectada alucinação
         """
         # Valida campos obrigatórios
         if not embate.titulo:
@@ -39,6 +42,18 @@ class EmbateHooks:
         
         # Adiciona metadados
         embate.metadata["criado_em"] = datetime.now().isoformat()
+        
+        # Detecta alucinações
+        result = await self.manager.detect_hallucination(embate)
+        if result["status"] == "success" and result["is_hallucination"]:
+            raise ValueError(
+                f"Possível alucinação detectada:\n" + 
+                "\n".join([
+                    f"- {i}" for i in result["indicators"]["inconsistencias"]
+                ] + [
+                    f"- {d}" for d in result["indicators"]["duplicidades"]
+                ])
+            )
         
     async def post_create(self, embate: Dict[str, Any]) -> None:
         """

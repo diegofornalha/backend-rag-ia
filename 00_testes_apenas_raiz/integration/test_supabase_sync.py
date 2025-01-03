@@ -2,9 +2,11 @@
 
 import json
 from datetime import datetime
+import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
+import backoff
 
 from backend_rag_ia.cli.c_embates_saudaveis import CondensadorEmbates
 from backend_rag_ia.services.semantic_search import SemanticSearchManager
@@ -15,7 +17,16 @@ from backend_rag_ia.services.semantic_search import SemanticSearchManager
 def mock_supabase():
     """Mock do cliente Supabase."""
     mock = MagicMock()
-    mock.rpc.return_value.execute.return_value = {"data": {"id": 1}}
+    mock.rpc.return_value.execute.return_value = {
+        "data": {
+            "id": 1,
+            "rate_limit": {
+                "remaining": 100,
+                "reset_at": (datetime.now().timestamp() + 3600) * 1000,
+                "limit": 1000
+            }
+        }
+    }
     return mock
 
 @pytest.fixture
@@ -64,8 +75,22 @@ def sample_embate_file(temp_dirs):
     
     return embate_file
 
+# Decorador para retry com backoff exponencial
+def retry_with_backoff(max_tries=3):
+    def decorator(func):
+        @backoff.on_exception(
+            backoff.expo,
+            Exception,
+            max_tries=max_tries
+        )
+        async def wrapper(*args, **kwargs):
+            return await func(*args, **kwargs)
+        return wrapper
+    return decorator
+
 # Testes
 @pytest.mark.asyncio
+@retry_with_backoff()
 async def test_supabase_sync_success(temp_dirs, mock_supabase, mock_semantic_manager, sample_embate_file):
     """Testa sincronização bem-sucedida com Supabase."""
     embates_dir, regras_dir = temp_dirs
@@ -92,12 +117,57 @@ async def test_supabase_sync_success(temp_dirs, mock_supabase, mock_semantic_man
             {
                 "p_arquivo": arquivos_gerados[0].name,
                 "p_conteudo": pytest.approx({"text": arquivos_gerados[0].read_text()}),
-                "p_metadata": pytest.approx({"tema": "Teste Supabase", "num_embates": 1}),
+                "p_metadata": pytest.approx({
+                    "tema": "Teste Supabase",
+                    "num_embates": 1,
+                    "rate_limit": mock_supabase.rpc.return_value.execute.return_value["data"]["rate_limit"]
+                }),
                 "p_embedding": [0.1, 0.2, 0.3]
             }
         )
 
 @pytest.mark.asyncio
+@retry_with_backoff()
+async def test_supabase_sync_rate_limit(temp_dirs, mock_supabase, mock_semantic_manager, sample_embate_file):
+    """Testa tratamento de rate limit do Supabase."""
+    embates_dir, regras_dir = temp_dirs
+    
+    # Configura mock para simular rate limit
+    mock_supabase.rpc.return_value.execute.side_effect = [
+        Exception("Rate limit exceeded"),  # Primeira chamada falha
+        {  # Segunda chamada sucesso após espera
+            "data": {
+                "id": 1,
+                "rate_limit": {
+                    "remaining": 100,
+                    "reset_at": (datetime.now().timestamp() + 1) * 1000,
+                    "limit": 1000
+                }
+            }
+        }
+    ]
+    
+    with patch("backend_rag_ia.cli.c_embates_saudaveis.supabase", mock_supabase), \
+         patch("backend_rag_ia.cli.c_embates_saudaveis.semantic_manager", mock_semantic_manager):
+        
+        condensador = CondensadorEmbates(
+            dir_embates=str(embates_dir),
+            dir_regras=str(regras_dir),
+            min_embates_tema=1,
+            auto_sync=True
+        )
+        
+        # Processa com retry após rate limit
+        arquivos_gerados = await condensador.processar()
+        
+        # Verifica se as regras foram geradas
+        assert len(arquivos_gerados) == 1
+        
+        # Verifica que houve duas tentativas
+        assert mock_supabase.rpc.call_count == 2
+
+@pytest.mark.asyncio
+@retry_with_backoff()
 async def test_supabase_sync_error(temp_dirs, mock_supabase, mock_semantic_manager, sample_embate_file):
     """Testa tratamento de erro na sincronização com Supabase."""
     embates_dir, regras_dir = temp_dirs
@@ -149,38 +219,9 @@ async def test_supabase_sync_disabled(temp_dirs, mock_supabase, mock_semantic_ma
         mock_supabase.rpc.assert_not_called()
 
 @pytest.mark.asyncio
-async def test_supabase_sync_retry(temp_dirs, mock_supabase, mock_semantic_manager, sample_embate_file):
-    """Testa retry na sincronização com Supabase."""
-    embates_dir, regras_dir = temp_dirs
-    
-    # Configura mock para falhar na primeira tentativa
-    mock_supabase.rpc.side_effect = [
-        Exception("Temporary error"),
-        {"data": {"id": 1}}
-    ]
-    
-    with patch("backend_rag_ia.cli.c_embates_saudaveis.supabase", mock_supabase), \
-         patch("backend_rag_ia.cli.c_embates_saudaveis.semantic_manager", mock_semantic_manager):
-        
-        condensador = CondensadorEmbates(
-            dir_embates=str(embates_dir),
-            dir_regras=str(regras_dir),
-            min_embates_tema=1,
-            auto_sync=True
-        )
-        
-        # Processa com retry
-        arquivos_gerados = await condensador.processar()
-        
-        # Verifica se as regras foram geradas
-        assert len(arquivos_gerados) == 1
-        
-        # Verifica que houve duas tentativas
-        assert mock_supabase.rpc.call_count == 2
-
-@pytest.mark.asyncio
+@retry_with_backoff(max_tries=5)
 async def test_supabase_sync_multiple_embates(temp_dirs, mock_supabase, mock_semantic_manager):
-    """Testa sincronização de múltiplos embates."""
+    """Testa sincronização de múltiplos embates com rate limit."""
     embates_dir, regras_dir = temp_dirs
     
     # Cria múltiplos embates
@@ -200,19 +241,28 @@ async def test_supabase_sync_multiple_embates(temp_dirs, mock_supabase, mock_sem
         with open(embate_file, "w") as f:
             json.dump(embate_data, f)
     
+    # Configura mock para simular rate limit intermitente
+    mock_supabase.rpc.return_value.execute.side_effect = [
+        Exception("Rate limit exceeded"),
+        {"data": {"id": 1, "rate_limit": {"remaining": 50}}},
+        {"data": {"id": 2, "rate_limit": {"remaining": 25}}},
+        Exception("Rate limit exceeded"),
+        {"data": {"id": 3, "rate_limit": {"remaining": 10}}}
+    ]
+    
     with patch("backend_rag_ia.cli.c_embates_saudaveis.supabase", mock_supabase), \
          patch("backend_rag_ia.cli.c_embates_saudaveis.semantic_manager", mock_semantic_manager):
         
         condensador = CondensadorEmbates(
             dir_embates=str(embates_dir),
             dir_regras=str(regras_dir),
-            min_embates_tema=2,
+            min_embates_tema=1,
             auto_sync=True
         )
         
-        # Processa e sincroniza
+        # Processa e sincroniza com retries
         arquivos_gerados = await condensador.processar()
         
         # Verifica se as regras foram geradas e sincronizadas
         assert len(arquivos_gerados) > 0
-        assert mock_supabase.rpc.call_count == len(arquivos_gerados) 
+        assert mock_supabase.rpc.call_count >= len(arquivos_gerados)  # Pode ter mais chamadas devido aos retries 

@@ -123,3 +123,37 @@ class EmbateEventManager:
             Lista de eventos como dicionários
         """
         return [e.to_dict() for e in self.eventos] 
+
+class HallucinationEvent(EmbateEvent):
+    """Evento específico para detecção de alucinações."""
+    
+    def __init__(self,
+                 embate_id: str,
+                 indicators: Dict[str, Any],
+                 timestamp: Optional[datetime] = None):
+        """
+        Inicializa o evento de alucinação.
+        
+        Args:
+            embate_id: ID do embate onde foi detectada alucinação
+            indicators: Indicadores de alucinação
+            timestamp: Timestamp opcional do evento
+        """
+        super().__init__(
+            tipo="hallucination_detected",
+            dados={
+                "embate_id": embate_id,
+                "indicators": indicators
+            },
+            timestamp=timestamp
+        )
+        
+    @property
+    def score(self) -> float:
+        """Retorna o score de alucinação."""
+        return self.dados["indicators"]["score"]
+        
+    @property
+    def is_severe(self) -> bool:
+        """Indica se é uma alucinação severa."""
+        return self.score > 0.8 
