@@ -38,8 +38,8 @@ def check_supabase_connection() -> tuple[bool, Client]:
 def get_documents_count(supabase: Client) -> dict[str, Any]:
     """Obtém a contagem e lista de documentos."""
     try:
-        # Busca documentos na tabela
-        response = supabase.table("rag.01_base_conhecimento_regras_geral").select("*").execute()
+        # Busca documentos usando from_ com schema explícito
+        response = supabase.from_("01_base_conhecimento_regras_geral").select("*").execute()
         documents = response.data
 
         # Debug do formato dos documentos
@@ -51,6 +51,9 @@ def get_documents_count(supabase: Client) -> dict[str, Any]:
         return {"count": len(documents), "documents": documents}
     except Exception as e:
         console.print(f"❌ Erro ao buscar documentos: {e}")
+        console.print("\n🔧 Detalhes técnicos para debug:")
+        console.print(f"Tipo do erro: {type(e)}")
+        console.print(f"Mensagem completa: {str(e)}")
         return {"count": 0, "documents": []}
 
 
@@ -83,7 +86,7 @@ def display_documents_table(documents: list[dict]) -> None:
 def count_documents(supabase: Client) -> int:
     """Conta o número de documentos na base."""
     try:
-        response = supabase.table("rag.01_base_conhecimento_regras_geral").select("*", count="exact").execute()
+        response = supabase.from_("01_base_conhecimento_regras_geral").select("*", count="exact").execute()
         return response.count if hasattr(response, 'count') else 0
     except Exception as e:
         print(f"Erro ao contar documentos: {e}")
