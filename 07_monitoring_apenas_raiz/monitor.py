@@ -5,9 +5,12 @@ import logging
 import time
 from pathlib import Path
 from typing import Any
+import socket
 
 import psutil
 import yaml
+
+from core.embates_monitor import EmbatesMonitor
 
 # Configuração de logging
 logging.basicConfig(
@@ -28,6 +31,22 @@ class Monitor:
         self.embates_dir = Path(self.monitoring_config.get('embates_dir', 'embates'))
         self.api_url = self.monitoring_config.get('api_url', 'http://localhost:10000')
         self.check_interval = self.monitoring_config.get('check_interval', 60)
+        
+        # Inicializa o monitor de embates
+        self.embates_monitor = EmbatesMonitor(self.config)
+        
+        # Configuração de rede
+        self.hostname = "localhost"
+        try:
+            # Tenta obter IP real
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            self.ip_local = s.getsockname()[0]
+            s.close()
+        except:
+            # Fallback para localhost
+            self.ip_local = "127.0.0.1"
+            logger.warning("Usando IP local fallback")
     
     def _load_config(self, config_path: str) -> dict[str, Any]:
         """Carrega configurações do arquivo YAML."""
@@ -44,92 +63,76 @@ class Monitor:
             return
             
         try:
-            abertos = resolvidos = 0
-            tempos_resolucao = []
-            concordancias = []
-            tags = {}
+            # Verifica proteção DDoS
+            if self.embates_monitor.verificar_ddos(self.ip_local):
+                logger.error("Possível ataque DDoS detectado - Sistema em proteção")
+                return
             
-            for arquivo in self.embates_dir.glob("embate_*.json"):
-                with open(arquivo) as f:
-                    dados = json.load(f)
+            # Verifica se pode incrementar ferramentas
+            if not self.embates_monitor.incrementar_tools():
+                logger.warning("Sistema em contenção - Aguardando...")
+                time.sleep(2)  # Pausa para contenção
+                self.embates_monitor.retomar_embate()
+                return
                 
-                # Status
-                if dados['status'] == 'aberto':
-                    abertos += 1
-                else:
-                    resolvidos += 1
-                    
-                    # Tempo de resolução
-                    if 'data_inicio' in dados and 'data_resolucao' in dados:
-                        inicio = time.strptime(dados['data_inicio'], "%Y-%m-%dT%H:%M:%S")
-                        fim = time.strptime(dados['data_resolucao'], "%Y-%m-%dT%H:%M:%S")
-                        horas = (time.mktime(fim) - time.mktime(inicio)) / 3600
-                        tempos_resolucao.append(horas)
-                
-                # Concordância
-                if dados.get('decisao') and dados.get('argumentos'):
-                    votos_favor = sum(1 for arg in dados['argumentos'] if 'concordo' in arg['conteudo'].lower())
-                    concordancia = votos_favor / len(dados['argumentos'])
-                    concordancias.append(concordancia)
-                
-                # Tags
-                for tag in dados.get('tags', []):
-                    tags[tag] = tags.get(tag, 0) + 1
+            # Coleta métricas do sistema
+            cpu = psutil.cpu_percent(interval=1) / 100
+            memoria = psutil.virtual_memory().percent / 100
+            disco = psutil.disk_usage('/').percent / 100
             
-            # Log métricas
-            logger.info("Métricas de embates", extra={
-                'embates_abertos': abertos,
-                'embates_resolvidos': resolvidos,
-                'tempo_medio_resolucao': sum(tempos_resolucao)/len(tempos_resolucao) if tempos_resolucao else 0,
-                'taxa_concordancia': sum(concordancias)/len(concordancias) if concordancias else 0,
-                'tags': tags
-            })
+            # Hidrata as métricas
+            self.embates_monitor.hidratar_metrica("cpu", cpu)
+            self.embates_monitor.hidratar_metrica("memoria", memoria)
+            self.embates_monitor.hidratar_metrica("disco", disco)
+            
+            # Verifica limites e gera relatório
+            limites = self.embates_monitor.verificar_limites()
+            if any(limites.values()):
+                logger.warning("Limites excedidos detectados!")
+                
+            # Salva relatório
+            self.embates_monitor.salvar_relatorio(self.embates_dir)
             
         except Exception as e:
             logger.error(f"Erro ao verificar embates: {e}")
     
     def check_sistema(self) -> None:
-        """Monitora recursos do sistema."""
+        """Verifica métricas do sistema."""
         if not self.monitoring_config.get('metrics', {}).get('system', {}).get('enabled', True):
             return
             
         try:
-            cpu = psutil.cpu_percent()
-            memoria = psutil.virtual_memory().percent
-            disco = psutil.disk_usage('/').percent
+            cpu_percent = psutil.cpu_percent(interval=1)
+            mem_percent = psutil.virtual_memory().percent
+            disk_percent = psutil.disk_usage('/').percent
             
-            logger.info("Métricas do sistema", extra={
-                'cpu_percent': cpu,
-                'memoria_percent': memoria,
-                'disco_percent': disco
-            })
+            # Verifica proteção DDoS nos recursos do sistema
+            if (cpu_percent > self.embates_monitor.ddos_config["limite_cpu"] and
+                mem_percent > self.embates_monitor.ddos_config["limite_memoria"]):
+                logger.warning("Possível DDoS detectado através do uso de recursos!")
+            
+            logger.info(f"CPU: {cpu_percent}% | Memória: {mem_percent}% | Disco: {disk_percent}%")
+            
         except Exception as e:
-            logger.error(f"Erro ao monitorar sistema: {e}")
+            logger.error(f"Erro ao verificar sistema: {e}")
     
     def run(self) -> None:
         """Executa o loop principal de monitoramento."""
-        logger.info("Iniciando monitoramento...")
+        logger.info(f"Iniciando monitoramento no host: {self.hostname} ({self.ip_local})")
         
-        while True:
-            try:
-                if self.test_settings.get('auto_proceed', True):
-                    self.check_embates()
-                    self.check_sistema()
-                else:
-                    # Modo interativo (não usado no momento)
-                    pass
-                
+        try:
+            while True:
+                self.check_embates()
+                self.check_sistema()
                 time.sleep(self.check_interval)
                 
-            except KeyboardInterrupt:
-                logger.info("Monitoramento interrompido pelo usuário")
-                break
-            except Exception as e:
-                logger.error(f"Erro no loop de monitoramento: {e}")
-                if not self.test_settings.get('fail_fast', False):
-                    time.sleep(self.check_interval)
-                else:
-                    break
+        except KeyboardInterrupt:
+            logger.info("Monitoramento interrompido pelo usuário")
+        except Exception as e:
+            logger.error(f"Erro no loop de monitoramento: {e}")
+        finally:
+            # Salva relatório final
+            self.embates_monitor.salvar_relatorio(self.embates_dir)
 
 if __name__ == "__main__":
     monitor = Monitor()
