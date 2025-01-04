@@ -1,0 +1,138 @@
+{
+  "id": "api_batch_rag",
+  "title": "Implementação dos Endpoints de Operações em Lote",
+  "description": "Define a implementação dos endpoints para processamento em lote",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "id": "batch_upload",
+      "title": "Upload em Lote",
+      "description": "Implementa endpoint de upload em lote de documentos",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def batch_upload(documents: List[DocumentCreate]):
+    try:
+        # Criar registro da operação em lote
+        batch_data = {
+            'status': 'processing',
+            'total_items': len(documents),
+            'processed_items': 0,
+            'errors': []
+        }
+        
+        batch_result = await supabase.table('rag.batch_operations').insert(batch_data).execute()
+        batch_id = batch_result.data[0]['id']
+        
+        # Iniciar processamento assíncrono
+        background_tasks.add_task(process_batch_upload, batch_id, documents)
+        
+        return BatchOperation(**batch_result.data[0])
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def process_batch_upload(batch_id: str, documents: List[DocumentCreate]):
+    try:
+        errors = []
+        processed = 0
+        
+        for doc in documents:
+            try:
+                # Processar cada documento
+                content = json.dumps(doc.conteudo, sort_keys=True)
+                content_hash = hashlib.sha256(content.encode()).hexdigest()
+                
+                # Verificar duplicidade
+                result = await supabase.rpc('check_duplicate_content', {'content_hash': content_hash}).execute()
+                if result.data:
+                    errors.append(f"Documento duplicado: {doc.titulo}")
+                    continue
+                
+                # Inserir documento
+                doc_data = {
+                    'titulo': doc.titulo,
+                    'conteudo': doc.conteudo,
+                    'content_hash': content_hash,
+                    'metadata': doc.metadata or {}
+                }
+                
+                await supabase.table('rag.01_base_conhecimento_regras_geral').insert(doc_data).execute()
+                processed += 1
+                
+            except Exception as e:
+                errors.append(f"Erro ao processar {doc.titulo}: {str(e)}")
+                
+            # Atualizar progresso
+            await supabase.table('rag.batch_operations').update({
+                'processed_items': processed,
+                'errors': errors
+            }).eq('id', batch_id).execute()
+            
+        # Finalizar processamento
+        status = 'completed' if not errors else 'completed_with_errors'
+        await supabase.table('rag.batch_operations').update({
+            'status': status,
+            'processed_items': processed,
+            'errors': errors
+        }).eq('id', batch_id).execute()
+        
+        # Atualizar estatísticas
+        await supabase.rpc('update_statistics').execute()
+        
+    except Exception as e:
+        # Registrar erro geral
+        await supabase.table('rag.batch_operations').update({
+            'status': 'failed',
+            'errors': [str(e)]
+        }).eq('id', batch_id).execute()
+        """
+      }
+    },
+    {
+      "id": "get_batch_status",
+      "title": "Status do Lote",
+      "description": "Implementa endpoint de consulta de status do lote",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def get_batch_status(batch_id: str = Path(...)):
+    try:
+        result = await supabase.table('rag.batch_operations').select('*').eq('id', batch_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Operação em lote não encontrada")
+            
+        return BatchOperation(**result.data[0])
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    }
+  ],
+  "dependencies": {
+    "python": ["fastapi", "python-dotenv", "supabase"],
+    "environment": ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
+  },
+  "tests": {
+    "batch_upload": {
+      "input": {
+        "documents": [
+          {
+            "titulo": "Doc 1",
+            "conteudo": {"texto": "Teste 1"}
+          },
+          {
+            "titulo": "Doc 2",
+            "conteudo": {"texto": "Teste 2"}
+          }
+        ]
+      },
+      "expected": {
+        "status": 200,
+        "has_batch_id": true
+      }
+    }
+  }
+} 

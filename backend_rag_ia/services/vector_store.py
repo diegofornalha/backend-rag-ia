@@ -1,6 +1,9 @@
+"""Módulo para interagir com o Supabase Vector Store.
+
+Este módulo fornece uma classe para gerenciar documentos no Supabase Vector Store,
+incluindo operações CRUD e busca por similaridade.
 """
-Serviço para interagir com o Supabase Vector Store.
-"""
+
 import logging
 import os
 from typing import Any
@@ -14,10 +17,21 @@ logger = logging.getLogger(__name__)
 
 
 class VectorStore:
-    """Classe para interagir com o Supabase Vector Store."""
+    """Classe para interagir com o Supabase Vector Store.
+
+    Esta classe fornece métodos para gerenciar documentos no Supabase Vector Store,
+    incluindo inserção, atualização, remoção e busca por similaridade.
+    """
 
     def __init__(self) -> None:
-        """Inicializa o cliente Supabase."""
+        """Inicializa o cliente Supabase.
+
+        Raises
+        ------
+        ValueError
+            Se as variáveis de ambiente SUPABASE_URL e SUPABASE_KEY não estiverem definidas.
+
+        """
         supabase_url = os.getenv("SUPABASE_URL")
         supabase_key = os.getenv("SUPABASE_KEY")
 
@@ -27,17 +41,31 @@ class VectorStore:
         self.supabase_client: Client = create_client(supabase_url, supabase_key)
 
     def insert_document(self, titulo: str, conteudo: dict[str, Any], document_hash: str, version_key: str) -> str:
-        """
-        Insere um documento no Supabase.
+        """Insere um documento no Supabase.
 
-        Args:
-            titulo: Título do documento
-            conteudo: Conteúdo do documento
-            document_hash: Hash do documento
-            version_key: Chave de versão
+        Parameters
+        ----------
+        titulo : str
+            Título do documento.
+        conteudo : dict[str, Any]
+            Conteúdo do documento.
+        document_hash : str
+            Hash do documento.
+        version_key : str
+            Chave de versão.
 
-        Returns:
-            ID do documento inserido
+        Returns
+        -------
+        str
+            ID do documento inserido.
+
+        Raises
+        ------
+        ValueError
+            Se houver erro ao inserir o documento.
+        Exception
+            Se ocorrer um erro durante a operação.
+
         """
         try:
             response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').insert({
@@ -57,14 +85,23 @@ class VectorStore:
             raise
 
     def get_document(self, document_id: str) -> dict[str, Any] | None:
-        """
-        Obtém um documento do Supabase.
+        """Obtém um documento do Supabase.
 
-        Args:
-            document_id: ID do documento
+        Parameters
+        ----------
+        document_id : str
+            ID do documento.
 
-        Returns:
-            Documento ou None se não encontrado
+        Returns
+        -------
+        dict[str, Any] | None
+            Documento encontrado ou None se não encontrado.
+
+        Raises
+        ------
+        Exception
+            Se ocorrer um erro durante a operação.
+
         """
         try:
             response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').select('*').eq('id', document_id).execute()
@@ -75,15 +112,28 @@ class VectorStore:
             raise
 
     def update_document(self, document_id: str, titulo: str, conteudo: dict[str, Any], document_hash: str, version_key: str) -> None:
-        """
-        Atualiza um documento no Supabase.
+        """Atualiza um documento no Supabase.
 
-        Args:
-            document_id: ID do documento
-            titulo: Título do documento
-            conteudo: Conteúdo do documento
-            document_hash: Hash do documento
-            version_key: Chave de versão
+        Parameters
+        ----------
+        document_id : str
+            ID do documento.
+        titulo : str
+            Título do documento.
+        conteudo : dict[str, Any]
+            Conteúdo do documento.
+        document_hash : str
+            Hash do documento.
+        version_key : str
+            Chave de versão.
+
+        Raises
+        ------
+        ValueError
+            Se houver erro ao atualizar o documento.
+        Exception
+            Se ocorrer um erro durante a operação.
+
         """
         try:
             response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').update({
@@ -101,11 +151,20 @@ class VectorStore:
             raise
 
     def delete_document(self, document_id: str) -> None:
-        """
-        Remove um documento do Supabase.
+        """Remove um documento do Supabase.
 
-        Args:
-            document_id: ID do documento
+        Parameters
+        ----------
+        document_id : str
+            ID do documento.
+
+        Raises
+        ------
+        ValueError
+            Se houver erro ao deletar o documento.
+        Exception
+            Se ocorrer um erro durante a operação.
+
         """
         try:
             response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').delete().eq('id', document_id).execute()
@@ -117,11 +176,18 @@ class VectorStore:
             raise
 
     def list_documents(self) -> list[dict[str, Any]]:
-        """
-        Lista todos os documentos do Supabase.
+        """Lista todos os documentos do Supabase.
 
-        Returns:
-            Lista de documentos
+        Returns
+        -------
+        list[dict[str, Any]]
+            Lista de documentos.
+
+        Raises
+        ------
+        Exception
+            Se ocorrer um erro durante a operação.
+
         """
         try:
             response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').select('*').execute()
@@ -132,15 +198,25 @@ class VectorStore:
             raise
 
     def search_similar_documents(self, query_embedding: list[float], match_count: int = 5) -> list[tuple[dict[str, Any], float]]:
-        """
-        Busca documentos similares usando o embedding da query.
+        """Busca documentos similares usando o embedding da query.
 
-        Args:
-            query_embedding: Embedding da query
-            match_count: Número de documentos para retornar
+        Parameters
+        ----------
+        query_embedding : list[float]
+            Embedding da query.
+        match_count : int, optional
+            Número de documentos para retornar, by default 5.
 
-        Returns:
-            Lista de tuplas (documento, similaridade)
+        Returns
+        -------
+        list[tuple[dict[str, Any], float]]
+            Lista de tuplas (documento, similaridade).
+
+        Raises
+        ------
+        Exception
+            Se ocorrer um erro durante a operação.
+
         """
         try:
             response = self.supabase_client.rpc(

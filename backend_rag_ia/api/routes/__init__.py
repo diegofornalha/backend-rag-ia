@@ -10,4 +10,4 @@ __all__ = [
     'health_router',
     'documents_router',
     'statistics_router'
-] 
+]

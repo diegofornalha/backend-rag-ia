@@ -1,0 +1,54 @@
+# Configuração do ruff para o projeto
+
+# Versão do Python alvo
+target-version = "py39"
+
+# Regras selecionadas
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "C",   # mccabe
+    "D",   # pydocstyle
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "S",   # flake8-bandit
+]
+
+# Regras ignoradas
+ignore = [
+    "D203",  # 1 blank line required before class docstring
+    "D213",  # Multi-line docstring summary should start at the second line
+]
+
+# Comprimento máximo de linha
+line-length = 100
+
+# Configurações de docstring
+[pydocstyle]
+convention = "google"
+
+# Configurações de complexidade
+[mccabe]
+max-complexity = 10
+
+# Configurações de imports
+[isort]
+known-first-party = ["backend_rag_ia"]
+known-third-party = ["fastapi", "pydantic", "pytest"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+# Configurações de paths
+[per-file-ignores]
+"tests/*" = ["S101"]  # Ignore assert statements in tests
+"__init__.py" = ["F401"]  # Ignore unused imports in __init__.py files
+
+# Configurações de exclusão
+exclude = [
+    ".git",
+    ".pytest_cache",
+    "__pycache__",
+    "build",
+    "dist",
+] 

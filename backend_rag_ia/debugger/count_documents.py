@@ -1,3 +1,9 @@
+"""Módulo para contagem e visualização de documentos no Supabase.
+
+Este módulo fornece funções para verificar a conexão com o Supabase,
+contar documentos e exibir informações sobre eles em formato tabular.
+"""
+
 #!/usr/bin/env python3
 
 import json
@@ -15,7 +21,15 @@ console = Console()
 
 
 def check_supabase_connection() -> tuple[bool, Client]:
-    """Verifica conexão com o Supabase."""
+    """Verifica conexão com o Supabase.
+
+    Returns
+    -------
+    tuple[bool, Client]
+        Um par contendo um booleano indicando sucesso da conexão
+        e o cliente Supabase se bem sucedido, ou None se falhou.
+
+    """
     try:
         supabase_url = os.getenv("SUPABASE_URL")
         supabase_key = os.getenv("SUPABASE_KEY")
@@ -36,7 +50,19 @@ def check_supabase_connection() -> tuple[bool, Client]:
 
 
 def get_documents_count(supabase: Client) -> dict[str, Any]:
-    """Obtém a contagem e lista de documentos."""
+    """Obtém a contagem e lista de documentos.
+
+    Parameters
+    ----------
+    supabase : Client
+        Cliente Supabase conectado.
+
+    Returns
+    -------
+    dict[str, Any]
+        Dicionário contendo a contagem e lista de documentos.
+
+    """
     try:
         # Busca documentos usando from_ com schema explícito
         response = supabase.from_("01_base_conhecimento_regras_geral").select("*").execute()
@@ -58,7 +84,14 @@ def get_documents_count(supabase: Client) -> dict[str, Any]:
 
 
 def display_documents_table(documents: list[dict]) -> None:
-    """Exibe uma tabela formatada com os documentos."""
+    """Exibe uma tabela formatada com os documentos.
+
+    Parameters
+    ----------
+    documents : list[dict]
+        Lista de documentos a serem exibidos.
+
+    """
     table = Table(title="Documentos no Supabase")
 
     table.add_column("ID", style="cyan")
@@ -68,7 +101,7 @@ def display_documents_table(documents: list[dict]) -> None:
 
     for doc in documents:
         content = doc.get("conteudo", {}).get("text", "N/A")
-        
+
         # Limita o tamanho do conteúdo
         if len(content) > 47:
             content = content[:47] + "..."
@@ -84,7 +117,19 @@ def display_documents_table(documents: list[dict]) -> None:
 
 
 def count_documents(supabase: Client) -> int:
-    """Conta o número de documentos na base."""
+    """Conta o número de documentos na base.
+
+    Parameters
+    ----------
+    supabase : Client
+        Cliente Supabase conectado.
+
+    Returns
+    -------
+    int
+        Número total de documentos.
+
+    """
     try:
         response = supabase.from_("01_base_conhecimento_regras_geral").select("*", count="exact").execute()
         return response.count if hasattr(response, 'count') else 0
@@ -94,7 +139,12 @@ def count_documents(supabase: Client) -> int:
 
 
 def main() -> None:
-    """Função principal."""
+    """Função principal.
+
+    Executa a verificação de documentos no Supabase,
+    exibindo a contagem e detalhes em formato tabular.
+
+    """
     console.print("🔍 Verificando documentos no Supabase...")
 
     # Verifica conexão com Supabase

@@ -1,364 +1,182 @@
-"""
-Métricas do sistema.
+"""Implementa sistema de métricas.
+
+Este módulo fornece classes e funções para coletar, armazenar
+e agregar métricas do sistema.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
-import time
+from datetime import datetime
+from typing import Any
 
-# Constantes
-MAX_TOOLS = 3  # Limite máximo de ferramentas
-
-def testar_limite_ferramentas():
-    """Função para testar o limite de ferramentas."""
-    print("\nTestando limite de ferramentas:")
-    print("--------------------------------")
-    
-    metrica = Metrica(
-        nome="teste",
-        valor=1.0,
-        timestamp=datetime.now()
-    )
-    
-    # Testa incrementos até passar do limite
-    for i in range(MAX_TOOLS + 1):
-        resultado = metrica.incrementar_tools()
-        print(f"Ferramenta {i+1}: {'✅ Permitido' if resultado else '❌ Bloqueado'}")
-    
-    print(f"\nTotal de ferramentas usadas: {metrica.tools_count}")
 
 @dataclass
-class Metrica:
-    """Modelo para métricas."""
-    nome: str
-    valor: float
-    timestamp: datetime
-    tags: Dict[str, str] = None
-    tools_count: int = 0
-    modo_contencao: bool = False
-    embate_ativo: bool = True
-    tema_atual: Optional[str] = None
+class MetricValue:
+    """Define um valor de métrica com metadados.
 
-    def incrementar_tools(self) -> bool:
-        """
-        Incrementa contador de ferramentas e verifica limite.
-        
-        Returns:
-            True se ainda não atingiu limite, False caso contrário
-        """
-        if not self.embate_ativo:
-            return False
-            
-        self.tools_count += 1
-        hora_atual = datetime.now().strftime("%H:%M:%S")
-        
-        if self.tools_count >= MAX_TOOLS:
-            if not self.modo_contencao:
-                print(f"\n🛑 AVISO: Embate em ação! [{hora_atual}]")
-                if not self.tema_atual:
-                    self.tema_atual = self.nome
-                print(f"Tema do embate: {self.tema_atual}")
-                print(f"CLI interrompido após {self.tools_count} ferramentas.")
-                print("Sistema entrando em modo de contenção...")
-                self.modo_contencao = True
-                return False
-            else:
-                print(f"\n⏸️  Sistema em contenção [{hora_atual}]")
-                print("Aguardando 2 segundos...")
-                time.sleep(2)
-                print(f"\n🔄 Reativando embate sobre '{self.tema_atual}'... [{datetime.now().strftime('%H:%M:%S')}]")
-                print("Sistema retomando fluxo de embates.")
-                print("\n> Digite 'continue' para prosseguir ou 'stop' para interromper")
-                comando = "continue"  # Simulando input do usuário
-                print(comando)
-                
-                if comando.lower() == "stop":
-                    print("\n🛑 Embate interrompido manualmente pelo usuário.")
-                    self.embate_ativo = False
-                    return False
-                    
-                print(f"\n✨ Embate sobre '{self.tema_atual}' continuando...")
-                self.modo_contencao = False
-                # Reseta o contador mas mantém o embate ativo
-                self.tools_count = 0
-                return True
-        return True
+    Attributes
+    ----------
+    value : float | int
+        Valor da métrica.
+    timestamp : datetime
+        Momento em que a métrica foi registrada.
+    metadata : dict[str, Any] | None
+        Metadados adicionais da métrica.
 
-    def interromper_embate(self) -> None:
-        """Interrompe manualmente o embate atual."""
-        hora_atual = datetime.now().strftime("%H:%M:%S")
-        print(f"\n🛑 Embate sobre '{self.tema_atual}' interrompido manualmente [{hora_atual}]")
-        self.embate_ativo = False
-        self.modo_contencao = False
+    """
 
-@dataclass
-class CacheMetric:
-    """Métrica de cache."""
-    hits: int = 0
-    misses: int = 0
-    tamanho: int = 0
-    ultima_limpeza: Optional[datetime] = None
-    
-    @property
-    def hit_rate(self) -> float:
-        """Taxa de acertos do cache."""
-        total = self.hits + self.misses
-        return self.hits / total if total > 0 else 0.0
+    value: float | int
+    timestamp: datetime = datetime.now()
+    metadata: dict[str, Any] | None = None
 
-@dataclass
-class ResponseTimeMetric:
-    """Métrica de tempo de resposta."""
-    tempos: List[float] = None
-    
-    def __post_init__(self):
-        if self.tempos is None:
-            self.tempos = []
-            
-    async def record_request(self, inicio: datetime, fim: datetime) -> None:
-        """Registra tempo de uma requisição."""
-        tempo = (fim - inicio).total_seconds() * 1000  # em ms
-        self.tempos.append(tempo)
-        
-    async def get_stats(self) -> Dict:
-        """Calcula estatísticas dos tempos."""
-        if not self.tempos:
-            return {
-                "avg_response_time": 0,
-                "p95_response_time": 0,
-                "p99_response_time": 0
-            }
-            
-        tempos_ordenados = sorted(self.tempos)
-        n = len(tempos_ordenados)
-        
-        return {
-            "avg_response_time": sum(self.tempos) / n,
-            "p95_response_time": tempos_ordenados[int(n * 0.95)],
-            "p99_response_time": tempos_ordenados[int(n * 0.99)]
-        }
 
-@dataclass
-class SearchAccuracyMetric:
-    """Métrica de precisão da busca."""
-    relevantes: int = 0
-    irrelevantes: int = 0
-    
-    async def record_relevant_result(self) -> None:
-        """Registra resultado relevante."""
-        self.relevantes += 1
-        
-    async def record_irrelevant_result(self) -> None:
-        """Registra resultado irrelevante."""
-        self.irrelevantes += 1
-        
-    async def get_stats(self) -> Dict:
-        """Calcula estatísticas de precisão."""
-        total = self.relevantes + self.irrelevantes
-        return {
-            "accuracy": self.relevantes / total if total > 0 else 0,
-            "total_searches": total,
-            "relevant_results": self.relevantes,
-            "irrelevant_results": self.irrelevantes
-        }
+class MetricCollector:
+    """Coleta e armazena métricas do sistema.
 
-@dataclass
-class DependencyMetric:
-    """Métrica de dependências."""
-    conflicts: int = 0
-    outdated: List[str] = None
-    incompatible: List[str] = None
-    
-    def __post_init__(self):
-        if self.outdated is None:
-            self.outdated = []
-        if self.incompatible is None:
-            self.incompatible = []
-            
-    async def check_dependencies(self) -> None:
-        """Verifica dependências."""
-        # Implementação simplificada por enquanto
-        pass
-        
-    async def get_stats(self) -> Dict:
-        """Retorna estatísticas de dependências."""
-        return {
-            "conflicts": self.conflicts,
-            "outdated": self.outdated,
-            "incompatible": self.incompatible
-        }
+    Esta classe fornece métodos para registrar e recuperar
+    valores de métricas ao longo do tempo.
 
-class MetricsCollector:
-    """Coletor de métricas do sistema."""
-    
-    def __init__(self, janela_retencao: int = 30):
+    """
+
+    def __init__(self) -> None:
+        """Inicializa o coletor de métricas."""
+        self._metrics: dict[str, list[MetricValue]] = {}
+
+    def record(self, name: str, value: float | int, metadata: dict[str, Any] | None = None) -> None:
+        """Registra um novo valor de métrica.
+
+        Parameters
+        ----------
+        name : str
+            Nome da métrica.
+        value : float | int
+            Valor a ser registrado.
+        metadata : dict[str, Any] | None, optional
+            Metadados adicionais, por padrão None.
+
         """
-        Inicializa o coletor.
-        
-        Args:
-            janela_retencao: Dias para manter métricas
+        if name not in self._metrics:
+            self._metrics[name] = []
+        self._metrics[name].append(MetricValue(value, metadata=metadata))
+
+    def get_metric(self, name: str) -> list[MetricValue] | None:
+        """Retorna todos os valores de uma métrica.
+
+        Parameters
+        ----------
+        name : str
+            Nome da métrica.
+
+        Returns
+        -------
+        list[MetricValue] | None
+            Lista de valores ou None se a métrica não existe.
+
         """
-        self.janela_retencao = janela_retencao
-        self.metricas: List[Metrica] = []
-        self.cache_metrics = CacheMetric()
-        self.response_time = ResponseTimeMetric()
-        self.search_accuracy = SearchAccuracyMetric()
-        self.dependency = DependencyMetric()
-        
-    def registrar(self, nome: str, valor: float, tags: Dict[str, str] = None) -> None:
+        return self._metrics.get(name)
+
+    def get_latest(self, name: str) -> MetricValue | None:
+        """Retorna o valor mais recente de uma métrica.
+
+        Parameters
+        ----------
+        name : str
+            Nome da métrica.
+
+        Returns
+        -------
+        MetricValue | None
+            Valor mais recente ou None se a métrica não existe.
+
         """
-        Registra uma nova métrica.
-        
-        Args:
-            nome: Nome da métrica
-            valor: Valor da métrica
-            tags: Tags opcionais
+        values = self._metrics.get(name, [])
+        return values[-1] if values else None
+
+    def clear(self, name: str | None = None) -> None:
+        """Remove métricas do coletor.
+
+        Parameters
+        ----------
+        name : str | None, optional
+            Nome da métrica a remover, por padrão None.
+            Se None, remove todas as métricas.
+
         """
-        metrica = Metrica(
-            nome=nome,
-            valor=valor,
-            timestamp=datetime.now(),
-            tags=tags or {}
-        )
-        
-        # Verifica limite de ferramentas
-        if not metrica.incrementar_tools():
-            raise ValueError(f"Limite de {MAX_TOOLS} ferramentas atingido")
-            
-        self.metricas.append(metrica)
-        self._limpar_antigas()
-        
-    def registrar_cache_hit(self) -> None:
-        """Registra um acerto no cache."""
-        self.cache_metrics.hits += 1
-        
-    def registrar_cache_miss(self) -> None:
-        """Registra um erro no cache."""
-        self.cache_metrics.misses += 1
-        
-    def atualizar_tamanho_cache(self, tamanho: int) -> None:
+        if name:
+            self._metrics.pop(name, None)
+        else:
+            self._metrics.clear()
+
+
+class MetricAggregator:
+    """Agrega valores de métricas.
+
+    Esta classe fornece métodos para calcular agregações
+    como média, soma e contagem de valores de métricas.
+
+    """
+
+    def __init__(self, collector: MetricCollector) -> None:
+        """Inicializa o agregador de métricas.
+
+        Parameters
+        ----------
+        collector : MetricCollector
+            Coletor de métricas a ser usado.
+
         """
-        Atualiza tamanho do cache.
-        
-        Args:
-            tamanho: Novo tamanho
+        self.collector = collector
+
+    def average(self, name: str) -> float | None:
+        """Calcula a média dos valores de uma métrica.
+
+        Parameters
+        ----------
+        name : str
+            Nome da métrica.
+
+        Returns
+        -------
+        float | None
+            Média dos valores ou None se a métrica não existe.
+
         """
-        self.cache_metrics.tamanho = tamanho
-        
-    def registrar_limpeza_cache(self) -> None:
-        """Registra limpeza do cache."""
-        self.cache_metrics.ultima_limpeza = datetime.now()
-        
-    def get_metricas(self, nome: Optional[str] = None, tags: Dict[str, str] = None) -> List[Metrica]:
+        values = self.collector.get_metric(name)
+        if not values:
+            return None
+        return sum(v.value for v in values) / len(values)
+
+    def sum(self, name: str) -> float | None:
+        """Calcula a soma dos valores de uma métrica.
+
+        Parameters
+        ----------
+        name : str
+            Nome da métrica.
+
+        Returns
+        -------
+        float | None
+            Soma dos valores ou None se a métrica não existe.
+
         """
-        Busca métricas com filtros.
-        
-        Args:
-            nome: Filtrar por nome
-            tags: Filtrar por tags
-            
-        Returns:
-            Lista de métricas filtradas
+        values = self.collector.get_metric(name)
+        if not values:
+            return None
+        return sum(v.value for v in values)
+
+    def count(self, name: str) -> int:
+        """Conta quantos valores uma métrica possui.
+
+        Parameters
+        ----------
+        name : str
+            Nome da métrica.
+
+        Returns
+        -------
+        int
+            Número de valores registrados.
+
         """
-        metricas = self.metricas
-        
-        if nome:
-            metricas = [m for m in metricas if m.nome == nome]
-            
-        if tags:
-            metricas = [
-                m for m in metricas
-                if all(m.tags.get(k) == v for k, v in tags.items())
-            ]
-            
-        return metricas
-        
-    def get_estatisticas(self, nome: str, periodo: timedelta = None) -> Dict:
-        """
-        Calcula estatísticas de uma métrica.
-        
-        Args:
-            nome: Nome da métrica
-            periodo: Período para análise
-            
-        Returns:
-            Estatísticas calculadas
-        """
-        metricas = self.get_metricas(nome)
-        
-        if periodo:
-            limite = datetime.now() - periodo
-            metricas = [m for m in metricas if m.timestamp > limite]
-            
-        if not metricas:
-            return {
-                "total": 0,
-                "media": 0.0,
-                "min": 0.0,
-                "max": 0.0
-            }
-            
-        valores = [m.valor for m in metricas]
-        return {
-            "total": len(valores),
-            "media": sum(valores) / len(valores),
-            "min": min(valores),
-            "max": max(valores)
-        }
-        
-    def get_cache_metrics(self) -> Dict:
-        """
-        Retorna métricas do cache.
-        
-        Returns:
-            Métricas do cache
-        """
-        return {
-            "hits": self.cache_metrics.hits,
-            "misses": self.cache_metrics.misses,
-            "hit_rate": self.cache_metrics.hit_rate,
-            "tamanho": self.cache_metrics.tamanho,
-            "ultima_limpeza": self.cache_metrics.ultima_limpeza
-        }
-        
-    async def collect_all(self) -> None:
-        """Coleta todas as métricas."""
-        await self.dependency.check_dependencies()
-        
-    async def generate_report(self) -> Dict:
-        """Gera relatório com todas as métricas."""
-        return {
-            "response_time": await self.response_time.get_stats(),
-            "cache": self.cache_metrics.hit_rate,
-            "search": await self.search_accuracy.get_stats(),
-            "dependencies": await self.dependency.get_stats()
-        }
-        
-    async def check_alerts(self) -> List[str]:
-        """Verifica alertas críticos."""
-        alertas = []
-        
-        # Verifica tempo de resposta
-        stats = await self.response_time.get_stats()
-        if stats["p99_response_time"] > 1000:  # mais de 1s
-            alertas.append("Tempo de resposta crítico")
-            
-        # Verifica precisão da busca
-        search_stats = await self.search_accuracy.get_stats()
-        if search_stats["accuracy"] < 0.8:  # menos de 80%
-            alertas.append("Precisão da busca baixa")
-            
-        # Verifica dependências
-        dep_stats = await self.dependency.get_stats()
-        if dep_stats["conflicts"] > 0:
-            alertas.append("Conflitos de dependências detectados")
-            
-        return alertas
-        
-    def _limpar_antigas(self) -> None:
-        """Remove métricas antigas."""
-        if not self.janela_retencao:
-            return
-            
-        limite = datetime.now() - timedelta(days=self.janela_retencao)
-        self.metricas = [m for m in self.metricas if m.timestamp > limite] 
+        values = self.collector.get_metric(name)
+        return len(values) if values else 0

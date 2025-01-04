@@ -1,68 +1,63 @@
-"""
-Modelos Pydantic para o banco de dados.
+"""Módulo para modelos do banco de dados.
+
+Este módulo fornece classes e funções para interagir com o banco de dados,
+incluindo modelos para documentos e embeddings.
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
-from pydantic import BaseModel, Field
-
-
-class DocumentBase(BaseModel):
-    """Modelo base para documentos."""
-
-    content: str
-    metadata: dict[str, Any] = Field(default_factory=dict)
-    document_hash: str | None = None
+from pydantic import BaseModel
 
 
-class DocumentCreate(DocumentBase):
-    """Modelo para criação de documentos."""
-    pass
+class Document(BaseModel):
+    """Modelo para documentos no banco de dados.
 
+    Attributes
+    ----------
+    id : str
+        Identificador único do documento.
+    titulo : str
+        Título do documento.
+    conteudo : str
+        Conteúdo do documento.
+    metadata : dict[str, Any] | None
+        Metadados do documento.
+    created_at : datetime
+        Data de criação.
+    updated_at : datetime | None
+        Data da última atualização.
 
-class DocumentResponse(DocumentBase):
-    """Modelo para resposta de documentos."""
-    
+    """
+
     id: str
-    created_at: str
-    
-    class Config:
-        """Configuração do modelo."""
-        from_attributes = True
-
-
-class Document(DocumentBase):
-    """Modelo completo de documento."""
-
-    id: int
-    embedding_id: int | None = None
+    titulo: str
+    conteudo: str
+    metadata: dict[str, Any] | None = None
     created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        """Configuração do modelo."""
-        from_attributes = True
+    updated_at: Optional[datetime] = None
 
 
-class EmbeddingBase(BaseModel):
-    """Modelo base para embeddings."""
+class Embedding(BaseModel):
+    """Modelo para embeddings no banco de dados.
 
-    document_id: int
+    Attributes
+    ----------
+    id : str
+        Identificador único do embedding.
+    document_id : str
+        ID do documento associado.
+    embedding : list[float]
+        Vetor do embedding.
+    created_at : datetime
+        Data de criação.
+    updated_at : datetime | None
+        Data da última atualização.
+
+    """
+
+    id: str
+    document_id: str
     embedding: list[float]
-
-
-class EmbeddingCreate(EmbeddingBase):
-    """Modelo para criação de embeddings."""
-    pass
-
-
-class Embedding(EmbeddingBase):
-    """Modelo completo de embedding."""
-
-    id: int
     created_at: datetime
-
-    class Config:
-        """Configuração do modelo."""
-        from_attributes = True
+    updated_at: Optional[datetime] = None

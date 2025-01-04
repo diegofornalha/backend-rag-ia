@@ -6,37 +6,28 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    POETRY_VERSION=1.6.1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
-    PATH="$PATH:/root/.local/bin" \
-    PORT=10000 \
-    OPERATION_MODE=render \
-    IS_RENDER=true
+    PORT=8000
 
 # Diretório de trabalho
 WORKDIR /app
 
-# Instala dependências do sistema
+# Instalar dependências do sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# Copiar arquivos de dependências
+COPY requirements.txt .
 
-# Copia arquivos de dependências
-COPY pyproject.toml poetry.lock ./
+# Instalar dependências
+RUN pip install -r requirements.txt
 
-# Instala dependências
-RUN poetry install --no-dev --no-root
+# Copiar o código da aplicação
+COPY . .
 
-# Copia o código da aplicação
-COPY . /app/
-
-# Expõe a porta
+# Expor a porta
 EXPOSE $PORT
 
 # Comando para iniciar a aplicação
-CMD uvicorn backend_rag_ia.api.main:app --host 0.0.0.0 --port $PORT
+CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT

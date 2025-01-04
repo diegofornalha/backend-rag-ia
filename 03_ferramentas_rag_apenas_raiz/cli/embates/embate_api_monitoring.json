@@ -1,0 +1,137 @@
+{
+  "id": "api_monitoring_rag",
+  "title": "Implementação dos Endpoints de Monitoramento",
+  "description": "Define a implementação dos endpoints de monitoramento e estatísticas",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "id": "get_statistics",
+      "title": "Estatísticas Atuais",
+      "description": "Implementa endpoint de estatísticas atuais",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def get_statistics():
+    try:
+        # Buscar estatísticas atuais
+        result = await supabase.table('rag.statistics').select('*').order('created_at', desc=True).limit(1).execute()
+        
+        if not result.data:
+            # Se não houver estatísticas, gerar novas
+            await supabase.rpc('update_statistics').execute()
+            result = await supabase.table('rag.statistics').select('*').order('created_at', desc=True).limit(1).execute()
+            
+        return Statistics(**result.data[0])
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    },
+    {
+      "id": "get_statistics_history",
+      "title": "Histórico de Estatísticas",
+      "description": "Implementa endpoint de histórico de estatísticas",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def get_statistics_history(
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None)
+):
+    try:
+        query = supabase.table('rag.statistics').select('*')
+        
+        if start_date:
+            query = query.gte('created_at', start_date.isoformat())
+        if end_date:
+            query = query.lte('created_at', end_date.isoformat())
+            
+        result = await query.order('created_at', desc=True).execute()
+        
+        return [Statistics(**item) for item in result.data]
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    },
+    {
+      "id": "health_check",
+      "title": "Verificação de Saúde",
+      "description": "Implementa endpoint de health check",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def health_check():
+    try:
+        start_time = app.state.start_time
+        
+        # Verificar conexão com banco
+        db_ok = False
+        try:
+            await supabase.table('rag.statistics').select('count', head=True).execute()
+            db_ok = True
+        except:
+            pass
+            
+        return HealthCheck(
+            status="healthy" if db_ok else "degraded",
+            version="1.0.0",
+            database_connection=db_ok,
+            last_check=datetime.utcnow(),
+            uptime=(datetime.utcnow() - start_time).total_seconds()
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    },
+    {
+      "id": "get_logs",
+      "title": "Consulta de Logs",
+      "description": "Implementa endpoint de consulta de logs",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def get_logs(
+    operation_type: Optional[str] = Query(None),
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    limit: int = Query(100)
+):
+    try:
+        query = supabase.table('rag.changelog').select('*')
+        
+        if operation_type:
+            query = query.eq('operation_type', operation_type)
+        if start_date:
+            query = query.gte('created_at', start_date.isoformat())
+        if end_date:
+            query = query.lte('created_at', end_date.isoformat())
+            
+        result = await query.order('created_at', desc=True).limit(limit).execute()
+        
+        return [LogEntry(**item) for item in result.data]
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    }
+  ],
+  "dependencies": {
+    "python": ["fastapi", "python-dotenv", "supabase"],
+    "environment": ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
+  },
+  "tests": {
+    "health_check": {
+      "expected": {
+        "status": 200,
+        "has_version": true,
+        "has_uptime": true
+      }
+    }
+  }
+} 

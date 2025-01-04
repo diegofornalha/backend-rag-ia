@@ -1,0 +1,49 @@
+# Versão do Python alvo
+target-version = "py39"
+
+# Regras selecionadas
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "C90", # mccabe complexity
+    "UP", # pyupgrade
+    "RUF", # ruff-specific rules
+    "D",  # pydocstyle
+]
+
+# Regras ignoradas
+ignore = [
+    "D203",  # one-blank-line-before-class
+    "D213",  # multi-line-summary-second-line
+    "D406",  # section-name-should-end-with-newline
+    "D407",  # missing-dashed-underline-after-section
+    "D413",  # missing-blank-line-after-last-section
+    "UP007", # use X | Y for type annotations
+    "B008",  # do not perform function calls in argument defaults
+]
+
+# Comprimento máximo de linha
+line-length = 100
+
+# Diretórios excluídos
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+# Configurações específicas para docstrings
+[per-file-ignores]
+"tests/*" = ["D100", "D101", "D102", "D103", "D104"]
+"__init__.py" = ["D104"]
+
+# Configurações de complexidade
+[mccabe]
+max-complexity = 10 

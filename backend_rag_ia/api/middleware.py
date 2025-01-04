@@ -1,80 +1,151 @@
-import logging
-import time
-from collections.abc import Callable
-from datetime import datetime
+"""Módulo para gerenciamento de middlewares da API.
 
-from fastapi import Request, Response
+Este módulo fornece funções e handlers para gerenciar middlewares,
+incluindo tratamento de erros e logging.
+"""
+
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from ..config.settings import get_settings
-
-# Configuração do logger
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+from ..exceptions import (
+    DocumentNotFoundError,
+    InvalidDocumentError,
+    InvalidQueryError,
+    StorageError,
+    UnauthorizedError,
 )
-logger = logging.getLogger(__name__)
-settings = get_settings()
 
-async def environment_middleware(request: Request, call_next: Callable) -> Response:
-    """Middleware para verificar e validar o ambiente de execução."""
-    if settings.is_render_environment:
-        # Adiciona headers específicos do Render
-        response = await call_next(request)
-        response.headers["X-Render-Environment"] = "true"
-        response.headers["X-Operation-Mode"] = settings.OPERATION_MODE
-        return response
-    return await call_next(request)
 
-async def logging_middleware(request: Request, call_next: Callable) -> Response:
-    """Middleware para logging de requisições e respostas."""
-    start_time = time.time()
-    
-    # Log da requisição
-    logger.info(
-        f"Request: {request.method} {request.url} "
-        f"Mode: {settings.OPERATION_MODE}"
-    )
-    
-    try:
-        response = await call_next(request)
-        process_time = time.time() - start_time
-        
-        # Log da resposta
-        logger.info(
-            f"Response: status={response.status_code} "
-            f"process_time={process_time:.3f}s "
-            f"environment={'render' if settings.is_render_environment else 'local'}"
+def add_error_handler(app: FastAPI) -> None:
+    """Adiciona handlers de erro à aplicação.
+
+    Parameters
+    ----------
+    app : FastAPI
+        Aplicação FastAPI para adicionar os handlers.
+
+    """
+    @app.exception_handler(DocumentNotFoundError)
+    async def document_not_found_handler(
+        request: Request,
+        exc: DocumentNotFoundError
+    ) -> JSONResponse:
+        """Trata erros de documento não encontrado.
+
+        Parameters
+        ----------
+        request : Request
+            Requisição que gerou o erro.
+        exc : DocumentNotFoundError
+            Exceção capturada.
+
+        Returns
+        -------
+        JSONResponse
+            Resposta com detalhes do erro.
+
+        """
+        return JSONResponse(
+            status_code=404,
+            content={"detail": str(exc)}
         )
-        
-        # Adiciona headers de performance e ambiente
-        response.headers["X-Process-Time"] = str(process_time)
-        response.headers["X-Environment"] = settings.ENVIRONMENT
-        return response
-        
-    except Exception as e:
-        # Log do erro
-        logger.error(f"Error processing request: {e!s}")
+
+    @app.exception_handler(InvalidDocumentError)
+    async def invalid_document_handler(
+        request: Request,
+        exc: InvalidDocumentError
+    ) -> JSONResponse:
+        """Trata erros de documento inválido.
+
+        Parameters
+        ----------
+        request : Request
+            Requisição que gerou o erro.
+        exc : InvalidDocumentError
+            Exceção capturada.
+
+        Returns
+        -------
+        JSONResponse
+            Resposta com detalhes do erro.
+
+        """
+        return JSONResponse(
+            status_code=400,
+            content={"detail": str(exc)}
+        )
+
+    @app.exception_handler(InvalidQueryError)
+    async def invalid_query_handler(
+        request: Request,
+        exc: InvalidQueryError
+    ) -> JSONResponse:
+        """Trata erros de consulta inválida.
+
+        Parameters
+        ----------
+        request : Request
+            Requisição que gerou o erro.
+        exc : InvalidQueryError
+            Exceção capturada.
+
+        Returns
+        -------
+        JSONResponse
+            Resposta com detalhes do erro.
+
+        """
+        return JSONResponse(
+            status_code=400,
+            content={"detail": str(exc)}
+        )
+
+    @app.exception_handler(StorageError)
+    async def storage_error_handler(
+        request: Request,
+        exc: StorageError
+    ) -> JSONResponse:
+        """Trata erros de armazenamento.
+
+        Parameters
+        ----------
+        request : Request
+            Requisição que gerou o erro.
+        exc : StorageError
+            Exceção capturada.
+
+        Returns
+        -------
+        JSONResponse
+            Resposta com detalhes do erro.
+
+        """
         return JSONResponse(
             status_code=500,
-            content={
-                "detail": "Internal server error",
-                "timestamp": datetime.utcnow().isoformat(),
-                "path": str(request.url),
-                "environment": settings.ENVIRONMENT
-            }
+            content={"detail": str(exc)}
         )
 
-async def error_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Handler global para tratamento de erros."""
-    logger.error(f"Error: {exc!s}")
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": str(exc),
-            "timestamp": datetime.utcnow().isoformat(),
-            "path": str(request.url),
-            "environment": settings.ENVIRONMENT,
-            "operation_mode": settings.OPERATION_MODE
-        }
-    ) 
+    @app.exception_handler(UnauthorizedError)
+    async def unauthorized_handler(
+        request: Request,
+        exc: UnauthorizedError
+    ) -> JSONResponse:
+        """Trata erros de autorização.
+
+        Parameters
+        ----------
+        request : Request
+            Requisição que gerou o erro.
+        exc : UnauthorizedError
+            Exceção capturada.
+
+        Returns
+        -------
+        JSONResponse
+            Resposta com detalhes do erro.
+
+        """
+        return JSONResponse(
+            status_code=401,
+            content={"detail": str(exc)}
+        )

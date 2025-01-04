@@ -1,107 +1,77 @@
-"""
-Gerenciador de busca semântica.
+"""Módulo para busca semântica.
+
+Este módulo fornece classes e funções para realizar busca semântica
+em documentos, incluindo busca por similaridade e indexação.
 """
 
-from typing import List, Dict, Optional
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 
-class SemanticSearchManager:
-    """Gerencia buscas semânticas no sistema."""
-    
-    def __init__(self, embedding_model=None):
+class SemanticSearch:
+    """Classe para busca semântica em documentos.
+
+    Esta classe implementa métodos para buscar documentos semanticamente
+    similares a uma consulta ou a outro documento.
+    """
+
+    def search(self, query: str, documents: list[dict], k: int = 5) -> list[dict]:
+        """Realiza busca semântica nos documentos.
+
+        Parameters
+        ----------
+        query : str
+            Texto da consulta.
+        documents : list[dict]
+            Lista de documentos para buscar.
+        k : int, optional
+            Número de resultados a retornar, by default 5.
+
+        Returns
+        -------
+        list[dict]
+            Lista de documentos mais similares.
+
         """
-        Inicializa o gerenciador.
-        
-        Args:
-            embedding_model: Modelo para gerar embeddings
+        # Implementação da busca semântica
+        pass
+
+    def batch_search(
+        self,
+        queries: list[str],
+        documents: list[dict],
+        k: int = 5
+    ) -> list[list[dict]]:
+        """Realiza busca em lote nos documentos.
+
+        Parameters
+        ----------
+        queries : list[str]
+            Lista de consultas.
+        documents : list[dict]
+            Lista de documentos para buscar.
+        k : int, optional
+            Número de resultados por consulta, by default 5.
+
+        Returns
+        -------
+        list[list[dict]]
+            Lista de listas de documentos similares.
+
         """
-        self.embedding_model = embedding_model
-    
-    def search(self, query: str, documents: List[Dict], k: int = 5) -> List[Dict]:
+        # Implementação da busca em lote
+        pass
+
+    def index_documents(self, documents: list[dict]) -> list[dict]:
+        """Indexa documentos para busca.
+
+        Parameters
+        ----------
+        documents : list[dict]
+            Lista de documentos para indexar.
+
+        Returns
+        -------
+        list[dict]
+            Lista de documentos indexados.
+
         """
-        Realiza busca semântica.
-        
-        Args:
-            query: Texto da busca
-            documents: Lista de documentos para buscar
-            k: Número de resultados a retornar
-            
-        Returns:
-            Lista dos k documentos mais relevantes
-        """
-        if not documents:
-            return []
-            
-        # Gera embedding da query
-        query_embedding = self.get_embedding(query)
-        
-        # Recupera embeddings dos documentos
-        doc_embeddings = []
-        for doc in documents:
-            embedding = doc.get("embedding")
-            if embedding:
-                doc_embeddings.append(embedding)
-            else:
-                # Gera embedding se não existir
-                doc_embeddings.append(self.get_embedding(doc["content"]))
-        
-        # Calcula similaridade
-        similarities = cosine_similarity(
-            [query_embedding],
-            doc_embeddings
-        )[0]
-        
-        # Ordena documentos por similaridade
-        doc_scores = list(zip(documents, similarities))
-        doc_scores.sort(key=lambda x: x[1], reverse=True)
-        
-        return [doc for doc, _ in doc_scores[:k]]
-    
-    def get_embedding(self, text: str) -> np.ndarray:
-        """
-        Gera embedding para um texto.
-        
-        Args:
-            text: Texto para gerar embedding
-            
-        Returns:
-            Array numpy com embedding
-        """
-        if self.embedding_model:
-            return self.embedding_model.encode(text)
-        
-        # Fallback para embedding simples se não houver modelo
-        return np.random.rand(384)  # Dimensão padrão
-    
-    def batch_search(self, queries: List[str], documents: List[Dict], k: int = 5) -> List[List[Dict]]:
-        """
-        Realiza múltiplas buscas em batch.
-        
-        Args:
-            queries: Lista de queries
-            documents: Lista de documentos
-            k: Número de resultados por query
-            
-        Returns:
-            Lista de resultados para cada query
-        """
-        results = []
-        for query in queries:
-            results.append(self.search(query, documents, k))
-        return results
-    
-    def index_documents(self, documents: List[Dict]) -> List[Dict]:
-        """
-        Indexa documentos gerando embeddings.
-        
-        Args:
-            documents: Lista de documentos para indexar
-            
-        Returns:
-            Documentos com embeddings adicionados
-        """
-        for doc in documents:
-            if "embedding" not in doc:
-                doc["embedding"] = self.get_embedding(doc["content"])
-        return documents
+        # Implementação da indexação
+        pass

@@ -1,119 +1,178 @@
-"""Cliente Supabase para operações no banco de dados."""
+"""Módulo para interação com o Supabase.
 
-from typing import Dict, List, Optional, Any
-from supabase import Client, create_client
+Este módulo fornece funcionalidades para interagir com o banco de dados
+Supabase, incluindo operações de CRUD e gerenciamento de documentos.
+"""
+
+from typing import Any
+
+from supabase import create_client
+
+from backend_rag_ia.config.env_config import get_env_config
 
 
 class SupabaseClient:
-    """Cliente para operações no Supabase."""
+    """Cliente para interação com o Supabase.
 
-    def __init__(self, url: str, key: str):
+    Esta classe fornece métodos para interagir com o banco de dados
+    Supabase, incluindo operações de CRUD e gerenciamento de documentos.
+
+    Attributes
+    ----------
+    client : supabase.Client
+        Cliente Supabase configurado.
+    table_name : str
+        Nome da tabela de documentos.
+
+    """
+
+    def __init__(self, table_name: str = "documents") -> None:
+        """Inicializa o cliente.
+
+        Parameters
+        ----------
+        table_name : str, optional
+            Nome da tabela de documentos, por padrão "documents".
+
         """
-        Inicializa o cliente.
+        env_config = get_env_config()
+        self.client = create_client(
+            env_config.supabase_url,
+            env_config.supabase_key
+        )
+        self.table_name = table_name
 
-        Args:
-            url: URL do projeto Supabase
-            key: Chave de API do Supabase
+    def insert_document(self, document: dict[str, Any]) -> dict[str, Any]:
+        """Insere um documento no banco de dados.
+
+        Parameters
+        ----------
+        document : dict[str, Any]
+            Documento a ser inserido.
+
+        Returns
+        -------
+        dict[str, Any]
+            Documento inserido com ID gerado.
+
         """
-        self.client = create_client(url, key)
+        result = self.client.table(self.table_name).insert(document).execute()
+        return result.data[0] if result.data else {}
 
-    def _ensure_schema(self, table: str) -> str:
+    def get_document(self, document_id: str) -> dict[str, Any]:
+        """Obtém um documento do banco de dados.
+
+        Parameters
+        ----------
+        document_id : str
+            ID do documento.
+
+        Returns
+        -------
+        dict[str, Any]
+            Documento encontrado ou dicionário vazio.
+
         """
-        Garante que a tabela use o schema rag.
+        result = (
+            self.client.table(self.table_name)
+            .select("*")
+            .eq("id", document_id)
+            .execute()
+        )
+        return result.data[0] if result.data else {}
 
-        Args:
-            table: Nome da tabela
+    def update_document(
+        self,
+        document_id: str,
+        updates: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Atualiza um documento no banco de dados.
 
-        Returns:
-            Nome da tabela com schema
+        Parameters
+        ----------
+        document_id : str
+            ID do documento.
+        updates : dict[str, Any]
+            Atualizações a serem aplicadas.
+
+        Returns
+        -------
+        dict[str, Any]
+            Documento atualizado.
+
         """
-        if not table.startswith("rag."):
-            table = f"rag.{table}"
-        return table
+        result = (
+            self.client.table(self.table_name)
+            .update(updates)
+            .eq("id", document_id)
+            .execute()
+        )
+        return result.data[0] if result.data else {}
 
-    async def insert(self, table: str, data: Dict) -> Dict:
+    def delete_document(self, document_id: str) -> bool:
+        """Remove um documento do banco de dados.
+
+        Parameters
+        ----------
+        document_id : str
+            ID do documento.
+
+        Returns
+        -------
+        bool
+            True se o documento foi removido, False caso contrário.
+
         """
-        Insere dados em uma tabela.
+        result = (
+            self.client.table(self.table_name)
+            .delete()
+            .eq("id", document_id)
+            .execute()
+        )
+        return bool(result.data)
 
-        Args:
-            table: Nome da tabela
-            data: Dados a inserir
+    def list_documents(self, limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
+        """Lista documentos do banco de dados.
 
-        Returns:
-            Dados inseridos
+        Parameters
+        ----------
+        limit : int, optional
+            Número máximo de documentos, por padrão 100.
+        offset : int, optional
+            Deslocamento para paginação, por padrão 0.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            Lista de documentos encontrados.
+
         """
-        table = self._ensure_schema(table)
-        result = await self.client.table(table).insert(data).execute()
-        return result.data[0]
+        result = (
+            self.client.table(self.table_name)
+            .select("*")
+            .range(offset, offset + limit - 1)
+            .execute()
+        )
+        return result.data if result.data else []
 
-    async def update(self, table: str, id_: str, data: Dict) -> Dict:
+    def search_documents(self, query: str) -> list[dict[str, Any]]:
+        """Busca documentos no banco de dados.
+
+        Parameters
+        ----------
+        query : str
+            Texto para busca.
+
+        Returns
+        -------
+        list[dict[str, Any]]
+            Lista de documentos encontrados.
+
         """
-        Atualiza dados em uma tabela.
-
-        Args:
-            table: Nome da tabela
-            id_: ID do registro
-            data: Dados a atualizar
-
-        Returns:
-            Dados atualizados
-        """
-        table = self._ensure_schema(table)
-        result = await self.client.table(table).update(data).eq("id", id_).execute()
-        return result.data[0]
-
-    async def delete(self, table: str, id_: str) -> None:
-        """
-        Remove dados de uma tabela.
-
-        Args:
-            table: Nome da tabela
-            id_: ID do registro
-        """
-        table = self._ensure_schema(table)
-        result = await self.client.table(table).delete().eq("id", id_).execute()
-
-    async def get(self, table: str, id_: str) -> Optional[Dict]:
-        """
-        Busca dados em uma tabela.
-
-        Args:
-            table: Nome da tabela
-            id_: ID do registro
-
-        Returns:
-            Dados encontrados ou None
-        """
-        table = self._ensure_schema(table)
-        result = await self.client.table(table).select("*").eq("id", id_).execute()
-        return result.data[0] if result.data else None
-
-    async def list(self, table: str, skip: int = 0, limit: int = 100) -> List[Dict]:
-        """
-        Lista dados de uma tabela.
-
-        Args:
-            table: Nome da tabela
-            skip: Registros a pular
-            limit: Limite de registros
-
-        Returns:
-            Lista de dados
-        """
-        table = self._ensure_schema(table)
-        result = await self.client.table(table).select("*").range(skip, skip + limit - 1).execute()
-        return result.data
-
-    async def count(self, table: str) -> int:
-        """
-        Conta registros em uma tabela.
-
-        Args:
-            table: Nome da tabela
-
-        Returns:
-            Número de registros
-        """
-        table = self._ensure_schema(table)
-        result = await self.client.table(table).select("count", count="exact").execute()
-        return result.count
+        result = (
+            self.client.table(self.table_name)
+            .select("*")
+            .textSearch("content", query)
+            .execute()
+        )
+        return result.data if result.data else []

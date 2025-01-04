@@ -1,0 +1,235 @@
+{
+  "id": "api_embeddings_rag",
+  "title": "Implementação dos Endpoints de Embeddings",
+  "description": "Define a implementação dos endpoints para sincronização de embeddings usando a API do CoFlow",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "id": "sync_document_embedding",
+      "title": "Sincronizar Embedding de Documento",
+      "description": "Implementa endpoint de sincronização de embedding para um documento",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def sync_document_embedding(document_id: str = Path(...)):
+    try:
+        # Buscar documento
+        doc_result = await supabase.table('rag.01_base_conhecimento_regras_geral').select('*').eq('id', document_id).execute()
+        
+        if not doc_result.data:
+            raise HTTPException(status_code=404, detail="Documento não encontrado")
+            
+        doc = doc_result.data[0]
+        
+        # Preparar texto para embedding
+        content = json.dumps(doc['conteudo'], sort_keys=True)
+        
+        # Gerar embedding via API CoFlow
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                'https://api.coflow.com.br/api/v1/embeddings',
+                json={'text': content}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=500, detail="Erro ao gerar embedding")
+                
+            embedding_vector = response.json()['embedding']
+            
+        # Salvar embedding
+        embedding_data = {
+            'document_id': document_id,
+            'embedding': embedding_vector,
+            'content_hash': doc['content_hash']
+        }
+        
+        # Verificar se já existe
+        existing = await supabase.table('rag.02_embeddings_regras_geral').select('*').eq('document_id', document_id).execute()
+        
+        if existing.data:
+            # Atualizar
+            result = await supabase.table('rag.02_embeddings_regras_geral').update(embedding_data).eq('document_id', document_id).execute()
+        else:
+            # Inserir novo
+            result = await supabase.table('rag.02_embeddings_regras_geral').insert(embedding_data).execute()
+            
+        # Registrar no changelog
+        await supabase.rpc(
+            'log_change',
+            {
+                'operation': 'SYNC',
+                'table_name': 'rag.02_embeddings_regras_geral',
+                'record_id': document_id,
+                'new_data': embedding_data
+            }
+        ).execute()
+        
+        return {"message": "Embedding sincronizado com sucesso"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    },
+    {
+      "id": "sync_missing_embeddings",
+      "title": "Sincronizar Embeddings Faltantes",
+      "description": "Implementa endpoint para sincronizar todos os documentos sem embedding",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def sync_missing_embeddings(background_tasks: BackgroundTasks):
+    try:
+        # Criar registro de operação em lote
+        batch_data = {
+            'status': 'processing',
+            'operation_type': 'sync_embeddings',
+            'total_items': 0,
+            'processed_items': 0,
+            'errors': []
+        }
+        
+        batch_result = await supabase.table('rag.batch_operations').insert(batch_data).execute()
+        batch_id = batch_result.data[0]['id']
+        
+        # Iniciar processamento assíncrono
+        background_tasks.add_task(process_missing_embeddings, batch_id)
+        
+        return BatchOperation(**batch_result.data[0])
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def process_missing_embeddings(batch_id: str):
+    try:
+        # Buscar documentos sem embedding
+        query = '''
+        SELECT d.* FROM rag.01_base_conhecimento_regras_geral d
+        LEFT JOIN rag.02_embeddings_regras_geral e ON d.id = e.document_id
+        WHERE e.id IS NULL
+        '''
+        
+        docs = await supabase.rpc('execute_sql', {'query': query}).execute()
+        
+        if not docs.data:
+            # Finalizar se não há documentos para processar
+            await supabase.table('rag.batch_operations').update({
+                'status': 'completed',
+                'total_items': 0,
+                'processed_items': 0
+            }).eq('id', batch_id).execute()
+            return
+            
+        total = len(docs.data)
+        processed = 0
+        errors = []
+        
+        # Atualizar total de itens
+        await supabase.table('rag.batch_operations').update({
+            'total_items': total
+        }).eq('id', batch_id).execute()
+        
+        # Processar cada documento
+        for doc in docs.data:
+            try:
+                # Gerar embedding
+                content = json.dumps(doc['conteudo'], sort_keys=True)
+                
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        'https://api.coflow.com.br/api/v1/embeddings',
+                        json={'text': content}
+                    )
+                    
+                    if response.status_code != 200:
+                        raise Exception("Erro ao gerar embedding")
+                        
+                    embedding_vector = response.json()['embedding']
+                    
+                # Salvar embedding
+                embedding_data = {
+                    'document_id': doc['id'],
+                    'embedding': embedding_vector,
+                    'content_hash': doc['content_hash']
+                }
+                
+                await supabase.table('rag.02_embeddings_regras_geral').insert(embedding_data).execute()
+                processed += 1
+                
+            except Exception as e:
+                errors.append(f"Erro ao processar documento {doc['id']}: {str(e)}")
+                
+            # Atualizar progresso
+            await supabase.table('rag.batch_operations').update({
+                'processed_items': processed,
+                'errors': errors
+            }).eq('id', batch_id).execute()
+            
+        # Finalizar processamento
+        status = 'completed' if not errors else 'completed_with_errors'
+        await supabase.table('rag.batch_operations').update({
+            'status': status,
+            'processed_items': processed,
+            'errors': errors
+        }).eq('id', batch_id).execute()
+        
+        # Atualizar estatísticas
+        await supabase.rpc('update_statistics').execute()
+        
+    except Exception as e:
+        # Registrar erro geral
+        await supabase.table('rag.batch_operations').update({
+            'status': 'failed',
+            'errors': [str(e)]
+        }).eq('id', batch_id).execute()
+        """
+      }
+    },
+    {
+      "id": "check_embedding_status",
+      "title": "Verificar Status do Embedding",
+      "description": "Implementa endpoint para verificar status do embedding de um documento",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def check_embedding_status(document_id: str = Path(...)):
+    try:
+        # Buscar documento
+        doc_result = await supabase.table('rag.01_base_conhecimento_regras_geral').select('*').eq('id', document_id).execute()
+        
+        if not doc_result.data:
+            raise HTTPException(status_code=404, detail="Documento não encontrado")
+            
+        # Buscar embedding
+        emb_result = await supabase.table('rag.02_embeddings_regras_geral').select('*').eq('document_id', document_id).execute()
+        
+        return {
+            "document_id": document_id,
+            "has_embedding": bool(emb_result.data),
+            "content_hash": doc_result.data[0]['content_hash'],
+            "embedding_hash": emb_result.data[0]['content_hash'] if emb_result.data else None,
+            "needs_update": bool(emb_result.data) and doc_result.data[0]['content_hash'] != emb_result.data[0]['content_hash']
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    }
+  ],
+  "dependencies": {
+    "python": ["fastapi", "httpx", "python-dotenv", "supabase"],
+    "environment": ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
+  },
+  "tests": {
+    "sync_document_embedding": {
+      "input": {
+        "document_id": "test-id"
+      },
+      "expected": {
+        "status": 200,
+        "message": "Embedding sincronizado com sucesso"
+      }
+    }
+  }
+} 

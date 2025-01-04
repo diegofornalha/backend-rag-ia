@@ -1,43 +1,45 @@
-import os
-from enum import Enum
+"""Módulo para configuração de rotas da API.
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+Este módulo fornece classes e funções para configurar as rotas
+da API, incluindo configurações de CORS e middlewares.
+"""
 
-router = APIRouter(prefix="/api/v1/config", tags=["config"])
+from typing import ClassVar
 
-class SemanticMode(str, Enum):
-    LOCAL = "local"
-    RENDER = "render"
-    AUTO = "auto"
 
-class SemanticModeUpdate(BaseModel):
-    mode: SemanticMode
+class CORSConfig:
+    """Configuração de CORS para a API.
 
-@router.get("/semantic-mode")
-async def get_semantic_mode():
-    """Retorna o modo atual da busca semântica."""
-    current_mode = os.getenv("SEMANTIC_SEARCH_MODE", "local")
-    return {
-        "mode": current_mode,
-        "description": {
-            "local": "Usando busca semântica local via Docker",
-            "render": "Usando busca semântica remota via Render",
-            "auto": "Modo automático com fallback"
-        }.get(current_mode, "Modo desconhecido")
-    }
+    Attributes
+    ----------
+    ALLOW_ORIGINS : list[str]
+        Lista de origens permitidas.
+    ALLOW_CREDENTIALS : bool
+        Se credenciais são permitidas.
+    ALLOW_METHODS : list[str]
+        Lista de métodos HTTP permitidos.
+    ALLOW_HEADERS : list[str]
+        Lista de headers permitidos.
 
-@router.post("/semantic-mode")
-async def update_semantic_mode(update: SemanticModeUpdate):
-    """Atualiza o modo da busca semântica."""
-    try:
-        os.environ["SEMANTIC_SEARCH_MODE"] = update.mode.value
-        return {
-            "message": f"Modo alterado para {update.mode}",
-            "mode": update.mode
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao atualizar modo: {e!s}"
-        ) from e
+    """
+
+    ALLOW_ORIGINS: ClassVar[list[str]] = ["*"]
+    ALLOW_CREDENTIALS: ClassVar[bool] = True
+    ALLOW_METHODS: ClassVar[list[str]] = ["*"]
+    ALLOW_HEADERS: ClassVar[list[str]] = ["*"]
+
+
+class RouteConfig:
+    """Configuração de rotas da API.
+
+    Attributes
+    ----------
+    PREFIX : str
+        Prefixo para todas as rotas.
+    TAGS : list[str]
+        Tags para documentação da API.
+
+    """
+
+    PREFIX: ClassVar[str] = "/api/v1"
+    TAGS: ClassVar[list[str]] = ["documents", "search", "statistics"]

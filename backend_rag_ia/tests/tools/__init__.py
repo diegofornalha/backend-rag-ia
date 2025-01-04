@@ -1,3 +1,1 @@
-"""
-Testes para o módulo tools
-""" 
+"""Implementa testes para o módulo tools."""

@@ -1,220 +1,129 @@
-"""
-Rotas para gerenciamento de documentos.
+"""Módulo para rotas de documentos da API.
 
-Este módulo contém as rotas para:
-- Upload de documentos
-- Listagem de documentos
-- Busca de documentos por ID
-- Remoção de documentos
-- Atualização de documentos
+Este módulo fornece endpoints para gerenciamento de documentos,
+incluindo upload, listagem, busca e remoção.
 """
 
-from typing import List, Optional
-from fastapi import APIRouter, HTTPException, UploadFile, File, Query
+from typing import Optional
+
+from fastapi import APIRouter, File, Query, UploadFile
 from pydantic import BaseModel
 
-router = APIRouter(
-    prefix="/documents",
-    tags=["Documentos"],
-    responses={
-        404: {"description": "Documento não encontrado"},
-        500: {"description": "Erro interno do servidor"}
-    }
-)
+from ...services.document_service import DocumentService
 
-class Document(BaseModel):
+router = APIRouter(prefix="/documents", tags=["documents"])
+
+
+class DocumentResponse(BaseModel):
+    """Modelo de resposta para documentos.
+
+    Attributes
+    ----------
+    id : str
+        Identificador único do documento.
+    title : str
+        Título do documento.
+    content : str
+        Conteúdo do documento.
+    metadata : dict
+        Metadados do documento.
+
     """
-    Modelo de documento.
-    
-    Attributes:
-        id: Identificador único do documento
-        title: Título do documento
-        content: Conteúdo do documento
-        metadata: Metadados adicionais (opcional)
-    """
+
     id: str
     title: str
     content: str
-    metadata: Optional[dict] = None
+    metadata: dict
 
-@router.post(
-    "/", 
-    response_model=Document,
-    summary="Upload de documento",
-    description="""
-    Faz upload de um novo documento para o sistema.
-    
-    O documento pode ser enviado como:
-    - Arquivo PDF
-    - Arquivo de texto (.txt)
-    - Arquivo Word (.doc, .docx)
-    
-    O sistema irá:
-    1. Extrair o texto do documento
-    2. Gerar embeddings para busca semântica
-    3. Armazenar no banco de dados
-    
-    Exemplos:
-    ```python
-    import requests
-    
-    files = {'file': open('documento.pdf', 'rb')}
-    response = requests.post('http://localhost:10000/documents', files=files)
-    document = response.json()
-    ```
-    """
-)
+
+@router.post("/", response_model=DocumentResponse)
 async def upload_document(
-    file: UploadFile = File(..., description="Arquivo do documento a ser enviado")
-) -> Document:
-    """Upload de documento."""
-    try:
-        # Implementação do upload
-        pass
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    file: UploadFile = File(...),
+    title: Optional[str] = None,
+    metadata: Optional[dict] = None
+) -> DocumentResponse:
+    """Faz upload de um novo documento.
 
-@router.get(
-    "/",
-    response_model=List[Document],
-    summary="Lista documentos",
-    description="""
-    Retorna a lista de documentos armazenados no sistema.
-    
-    Parâmetros de filtro:
-    - limit: Número máximo de documentos a retornar
-    - offset: Número de documentos a pular
-    - search: Termo para busca no título/conteúdo
-    
-    Exemplos:
-    ```python
-    import requests
-    
-    # Listar primeiros 10 documentos
-    response = requests.get('http://localhost:10000/documents?limit=10')
-    documents = response.json()
-    
-    # Buscar documentos com "python" no título
-    response = requests.get('http://localhost:10000/documents?search=python')
-    documents = response.json()
-    ```
+    Parameters
+    ----------
+    file : UploadFile
+        Arquivo a ser enviado.
+    title : Optional[str]
+        Título do documento.
+    metadata : Optional[dict]
+        Metadados do documento.
+
+    Returns
+    -------
+    DocumentResponse
+        Documento criado.
+
     """
-)
+    service = DocumentService()
+    document = await service.upload_document(file, title, metadata)
+    return document
+
+
+@router.get("/", response_model=list[DocumentResponse])
 async def list_documents(
-    limit: int = Query(10, description="Número máximo de documentos a retornar"),
-    offset: int = Query(0, description="Número de documentos a pular"),
-    search: Optional[str] = Query(None, description="Termo para busca no título/conteúdo")
-) -> List[Document]:
-    """Lista documentos."""
-    try:
-        # Implementação da listagem
-        pass
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100)
+) -> list[DocumentResponse]:
+    """Lista documentos com paginação.
 
-@router.get(
-    "/{document_id}",
-    response_model=Document,
-    summary="Busca documento por ID",
-    description="""
-    Retorna um documento específico pelo seu ID.
-    
-    Se o documento não for encontrado, retorna erro 404.
-    
-    Exemplos:
-    ```python
-    import requests
-    
-    document_id = "123"
-    response = requests.get(f'http://localhost:10000/documents/{document_id}')
-    
-    if response.status_code == 404:
-        print("Documento não encontrado")
-    else:
-        document = response.json()
-        print(document['title'])
-    ```
-    """
-)
-async def get_document(document_id: str) -> Document:
-    """Busca documento por ID."""
-    try:
-        # Implementação da busca
-        pass
-    except Exception as e:
-        raise HTTPException(status_code=404, detail="Documento não encontrado")
+    Parameters
+    ----------
+    skip : int
+        Número de documentos para pular.
+    limit : int
+        Número máximo de documentos a retornar.
 
-@router.delete(
-    "/{document_id}",
-    summary="Remove documento",
-    description="""
-    Remove um documento do sistema pelo seu ID.
-    
-    A remoção é permanente e não pode ser desfeita.
-    
-    Exemplos:
-    ```python
-    import requests
-    
-    document_id = "123"
-    response = requests.delete(f'http://localhost:10000/documents/{document_id}')
-    
-    if response.status_code == 200:
-        print("Documento removido com sucesso")
-    elif response.status_code == 404:
-        print("Documento não encontrado")
-    ```
-    """
-)
-async def delete_document(document_id: str):
-    """Remove documento."""
-    try:
-        # Implementação da remoção
-        pass
-    except Exception as e:
-        raise HTTPException(status_code=404, detail="Documento não encontrado")
+    Returns
+    -------
+    list[DocumentResponse]
+        Lista de documentos.
 
-@router.put(
-    "/{document_id}",
-    response_model=Document,
-    summary="Atualiza documento",
-    description="""
-    Atualiza um documento existente.
-    
-    Permite atualizar:
-    - Título
-    - Conteúdo
-    - Metadados
-    
-    O ID do documento não pode ser alterado.
-    
-    Exemplos:
-    ```python
-    import requests
-    
-    document_id = "123"
-    data = {
-        "title": "Novo título",
-        "content": "Novo conteúdo",
-        "metadata": {"tags": ["python", "fastapi"]}
-    }
-    
-    response = requests.put(
-        f'http://localhost:10000/documents/{document_id}',
-        json=data
-    )
-    
-    if response.status_code == 200:
-        updated_document = response.json()
-    elif response.status_code == 404:
-        print("Documento não encontrado")
-    ```
     """
-)
-async def update_document(document_id: str, document: Document) -> Document:
-    """Atualiza documento."""
-    try:
-        # Implementação da atualização
-        pass
-    except Exception as e:
-        raise HTTPException(status_code=404, detail="Documento não encontrado") 
+    service = DocumentService()
+    documents = await service.list_documents(skip, limit)
+    return documents
+
+
+@router.get("/{document_id}", response_model=DocumentResponse)
+async def get_document(document_id: str) -> DocumentResponse:
+    """Busca um documento pelo ID.
+
+    Parameters
+    ----------
+    document_id : str
+        ID do documento.
+
+    Returns
+    -------
+    DocumentResponse
+        Documento encontrado.
+
+    """
+    service = DocumentService()
+    document = await service.get_document(document_id)
+    return document
+
+
+@router.delete("/{document_id}")
+async def delete_document(document_id: str) -> dict:
+    """Remove um documento.
+
+    Parameters
+    ----------
+    document_id : str
+        ID do documento.
+
+    Returns
+    -------
+    dict
+        Mensagem de confirmação.
+
+    """
+    service = DocumentService()
+    await service.delete_document(document_id)
+    return {"message": "Documento removido com sucesso"}

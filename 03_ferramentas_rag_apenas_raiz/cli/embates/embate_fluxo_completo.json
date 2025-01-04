@@ -1,0 +1,140 @@
+{
+  "id": "fluxo_completo_rag",
+  "title": "Fluxo Completo do Sistema RAG",
+  "description": "Define o fluxo completo de processamento de documentos e embeddings no sistema RAG",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "id": "verificar_documento",
+      "title": "Verificar Documento",
+      "description": "Verifica se o documento já existe na base através do content_hash",
+      "sql": {
+        "query": "SELECT rag.check_duplicate_content(:content_hash)",
+        "params": ["content_hash"]
+      },
+      "next": {
+        "exists": "atualizar_documento",
+        "not_exists": "inserir_documento"
+      }
+    },
+    {
+      "id": "inserir_documento",
+      "title": "Inserir Novo Documento",
+      "description": "Insere um novo documento na tabela rag.01_base_conhecimento_regras_geral",
+      "sql": {
+        "query": "INSERT INTO rag.\"01_base_conhecimento_regras_geral\" (titulo, conteudo, content_hash, metadata) VALUES (:titulo, :conteudo, :content_hash, :metadata) RETURNING id",
+        "params": ["titulo", "conteudo", "content_hash", "metadata"]
+      },
+      "next": "gerar_embedding"
+    },
+    {
+      "id": "atualizar_documento",
+      "title": "Atualizar Documento Existente",
+      "description": "Atualiza um documento existente e registra no changelog",
+      "sql": {
+        "query": "UPDATE rag.\"01_base_conhecimento_regras_geral\" SET titulo = :titulo, conteudo = :conteudo, metadata = :metadata, updated_at = now() WHERE content_hash = :content_hash RETURNING id",
+        "params": ["titulo", "conteudo", "content_hash", "metadata"]
+      },
+      "next": "verificar_embedding"
+    },
+    {
+      "id": "verificar_embedding",
+      "title": "Verificar Embedding",
+      "description": "Verifica se é necessário gerar novo embedding para o documento",
+      "sql": {
+        "query": "SELECT e.id, e.content_hash FROM rag.\"02_embeddings_regras_geral\" e WHERE e.document_id = :document_id",
+        "params": ["document_id"]
+      },
+      "next": {
+        "exists": "verificar_hash_embedding",
+        "not_exists": "gerar_embedding"
+      }
+    },
+    {
+      "id": "verificar_hash_embedding",
+      "title": "Verificar Hash do Embedding",
+      "description": "Verifica se o conteúdo mudou e precisa regerar o embedding",
+      "sql": {
+        "query": "SELECT CASE WHEN e.content_hash = d.content_hash THEN true ELSE false END as hash_match FROM rag.\"02_embeddings_regras_geral\" e JOIN rag.\"01_base_conhecimento_regras_geral\" d ON d.id = e.document_id WHERE e.document_id = :document_id",
+        "params": ["document_id"]
+      },
+      "next": {
+        "hash_match": "finalizar",
+        "hash_mismatch": "gerar_embedding"
+      }
+    },
+    {
+      "id": "gerar_embedding",
+      "title": "Gerar Embedding",
+      "description": "Gera embedding via API do CoFlow e salva na tabela",
+      "api": {
+        "url": "https://api.coflow.com.br/api/v1/embeddings",
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "text": ":text"
+        }
+      },
+      "next": "salvar_embedding"
+    },
+    {
+      "id": "salvar_embedding",
+      "title": "Salvar Embedding",
+      "description": "Salva ou atualiza o embedding gerado",
+      "sql": {
+        "query": "INSERT INTO rag.\"02_embeddings_regras_geral\" (document_id, embedding, content_hash) VALUES (:document_id, :embedding, :content_hash) ON CONFLICT (document_id) DO UPDATE SET embedding = :embedding, content_hash = :content_hash, updated_at = now()",
+        "params": ["document_id", "embedding", "content_hash"]
+      },
+      "next": "atualizar_estatisticas"
+    },
+    {
+      "id": "atualizar_estatisticas",
+      "title": "Atualizar Estatísticas",
+      "description": "Atualiza as estatísticas do sistema",
+      "sql": {
+        "query": "SELECT rag.update_statistics()",
+        "params": []
+      },
+      "next": "finalizar"
+    },
+    {
+      "id": "finalizar",
+      "title": "Finalizar Processamento",
+      "description": "Registra conclusão do processamento no changelog",
+      "sql": {
+        "query": "SELECT rag.log_change('SYSTEM_UPDATE', 'rag.workflow', :document_id, NULL, jsonb_build_object('status', 'completed', 'document_id', :document_id))",
+        "params": ["document_id"]
+      }
+    }
+  ],
+  "error_handling": {
+    "on_error": {
+      "sql": {
+        "query": "SELECT rag.log_change('ERROR', :table_name, :record_id, NULL, NULL, :error_details)",
+        "params": ["table_name", "record_id", "error_details"]
+      }
+    },
+    "retry": {
+      "max_attempts": 3,
+      "delay_seconds": 5
+    }
+  },
+  "monitoring": {
+    "metrics": [
+      {
+        "name": "documentos_processados",
+        "query": "SELECT COUNT(*) FROM rag.changelog WHERE operation_type = 'SYSTEM_UPDATE' AND (new_data->>'status') = 'completed' AND created_at > now() - interval '1 day'"
+      },
+      {
+        "name": "erros_processamento",
+        "query": "SELECT COUNT(*) FROM rag.changelog WHERE operation_type = 'ERROR' AND created_at > now() - interval '1 day'"
+      },
+      {
+        "name": "tempo_medio_processamento",
+        "query": "SELECT avg(extract(epoch from (updated_at - created_at))) FROM rag.\"02_embeddings_regras_geral\" WHERE created_at > now() - interval '1 day'"
+      }
+    ]
+  }
+}

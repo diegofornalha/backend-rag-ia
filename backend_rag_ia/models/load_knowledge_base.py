@@ -1,3 +1,9 @@
+"""Módulo para carregamento da base de conhecimento.
+
+Este módulo fornece funções para carregar documentos individuais
+e a base de conhecimento completa a partir de arquivos JSON.
+"""
+
 import json
 import os
 from datetime import datetime
@@ -6,7 +12,19 @@ from models.document import Document
 
 
 def load_document_file(file_path: str) -> Document:
-    """Carrega um documento individual de um arquivo JSON"""
+    """Carrega um documento individual de um arquivo JSON.
+
+    Parameters
+    ----------
+    file_path : str
+        Caminho para o arquivo JSON contendo o documento.
+
+    Returns
+    -------
+    Document | None
+        Documento carregado ou None se houver erro.
+
+    """
     try:
         with open(file_path, encoding="utf-8") as file:
             data = json.load(file)
@@ -28,7 +46,19 @@ def load_document_file(file_path: str) -> Document:
 
 
 def load_knowledge_base(vector_store):
-    """Carrega documentos da base de conhecimento"""
+    """Carrega documentos da base de conhecimento.
+
+    Parameters
+    ----------
+    vector_store : VectorStore
+        Instância do vector store onde os documentos serão armazenados.
+
+    Raises
+    ------
+    Exception
+        Se houver erro ao carregar os documentos.
+
+    """
     try:
         documents = []
         documents_dir = "documents"

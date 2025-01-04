@@ -1,3 +1,1 @@
-"""
-Pacote de testes para o backend_rag_ia
-""" 
+"""Implementa testes para o backend_rag_ia."""

@@ -1,0 +1,226 @@
+{
+  "id": "api_endpoints_rag",
+  "title": "Implementação dos Endpoints da API RAG",
+  "description": "Define a implementação dos endpoints principais da API usando FastAPI e Supabase",
+  "version": "1.0.0",
+  "steps": [
+    {
+      "id": "create_document",
+      "title": "Criar Documento",
+      "description": "Implementa endpoint de criação de documento",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def create_document(document: DocumentCreate):
+    try:
+        # Gerar hash do conteúdo
+        content = json.dumps(document.conteudo, sort_keys=True)
+        content_hash = hashlib.sha256(content.encode()).hexdigest()
+        
+        # Verificar duplicidade
+        result = await supabase.rpc('check_duplicate_content', {'content_hash': content_hash}).execute()
+        if result.data:
+            raise HTTPException(status_code=409, detail="Documento duplicado")
+        
+        # Preparar dados
+        doc_data = {
+            'titulo': document.titulo,
+            'conteudo': document.conteudo,
+            'content_hash': content_hash,
+            'metadata': document.metadata or {}
+        }
+        
+        # Inserir no Supabase
+        result = await supabase.table('rag.01_base_conhecimento_regras_geral').insert(doc_data).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Erro ao criar documento")
+            
+        # Registrar no changelog
+        await supabase.rpc(
+            'log_change',
+            {
+                'operation': 'CREATE',
+                'table_name': 'rag.01_base_conhecimento_regras_geral',
+                'record_id': str(result.data[0]['id']),
+                'new_data': doc_data
+            }
+        ).execute()
+        
+        return Document(**result.data[0])
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    },
+    {
+      "id": "get_document",
+      "title": "Buscar Documento",
+      "description": "Implementa endpoint de busca de documento por ID",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def get_document(document_id: str = Path(...)):
+    try:
+        # Buscar documento
+        result = await supabase.table('rag.01_base_conhecimento_regras_geral').select('*').eq('id', document_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Documento não encontrado")
+            
+        # Buscar embedding associado
+        embedding = await supabase.table('rag.02_embeddings_regras_geral').select('*').eq('document_id', document_id).execute()
+        
+        # Adicionar status do embedding aos metadados
+        doc = result.data[0]
+        doc['metadata'] = doc.get('metadata', {})
+        doc['metadata']['has_embedding'] = bool(embedding.data)
+        
+        return Document(**doc)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    },
+    {
+      "id": "update_document",
+      "title": "Atualizar Documento",
+      "description": "Implementa endpoint de atualização de documento",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def update_document(
+    document_id: str = Path(...),
+    document: DocumentUpdate = Body(...)
+):
+    try:
+        # Verificar se documento existe
+        existing = await supabase.table('rag.01_base_conhecimento_regras_geral').select('*').eq('id', document_id).execute()
+        
+        if not existing.data:
+            raise HTTPException(status_code=404, detail="Documento não encontrado")
+            
+        # Preparar dados para atualização
+        update_data = document.dict(exclude_unset=True)
+        
+        if 'conteudo' in update_data:
+            # Gerar novo hash se conteúdo foi atualizado
+            content = json.dumps(update_data['conteudo'], sort_keys=True)
+            update_data['content_hash'] = hashlib.sha256(content.encode()).hexdigest()
+        
+        # Atualizar documento
+        result = await supabase.table('rag.01_base_conhecimento_regras_geral').update(update_data).eq('id', document_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Erro ao atualizar documento")
+            
+        # Registrar no changelog
+        await supabase.rpc(
+            'log_change',
+            {
+                'operation': 'UPDATE',
+                'table_name': 'rag.01_base_conhecimento_regras_geral',
+                'record_id': document_id,
+                'old_data': existing.data[0],
+                'new_data': result.data[0]
+            }
+        ).execute()
+        
+        return Document(**result.data[0])
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    },
+    {
+      "id": "delete_document",
+      "title": "Remover Documento",
+      "description": "Implementa endpoint de remoção de documento",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def delete_document(document_id: str = Path(...)):
+    try:
+        # Verificar se documento existe
+        existing = await supabase.table('rag.01_base_conhecimento_regras_geral').select('*').eq('id', document_id).execute()
+        
+        if not existing.data:
+            raise HTTPException(status_code=404, detail="Documento não encontrado")
+            
+        # Remover embedding primeiro (se existir)
+        await supabase.table('rag.02_embeddings_regras_geral').delete().eq('document_id', document_id).execute()
+        
+        # Remover documento
+        result = await supabase.table('rag.01_base_conhecimento_regras_geral').delete().eq('id', document_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Erro ao remover documento")
+            
+        # Registrar no changelog
+        await supabase.rpc(
+            'log_change',
+            {
+                'operation': 'DELETE',
+                'table_name': 'rag.01_base_conhecimento_regras_geral',
+                'record_id': document_id,
+                'old_data': existing.data[0]
+            }
+        ).execute()
+        
+        # Atualizar estatísticas
+        await supabase.rpc('update_statistics').execute()
+        
+        return {"message": "Documento removido com sucesso"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    },
+    {
+      "id": "generate_embedding",
+      "title": "Gerar Embedding",
+      "description": "Implementa endpoint de geração de embedding",
+      "code": {
+        "path": "backend_rag_ia/app/main.py",
+        "implementation": """
+async def generate_embedding(data: EmbeddingCreate):
+    try:
+        # Chamar API do CoFlow para gerar embedding
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                'https://api.coflow.com.br/api/v1/embeddings',
+                json={'text': data.text}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=500, detail="Erro ao gerar embedding")
+                
+            return response.json()['embedding']
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        """
+      }
+    }
+  ],
+  "dependencies": {
+    "python": ["fastapi", "httpx", "python-dotenv", "supabase"],
+    "environment": ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]
+  },
+  "tests": {
+    "create_document": {
+      "input": {
+        "titulo": "Teste",
+        "conteudo": {"texto": "Conteúdo de teste"}
+      },
+      "expected": {
+        "status": 200,
+        "has_id": true
+      }
+    }
+  }
+} 
