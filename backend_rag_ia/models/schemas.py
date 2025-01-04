@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
+
 
 class SearchQuery(BaseModel):
     """Schema para validação da query de busca."""
@@ -14,12 +16,12 @@ class SearchResult(BaseModel):
     titulo: str
     conteudo: str
     similarity: float
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
     created_at: datetime
 
 class SearchResponse(BaseModel):
     """Schema para resposta da busca."""
-    results: List[SearchResult]
+    results: list[SearchResult]
     total: int
     query: str
     execution_time: float

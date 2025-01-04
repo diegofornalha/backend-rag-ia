@@ -1,7 +1,6 @@
 """Configuração de logging para o projeto."""
 
 import logging
-from pathlib import Path
 
 
 def setup_logging() -> logging.Logger:

@@ -1,282 +1,119 @@
 """Cliente Supabase para operações no banco de dados."""
 
-import os
-from typing import Any
-
-from postgrest.exceptions import APIError
-from supabase import create_client
-
-from backend_rag_ia.constants import (
-    ERROR_SUPABASE_CONFIG,
-    ERROR_SUPABASE_CONNECT,
-)
-from backend_rag_ia.exceptions import (
-    DatabaseError,
-    EmbeddingError,
-    SupabaseError,
-)
-from backend_rag_ia.utils.logging_config import logger
+from typing import Dict, List, Optional, Any
+from supabase import Client, create_client
 
 
 class SupabaseClient:
     """Cliente para operações no Supabase."""
 
-    def __init__(self) -> None:
-        """Inicializa o cliente.
-
-        Raises:
-            SupabaseError: Se houver erro na configuração
+    def __init__(self, url: str, key: str):
         """
-        # Verifica configuração
-        url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_KEY")
+        Inicializa o cliente.
 
-        if not url or not key:
-            logger.error("Configuração do Supabase incompleta")
-            raise SupabaseError(ERROR_SUPABASE_CONFIG)
+        Args:
+            url: URL do projeto Supabase
+            key: Chave de API do Supabase
+        """
+        self.client = create_client(url, key)
 
-        try:
-            # Inicializa cliente
-            self.client = create_client(url, key)
-
-        except Exception as e:
-            logger.exception("Erro ao conectar ao Supabase: %s", e)
-            raise SupabaseError(ERROR_SUPABASE_CONNECT) from e
-
-    async def insert(self, table: str, data: dict[str, Any]) -> dict[str, Any]:
-        """Insere um registro na tabela.
+    def _ensure_schema(self, table: str) -> str:
+        """
+        Garante que a tabela use o schema rag.
 
         Args:
             table: Nome da tabela
-            data: Dados para inserir
 
         Returns:
-            Registro inserido
-
-        Raises:
-            DatabaseError: Se houver erro na inserção
+            Nome da tabela com schema
         """
-        try:
-            result = await self.client.table(table).insert(data).execute()
-            return result.data[0]
+        if not table.startswith("rag."):
+            table = f"rag.{table}"
+        return table
 
-        except APIError as e:
-            logger.exception("Erro ao inserir no Supabase: %s", e)
-            raise DatabaseError from e
+    async def insert(self, table: str, data: Dict) -> Dict:
+        """
+        Insere dados em uma tabela.
 
-        except Exception as e:
-            logger.exception("Erro ao inserir no Supabase: %s", e)
-            raise DatabaseError from e
+        Args:
+            table: Nome da tabela
+            data: Dados a inserir
 
-    async def update(
-        self,
-        table: str,
-        id_: str,
-        data: dict[str, Any],
-    ) -> dict[str, Any]:
-        """Atualiza um registro na tabela.
+        Returns:
+            Dados inseridos
+        """
+        table = self._ensure_schema(table)
+        result = await self.client.table(table).insert(data).execute()
+        return result.data[0]
+
+    async def update(self, table: str, id_: str, data: Dict) -> Dict:
+        """
+        Atualiza dados em uma tabela.
 
         Args:
             table: Nome da tabela
             id_: ID do registro
-            data: Dados para atualizar
+            data: Dados a atualizar
 
         Returns:
-            Registro atualizado
-
-        Raises:
-            DatabaseError: Se houver erro na atualização
+            Dados atualizados
         """
-        try:
-            result = await self.client.table(table).update(data).eq("id", id_).execute()
-            return result.data[0]
+        table = self._ensure_schema(table)
+        result = await self.client.table(table).update(data).eq("id", id_).execute()
+        return result.data[0]
 
-        except APIError as e:
-            logger.exception("Erro ao atualizar no Supabase: %s", e)
-            raise DatabaseError from e
+    async def delete(self, table: str, id_: str) -> None:
+        """
+        Remove dados de uma tabela.
 
-        except Exception as e:
-            logger.exception("Erro ao atualizar no Supabase: %s", e)
-            raise DatabaseError from e
+        Args:
+            table: Nome da tabela
+            id_: ID do registro
+        """
+        table = self._ensure_schema(table)
+        result = await self.client.table(table).delete().eq("id", id_).execute()
 
-    async def delete(self, table: str, id_: str) -> dict[str, Any]:
-        """Remove um registro da tabela.
+    async def get(self, table: str, id_: str) -> Optional[Dict]:
+        """
+        Busca dados em uma tabela.
 
         Args:
             table: Nome da tabela
             id_: ID do registro
 
         Returns:
-            Registro removido
-
-        Raises:
-            DatabaseError: Se houver erro na remoção
+            Dados encontrados ou None
         """
-        try:
-            result = await self.client.table(table).delete().eq("id", id_).execute()
-            return result.data[0]
+        table = self._ensure_schema(table)
+        result = await self.client.table(table).select("*").eq("id", id_).execute()
+        return result.data[0] if result.data else None
 
-        except APIError as e:
-            logger.exception("Erro ao remover do Supabase: %s", e)
-            raise DatabaseError from e
-
-        except Exception as e:
-            logger.exception("Erro ao remover do Supabase: %s", e)
-            raise DatabaseError from e
-
-    async def get(self, table: str, id_: str) -> dict[str, Any] | None:
-        """Busca um registro pelo ID.
+    async def list(self, table: str, skip: int = 0, limit: int = 100) -> List[Dict]:
+        """
+        Lista dados de uma tabela.
 
         Args:
             table: Nome da tabela
-            id_: ID do registro
+            skip: Registros a pular
+            limit: Limite de registros
 
         Returns:
-            Registro encontrado ou None
-
-        Raises:
-            DatabaseError: Se houver erro na busca
+            Lista de dados
         """
-        try:
-            result = await self.client.table(table).select("*").eq("id", id_).execute()
-            if result.data:
-                return result.data[0]
-            return None
-
-        except APIError as e:
-            logger.exception("Erro ao buscar no Supabase: %s", e)
-            raise DatabaseError from e
-
-        except Exception as e:
-            logger.exception("Erro ao buscar no Supabase: %s", e)
-            raise DatabaseError from e
-
-    async def list(
-        self,
-        table: str,
-        skip: int = 0,
-        limit: int = 10,
-    ) -> list[dict[str, Any]]:
-        """Lista registros com paginação.
-
-        Args:
-            table: Nome da tabela
-            skip: Número de registros para pular
-            limit: Número máximo de registros
-
-        Returns:
-            Lista de registros
-
-        Raises:
-            DatabaseError: Se houver erro na listagem
-        """
-        try:
-            result = await self.client.table(table).select("*").range(skip, skip + limit - 1).execute()
-            if result.data:
-                return result.data
-            return []
-
-        except APIError as e:
-            logger.exception("Erro ao listar no Supabase: %s", e)
-            raise DatabaseError from e
-
-        except Exception as e:
-            logger.exception("Erro ao listar no Supabase: %s", e)
-            raise DatabaseError from e
+        table = self._ensure_schema(table)
+        result = await self.client.table(table).select("*").range(skip, skip + limit - 1).execute()
+        return result.data
 
     async def count(self, table: str) -> int:
-        """Conta registros na tabela.
+        """
+        Conta registros em uma tabela.
 
         Args:
             table: Nome da tabela
 
         Returns:
-            Total de registros
-
-        Raises:
-            DatabaseError: Se houver erro na contagem
+            Número de registros
         """
-        try:
-            result = await self.client.table(table).select("count", count="exact").execute()
-            if result.count is not None:
-                return result.count
-            return 0
-
-        except APIError as e:
-            logger.exception("Erro ao contar no Supabase: %s", e)
-            raise DatabaseError from e
-
-        except Exception as e:
-            logger.exception("Erro ao contar no Supabase: %s", e)
-            raise DatabaseError from e
-
-    async def search(
-        self,
-        query_embedding: list[float],
-        k: int = 4,
-        threshold: float = 0.5,
-    ) -> list[dict[str, Any]]:
-        """Busca registros por similaridade.
-
-        Args:
-            query_embedding: Embedding da query
-            k: Número de resultados
-            threshold: Limiar de similaridade
-
-        Returns:
-            Lista de registros similares
-
-        Raises:
-            DatabaseError: Se houver erro na busca
-        """
-        try:
-            result = await self.client.rpc(
-                "match_documents",
-                {
-                    "query_embedding": query_embedding,
-                    "match_count": k,
-                    "similarity_threshold": threshold,
-                },
-            ).execute()
-            if result.data:
-                return result.data
-            return []
-
-        except APIError as e:
-            logger.exception("Erro na busca por similaridade: %s", e)
-            raise DatabaseError from e
-
-        except Exception as e:
-            logger.exception("Erro na busca por similaridade: %s", e)
-            raise DatabaseError from e
-
-    async def generate_embedding(self, text: str) -> list[float]:
-        """Gera embedding para um texto.
-
-        Args:
-            text: Texto para gerar embedding
-
-        Returns:
-            Lista de floats do embedding
-
-        Raises:
-            EmbeddingError: Se houver erro ao gerar embedding
-        """
-        try:
-            result = await self.client.rpc(
-                "generate_embedding",
-                {"text": text},
-            ).execute()
-            if result.data:
-                return result.data
-
-            logger.error("Erro ao gerar embedding: resultado vazio")
-            raise EmbeddingError("Resultado vazio")
-
-        except APIError as e:
-            logger.exception("Erro ao gerar embedding: %s", e)
-            raise EmbeddingError from e
-
-        except Exception as e:
-            logger.exception("Erro ao gerar embedding: %s", e)
-            raise EmbeddingError from e
+        table = self._ensure_schema(table)
+        result = await self.client.table(table).select("count", count="exact").execute()
+        return result.count

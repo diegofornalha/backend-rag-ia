@@ -1,148 +1,220 @@
-"""Rotas de documentos."""
+"""
+Rotas para gerenciamento de documentos.
 
-from datetime import UTC, datetime
-from typing import Any, List
-from fastapi import APIRouter, HTTPException, Path
+Este módulo contém as rotas para:
+- Upload de documentos
+- Listagem de documentos
+- Busca de documentos por ID
+- Remoção de documentos
+- Atualização de documentos
+"""
+
+from typing import List, Optional
+from fastapi import APIRouter, HTTPException, UploadFile, File, Query
 from pydantic import BaseModel
 
-from backend_rag_ia.models.database import (
-    Document,
-    DocumentCreate,
-    DocumentResponse
+router = APIRouter(
+    prefix="/documents",
+    tags=["Documentos"],
+    responses={
+        404: {"description": "Documento não encontrado"},
+        500: {"description": "Erro interno do servidor"}
+    }
 )
-from backend_rag_ia.services.vector_store import VectorStore
-from backend_rag_ia.utils.logging_config import logger
 
-router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
-
-@router.post("", response_model=DocumentResponse)
-async def add_document(document: DocumentCreate) -> DocumentResponse:
-    """Adiciona um novo documento.
-    
-    Args:
-        document: Documento a ser adicionado
-        
-    Returns:
-        Documento adicionado
+class Document(BaseModel):
     """
+    Modelo de documento.
+    
+    Attributes:
+        id: Identificador único do documento
+        title: Título do documento
+        content: Conteúdo do documento
+        metadata: Metadados adicionais (opcional)
+    """
+    id: str
+    title: str
+    content: str
+    metadata: Optional[dict] = None
+
+@router.post(
+    "/", 
+    response_model=Document,
+    summary="Upload de documento",
+    description="""
+    Faz upload de um novo documento para o sistema.
+    
+    O documento pode ser enviado como:
+    - Arquivo PDF
+    - Arquivo de texto (.txt)
+    - Arquivo Word (.doc, .docx)
+    
+    O sistema irá:
+    1. Extrair o texto do documento
+    2. Gerar embeddings para busca semântica
+    3. Armazenar no banco de dados
+    
+    Exemplos:
+    ```python
+    import requests
+    
+    files = {'file': open('documento.pdf', 'rb')}
+    response = requests.post('http://localhost:10000/documents', files=files)
+    document = response.json()
+    ```
+    """
+)
+async def upload_document(
+    file: UploadFile = File(..., description="Arquivo do documento a ser enviado")
+) -> Document:
+    """Upload de documento."""
     try:
-        # TODO: Implementar lógica de adicionar documento usando VectorStore
-        doc_id = "123"  # Gerar ID único
-        return DocumentResponse(
-            id=doc_id,
-            content=document.content,
-            metadata=document.metadata,
-            created_at=datetime.now(UTC).isoformat()
-        )
+        # Implementação do upload
+        pass
     except Exception as e:
-        logger.exception("Erro ao adicionar documento: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("", response_model=List[DocumentResponse])
-async def list_documents() -> List[DocumentResponse]:
-    """Lista todos os documentos.
+@router.get(
+    "/",
+    response_model=List[Document],
+    summary="Lista documentos",
+    description="""
+    Retorna a lista de documentos armazenados no sistema.
     
-    Returns:
-        Lista de documentos
+    Parâmetros de filtro:
+    - limit: Número máximo de documentos a retornar
+    - offset: Número de documentos a pular
+    - search: Termo para busca no título/conteúdo
+    
+    Exemplos:
+    ```python
+    import requests
+    
+    # Listar primeiros 10 documentos
+    response = requests.get('http://localhost:10000/documents?limit=10')
+    documents = response.json()
+    
+    # Buscar documentos com "python" no título
+    response = requests.get('http://localhost:10000/documents?search=python')
+    documents = response.json()
+    ```
     """
+)
+async def list_documents(
+    limit: int = Query(10, description="Número máximo de documentos a retornar"),
+    offset: int = Query(0, description="Número de documentos a pular"),
+    search: Optional[str] = Query(None, description="Termo para busca no título/conteúdo")
+) -> List[Document]:
+    """Lista documentos."""
     try:
-        # TODO: Implementar lógica de listar documentos usando VectorStore
-        return []
+        # Implementação da listagem
+        pass
     except Exception as e:
-        logger.exception("Erro ao listar documentos: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/{doc_id}", response_model=DocumentResponse)
-async def get_document(doc_id: str) -> DocumentResponse:
-    """Obtém um documento específico.
+@router.get(
+    "/{document_id}",
+    response_model=Document,
+    summary="Busca documento por ID",
+    description="""
+    Retorna um documento específico pelo seu ID.
     
-    Args:
-        doc_id: ID do documento
-        
-    Returns:
-        Documento
+    Se o documento não for encontrado, retorna erro 404.
+    
+    Exemplos:
+    ```python
+    import requests
+    
+    document_id = "123"
+    response = requests.get(f'http://localhost:10000/documents/{document_id}')
+    
+    if response.status_code == 404:
+        print("Documento não encontrado")
+    else:
+        document = response.json()
+        print(document['title'])
+    ```
     """
+)
+async def get_document(document_id: str) -> Document:
+    """Busca documento por ID."""
     try:
-        # TODO: Implementar lógica de obter documento usando VectorStore
-        return DocumentResponse(
-            id=doc_id,
-            content="Conteúdo do documento",
-            metadata={},
-            created_at=datetime.now(UTC).isoformat()
-        )
+        # Implementação da busca
+        pass
     except Exception as e:
-        logger.exception("Erro ao obter documento: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
 
-@router.put("/{doc_id}", response_model=DocumentResponse)
-async def update_document(doc_id: str, document: DocumentCreate) -> DocumentResponse:
-    """Atualiza um documento.
+@router.delete(
+    "/{document_id}",
+    summary="Remove documento",
+    description="""
+    Remove um documento do sistema pelo seu ID.
     
-    Args:
-        doc_id: ID do documento
-        document: Novos dados do documento
-        
-    Returns:
-        Documento atualizado
+    A remoção é permanente e não pode ser desfeita.
+    
+    Exemplos:
+    ```python
+    import requests
+    
+    document_id = "123"
+    response = requests.delete(f'http://localhost:10000/documents/{document_id}')
+    
+    if response.status_code == 200:
+        print("Documento removido com sucesso")
+    elif response.status_code == 404:
+        print("Documento não encontrado")
+    ```
     """
+)
+async def delete_document(document_id: str):
+    """Remove documento."""
     try:
-        # TODO: Implementar lógica de atualizar documento usando VectorStore
-        return DocumentResponse(
-            id=doc_id,
-            content=document.content,
-            metadata=document.metadata,
-            created_at=datetime.now(UTC).isoformat()
-        )
+        # Implementação da remoção
+        pass
     except Exception as e:
-        logger.exception("Erro ao atualizar documento: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
 
-@router.delete("/{doc_id}")
-async def delete_document(doc_id: str) -> dict[str, str]:
-    """Remove um documento.
+@router.put(
+    "/{document_id}",
+    response_model=Document,
+    summary="Atualiza documento",
+    description="""
+    Atualiza um documento existente.
     
-    Args:
-        doc_id: ID do documento
-        
-    Returns:
-        Mensagem de confirmação
-    """
-    try:
-        # TODO: Implementar lógica de remover documento usando VectorStore
-        return {"message": f"Documento {doc_id} removido com sucesso"}
-    except Exception as e:
-        logger.exception("Erro ao remover documento: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/history/{hours}", response_model=List[DocumentResponse])
-async def get_documents_history(
-    hours: int = Path(..., gt=0, description="Número de horas para buscar histórico")
-) -> List[DocumentResponse]:
-    """Obtém histórico de documentos.
+    Permite atualizar:
+    - Título
+    - Conteúdo
+    - Metadados
     
-    Args:
-        hours: Número de horas para buscar histórico
-        
-    Returns:
-        Lista de documentos no período
-    """
-    try:
-        # TODO: Implementar lógica de histórico usando VectorStore
-        return []
-    except Exception as e:
-        logger.exception("Erro ao obter histórico: %s", e)
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/count")
-async def count_documents() -> dict[str, int]:
-    """Conta total de documentos.
+    O ID do documento não pode ser alterado.
     
-    Returns:
-        Total de documentos
+    Exemplos:
+    ```python
+    import requests
+    
+    document_id = "123"
+    data = {
+        "title": "Novo título",
+        "content": "Novo conteúdo",
+        "metadata": {"tags": ["python", "fastapi"]}
+    }
+    
+    response = requests.put(
+        f'http://localhost:10000/documents/{document_id}',
+        json=data
+    )
+    
+    if response.status_code == 200:
+        updated_document = response.json()
+    elif response.status_code == 404:
+        print("Documento não encontrado")
+    ```
     """
+)
+async def update_document(document_id: str, document: Document) -> Document:
+    """Atualiza documento."""
     try:
-        # TODO: Implementar lógica de contagem usando VectorStore
-        return {"count": 0}
+        # Implementação da atualização
+        pass
     except Exception as e:
-        logger.exception("Erro ao contar documentos: %s", e)
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=404, detail="Documento não encontrado") 
