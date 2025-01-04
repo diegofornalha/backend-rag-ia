@@ -1,33 +1,57 @@
-[project]
-name = "backend_rag_ia"
+[tool.poetry]
+name = "backend-rag-ia"
 version = "0.1.0"
-description = "Backend para sistema RAG com IA"
-requires-python = ">=3.11"
+description = "Backend RAG IA"
+authors = ["Diego Fornalha <diegofornalha@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+sentence-transformers = "2.2.2"
+torch = "2.2.0"
+transformers = "4.30.2"
+huggingface-hub = "0.16.4"
+supabase = "1.0.3"
+rich = "13.4.2"
+python-dotenv = "1.0.0"
+numpy = "1.24.3"
+fastapi = "^0.104.1"
+uvicorn = "^0.24.0"
+ruff = "^0.1.6"
+pydantic-settings = "^2.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = ["docs/*", "tests/*"]
 
-# Regras essenciais
+[tool.ruff.lint]
 select = [
-    "E",   # pycodestyle
-    "F",   # pyflakes
-    "I",   # isort
-    "N",   # pep8-naming
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
-    "RUF", # ruff-specific
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
 ]
 
-# Ignorar alguns casos específicos
 ignore = [
     "E501",  # line too long
+    "B008",  # do not perform function calls in argument defaults
 ]
 
-# Configurações específicas
-[tool.ruff.per-file-ignores]
-"__init__.py" = ["F401"]  # unused imports
-
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ["backend_rag_ia"]
+known-third-party = ["rich", "supabase", "sentence_transformers"]
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+inline-quotes = "double"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

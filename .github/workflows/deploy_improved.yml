@@ -1,0 +1,370 @@
+name: Deploy (Improved)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  deployments: write
+  pull-requests: write
+
+env:
+  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+  RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+  AUTO_ROLLBACK: true
+  CLEANUP_ENABLED: true
+  EMBATE_ID: embate_sync_deploy_20240104
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: production
+      cancel-in-progress: false
+
+    steps:
+      - name: Configurar ambiente
+        run: |
+          echo "TEMP_HOME=/home/runner/work/_temp/${{ github.run_id }}" >> $GITHUB_ENV
+          echo "ORIGINAL_HOME=$HOME" >> $GITHUB_ENV
+          mkdir -p ${{ env.TEMP_HOME }}
+          echo "HOME=${{ env.TEMP_HOME }}" >> $GITHUB_ENV
+
+      - name: Checkout código
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+
+      - name: Carregar padrões de commit do embate
+        id: commit_patterns
+        run: |
+          EMBATE_FILE="03_ferramentas_rag_apenas_raiz/dados_embates/${EMBATE_ID}.json"
+          if [ -f "$EMBATE_FILE" ]; then
+            echo "📝 Carregando padrões de commit..."
+            
+            STATUS_PATTERN=$(jq -r '.metadata.commit_patterns.status' "$EMBATE_FILE")
+            RESULTADO_PATTERN=$(jq -r '.metadata.commit_patterns.resultado' "$EMBATE_FILE")
+            CLEANUP_PATTERN=$(jq -r '.metadata.commit_patterns.cleanup' "$EMBATE_FILE")
+            FINAL_PATTERN=$(jq -r '.metadata.commit_patterns.final' "$EMBATE_FILE")
+            
+            echo "status_pattern=$STATUS_PATTERN" >> $GITHUB_OUTPUT
+            echo "resultado_pattern=$RESULTADO_PATTERN" >> $GITHUB_OUTPUT
+            echo "cleanup_pattern=$CLEANUP_PATTERN" >> $GITHUB_OUTPUT
+            echo "final_pattern=$FINAL_PATTERN" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ Arquivo do embate não encontrado"
+            exit 1
+          fi
+
+      - name: Atualizar status do embate
+        run: |
+          EMBATE_FILE="03_ferramentas_rag_apenas_raiz/dados_embates/${EMBATE_ID}.json"
+          if [ -f "$EMBATE_FILE" ]; then
+            echo "📝 Atualizando status do embate..."
+            
+            TMP_FILE=$(mktemp)
+            jq --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" '
+              .argumentos += [{
+                "autor": "Sistema",
+                "tipo": "status",
+                "conteudo": "Deploy em andamento. Iniciando processo de verificação e implementação.",
+                "data": $timestamp
+              }]
+            ' "$EMBATE_FILE" > "$TMP_FILE"
+            mv "$TMP_FILE" "$EMBATE_FILE"
+            
+            git add "$EMBATE_FILE"
+            COMMIT_MSG="${{ steps.commit_patterns.outputs.status_pattern }}"
+            COMMIT_MSG="${COMMIT_MSG/\{embate_id\}/$EMBATE_ID}"
+            git commit -m "$COMMIT_MSG"
+            git push
+          else
+            echo "⚠️ Arquivo do embate não encontrado"
+          fi
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Verificar Docker
+        run: |
+          docker --version
+          docker compose version
+
+      - name: Build e teste da imagem
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          load: true
+          tags: app:test
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Mover cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Obter último deploy bem sucedido
+        id: last_deploy
+        run: |
+          LAST_DEPLOY=$(curl -s -H "authorization: Bearer $RENDER_API_KEY" \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys?limit=1" \
+            | jq -r '.[0].id')
+          echo "deploy_id=$LAST_DEPLOY" >> $GITHUB_OUTPUT
+
+      - name: Deploy to Render
+        id: deploy
+        run: |
+          START_TIME=$(date +%s)
+          echo "start_time=$START_TIME" >> $GITHUB_OUTPUT
+
+          DEPLOY_ID=$(curl -X POST \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
+            -H "accept: application/json" \
+            -H "authorization: Bearer $RENDER_API_KEY" | jq -r '.id')
+          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+
+      - name: Verificar status do deploy
+        id: check_deploy
+        run: |
+          MAX_RETRIES=30  # 5 minutos (10s * 30)
+          RETRY_COUNT=0
+          LAST_STATUS=""
+          DEPLOY_SUCCESS=false
+
+          check_service_status() {
+            curl -s -H "authorization: Bearer $RENDER_API_KEY" \
+              "https://api.render.com/v1/services/$RENDER_SERVICE_ID" \
+              | jq -r '.serviceDetails.status'
+          }
+
+          check_deploy_status() {
+            curl -s -H "authorization: Bearer $RENDER_API_KEY" \
+              "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/${{ steps.deploy.outputs.deploy_id }}" \
+              | jq -r '.status'
+          }
+
+          check_health() {
+            HEALTH_URL="https://$SERVICE_URL/api/v1/health"
+            curl -s -f "$HEALTH_URL" > /dev/null
+            return $?
+          }
+
+          echo "🔄 Iniciando verificação do deploy..."
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            SERVICE_STATUS=$(check_service_status)
+            DEPLOY_STATUS=$(check_deploy_status)
+            
+            if [ "$DEPLOY_STATUS" != "$LAST_STATUS" ]; then
+              echo "📊 Status do serviço: $SERVICE_STATUS"
+              echo "🚀 Status do deploy: $DEPLOY_STATUS"
+              LAST_STATUS="$DEPLOY_STATUS"
+            fi
+            
+            if [ "$SERVICE_STATUS" = "live" ] && [ "$DEPLOY_STATUS" = "live" ]; then
+              echo "✅ Serviço e deploy estão ativos!"
+              
+              if check_health; then
+                echo "💚 Health check passou!"
+                DEPLOY_SUCCESS=true
+                echo "success=true" >> $GITHUB_OUTPUT
+                exit 0
+              else
+                echo "⚠️ Serviço ativo mas health check falhou"
+              fi
+            elif [ "$DEPLOY_STATUS" = "failed" ]; then
+              echo "❌ Deploy falhou!"
+              echo "success=false" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            
+            if [ $RETRY_COUNT -lt 10 ]; then
+              SLEEP_TIME=5
+            else
+              SLEEP_TIME=10
+            fi
+            
+            echo "⏳ Tentativa $RETRY_COUNT de $MAX_RETRIES (aguardando ${SLEEP_TIME}s)"
+            sleep $SLEEP_TIME
+          done
+
+          echo "⚠️ Timeout ao aguardar deploy"
+          echo "success=false" >> $GITHUB_OUTPUT
+          exit 1
+
+      - name: Rollback automático
+        if: |
+          env.AUTO_ROLLBACK == 'true' && 
+          steps.check_deploy.outputs.success != 'true' && 
+          steps.last_deploy.outputs.deploy_id != ''
+        run: |
+          echo "🔄 Iniciando rollback automático..."
+
+          curl -X POST \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/${{ steps.last_deploy.outputs.deploy_id }}/rollback" \
+            -H "accept: application/json" \
+            -H "authorization: Bearer $RENDER_API_KEY"
+
+          echo "✅ Rollback iniciado para o deploy ${{ steps.last_deploy.outputs.deploy_id }}"
+
+      - name: Notificar status
+        if: always()
+        run: |
+          if [ "${{ steps.check_deploy.outputs.success }}" = "true" ]; then
+            echo "✅ Deploy concluído com sucesso!"
+          elif [ "${{ env.AUTO_ROLLBACK }}" = "true" ]; then
+            echo "⚠️ Deploy falhou - Rollback automático executado"
+          else
+            echo "❌ Deploy falhou!"
+          fi
+
+      - name: Registrar métricas
+        if: always()
+        run: |
+          END_TIME=$(date +%s)
+          START_TIME=${{ steps.deploy.outputs.start_time }}
+          DEPLOY_TIME=$((END_TIME - START_TIME))
+
+          echo "📊 Métricas do Deploy:"
+          echo "- Tempo total: ${DEPLOY_TIME}s"
+          echo "- Status: ${{ steps.check_deploy.outputs.success }}"
+          echo "- Rollback executado: ${{ env.AUTO_ROLLBACK }}"
+
+      - name: Registrar resultado no embate
+        if: always()
+        run: |
+          EMBATE_FILE="03_ferramentas_rag_apenas_raiz/dados_embates/${EMBATE_ID}.json"
+          if [ -f "$EMBATE_FILE" ]; then
+            echo "📝 Registrando resultado no embate..."
+            
+            if [ "${{ steps.check_deploy.outputs.success }}" = "true" ]; then
+              STATUS_MSG="Deploy concluído com sucesso em ${DEPLOY_TIME}s"
+              NOVO_STATUS="resolvido"
+              COMMIT_STATUS="sucesso"
+            else
+              STATUS_MSG="Deploy falhou. Rollback executado: ${{ env.AUTO_ROLLBACK }}"
+              NOVO_STATUS="falhou"
+              COMMIT_STATUS="falha"
+            fi
+            
+            TMP_FILE=$(mktemp)
+            jq --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+               --arg status "$NOVO_STATUS" \
+               --arg msg "$STATUS_MSG" '
+              .status = $status |
+              .argumentos += [{
+                "autor": "Sistema",
+                "tipo": "resultado",
+                "conteudo": $msg,
+                "data": $timestamp
+              }]
+            ' "$EMBATE_FILE" > "$TMP_FILE"
+            mv "$TMP_FILE" "$EMBATE_FILE"
+            
+            git add "$EMBATE_FILE"
+            COMMIT_MSG="${{ steps.commit_patterns.outputs.resultado_pattern }}"
+            COMMIT_MSG="${COMMIT_MSG/\{status\}/$COMMIT_STATUS}"
+            git commit -m "$COMMIT_MSG"
+            git push
+          fi
+
+      - name: Limpeza pós-job
+        if: always() && env.CLEANUP_ENABLED == 'true'
+        run: |
+          echo "🧹 Iniciando limpeza pós-job..."
+
+          # 1. Limpeza de configurações Git
+          echo "Limpando configurações Git..."
+          git config --local --unset-all http.https://github.com/.extraheader || true
+          git config --local --unset-all core.sshCommand || true
+
+          # 2. Limpeza de credenciais
+          echo "Removendo credenciais..."
+          rm -rf ~/.git-credentials || true
+          rm -rf ~/.ssh/known_hosts || true
+
+          # 3. Limpeza de caches
+          echo "Limpando caches..."
+          rm -rf /tmp/.buildx-cache* || true
+          rm -rf ~/.cache/pip || true
+
+          # 4. Compressão de logs
+          echo "Comprimindo logs..."
+          find . -name "*.log" -type f -exec gzip {} \;
+
+          # 5. Restaurar HOME original
+          echo "Restaurando ambiente..."
+          rm -rf ${{ env.TEMP_HOME }}
+          echo "HOME=${{ env.ORIGINAL_HOME }}" >> $GITHUB_ENV
+
+          # 6. Limpar variáveis sensíveis
+          echo "Limpando variáveis sensíveis..."
+          unset RENDER_API_KEY
+          unset RENDER_SERVICE_ID
+
+          echo "✨ Limpeza concluída!"
+
+          # 7. Relatório de limpeza
+          echo "📝 Relatório de Limpeza:"
+          echo "- Configurações Git removidas"
+          echo "- Credenciais limpas"
+          echo "- Caches removidos"
+          echo "- Logs comprimidos"
+          echo "- Ambiente restaurado"
+          echo "- Variáveis sensíveis limpas"
+
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git add .
+            COMMIT_MSG="${{ steps.commit_patterns.outputs.cleanup_pattern }}"
+            if [ "${{ steps.check_deploy.outputs.success }}" = "true" ]; then
+              COMMIT_MSG="${COMMIT_MSG/\{status\}/sucesso}"
+            else
+              COMMIT_MSG="${COMMIT_MSG/\{status\}/falha}"
+            fi
+            git commit -m "$COMMIT_MSG"
+            git push
+          fi
+
+      - name: Commit final e push
+        if: always()
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "📦 Commitando alterações finais..."
+            
+            git add .
+            COMMIT_MSG="${{ steps.commit_patterns.outputs.final_pattern }}"
+            if [ "${{ steps.check_deploy.outputs.success }}" = "true" ]; then
+              COMMIT_MSG="${COMMIT_MSG/\{status\}/sucesso}"
+            else
+              COMMIT_MSG="${COMMIT_MSG/\{status\}/falha}"
+            fi
+            
+            git commit -m "$COMMIT_MSG"
+            git push
+          else
+            echo "✨ Nenhuma alteração para commitar"
+          fi
