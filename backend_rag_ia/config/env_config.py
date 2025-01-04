@@ -83,7 +83,9 @@ class EnvConfig:
         local_url = os.getenv("LOCAL_URL", "http://localhost:10000")
 
         # Se estiver em modo local ou não tiver ACTIVE_URL, usa LOCAL_URL
-        base_url = active_url if (operation_mode != "local" and active_url) else local_url
+        base_url = (
+            active_url if (operation_mode != "local" and active_url) else local_url
+        )
 
         return APIConfig(
             host=os.getenv("HOST", "0.0.0.0"),
@@ -173,7 +175,10 @@ class EnvConfig:
         """
         required_configs = [
             (self.supabase.url, "SUPABASE_URL"),
-            (self.supabase.service_key or self.supabase.anon_key, "SUPABASE_KEY ou SUPABASE_SERVICE_KEY"),
+            (
+                self.supabase.service_key or self.supabase.anon_key,
+                "SUPABASE_KEY ou SUPABASE_SERVICE_KEY"
+            ),
             (self.api.base_url, "ACTIVE_URL ou LOCAL_URL"),
             (self.ai.gemini_key, "GEMINI_API_KEY")
         ]
