@@ -31,6 +31,7 @@ class SequentialCallsConfig:
         Número máximo de arquivos de backup.
     VERSION : str
         Versão do gerenciador.
+
     """
 
     LIMITE_AVISO: ClassVar[int] = 20
@@ -59,6 +60,7 @@ class SequentialCall:
         Metadados associados à chamada.
     errors : list[str]
         Lista de erros ocorridos.
+
     """
 
     id: str
