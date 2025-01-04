@@ -1,0 +1,10 @@
+{
+  "max_iterations": 5,
+  "min_impact_per_change": 0.2,
+  "max_consolidated_ratio": 0.8,
+  "diminishing_returns_threshold": 0.3,
+  "max_complexity": 15,
+  "min_cohesion": 0.5,
+  "max_coupling": 0.7,
+  "max_dependencies": 20
+}

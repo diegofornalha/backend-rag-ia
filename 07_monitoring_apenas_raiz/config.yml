@@ -1,0 +1,24 @@
+test_settings:
+  auto_proceed: true
+  skip_confirmations: true
+  verbose_output: false
+  fail_fast: false
+
+monitoring:
+  embates_dir: embates
+  api_url: http://localhost:10000
+  check_interval: 60
+
+  metrics:
+    business:
+      enabled: true
+      thresholds:
+        resolucao_tempo_max: 72 # horas
+        concordancia_min: 0.5 # 50%
+
+    system:
+      enabled: true
+      thresholds:
+        cpu_max: 80 # %
+        memoria_max: 80 # %
+        disco_max: 90 # %

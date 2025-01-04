@@ -1,0 +1,12 @@
+embate_ativo: true
+limites_excedidos:
+  cpu: false
+  disco: false
+  memoria: true
+metricas_hidratacao:
+  cpu: 0.22399999999999998
+  disco: 0.27
+  memoria: 0.84
+  rede: 0.0
+timestamp: '2025-01-03T20:07:25.567068'
+tools_count: 1

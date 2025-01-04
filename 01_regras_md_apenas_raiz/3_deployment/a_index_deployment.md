@@ -10,6 +10,7 @@ Este diretório contém a documentação relacionada ao processo de deploy do pr
 - `d_env.md`: Guia de variáveis de ambiente
 - `e_monitoring.md`: Monitoramento de deploy
 - `f_troubleshooting.md`: Resolução de problemas
+- `g_regras_ssh.md`: Regras e configurações de SSH para Render
 
 ## Subdiretórios
 

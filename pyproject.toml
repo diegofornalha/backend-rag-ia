@@ -24,5 +24,34 @@ pydantic-settings = "^2.1.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.ruff.isort]
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["docs/*", "tests/*"]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+]
+
+ignore = [
+    "E501",  # line too long
+    "B008",  # do not perform function calls in argument defaults
+]
+
+[tool.ruff.lint.isort]
 known-first-party = ["backend_rag_ia"]
+known-third-party = ["rich", "supabase", "sentence_transformers"]
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+inline-quotes = "double"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"

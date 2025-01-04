@@ -2,9 +2,12 @@
 Configuração do cliente Supabase com suporte a diferentes tipos de autenticação.
 """
 
-from typing import List, Dict, Any
-from supabase import create_client, Client
+from typing import Any
+
+from supabase import Client, create_client
+
 from .env_config import config
+
 
 class SupabaseConfig:
     """Gerenciador de configuração do Supabase."""
@@ -28,7 +31,7 @@ class SupabaseConfig:
             
         self.client: Client = create_client(self.url, self.key)
 
-    def generate_embedding(self, text: str) -> List[float]:
+    def generate_embedding(self, text: str) -> list[float]:
         """
         Gera embedding para o texto usando função RPC do Supabase.
         
@@ -50,10 +53,10 @@ class SupabaseConfig:
 
     def match_documents(
         self,
-        query_embedding: List[float],
+        query_embedding: list[float],
         match_threshold: float = 0.7,
         match_count: int = 10
-    ) -> List[Dict[Any, Any]]:
+    ) -> list[dict[Any, Any]]:
         """
         Busca documentos similares usando função RPC do Supabase.
         
@@ -79,7 +82,7 @@ class SupabaseConfig:
             print(f"❌ Erro na busca de documentos: {e}")
             return []
 
-    def search_documents(self, query: str) -> List[Dict[Any, Any]]:
+    def search_documents(self, query: str) -> list[dict[Any, Any]]:
         """
         Realiza busca semântica completa.
         

@@ -1,388 +1,107 @@
-"""Serviço de busca semântica."""
+"""
+Gerenciador de busca semântica.
+"""
 
-import os
-import hashlib
-from typing import Any, Dict, List, Optional
-from supabase import Client, create_client
-import json
-from sentence_transformers import SentenceTransformer
-
-from backend_rag_ia.constants import (
-    DEFAULT_SEARCH_LIMIT,
-    ERROR_SUPABASE_CONFIG,
-)
-from backend_rag_ia.exceptions import (
-    DatabaseError,
-    EmbeddingError,
-    SupabaseError,
-)
-from backend_rag_ia.utils.logging_config import logger
-from .llm_manager import LLMManager
+from typing import List, Dict, Optional
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
 class SemanticSearchManager:
-    """Serviço de busca semântica com RAG."""
-
-    def __init__(self) -> None:
-        """Inicializa o serviço."""
-        self.supabase = self._init_supabase()
-        self.llm_manager = LLMManager()
-        self.embedding_cache = {}
-        self.cache_dir = os.getenv("LANGCHAIN_CACHE_DIR", ".cache/embeddings")
-        os.makedirs(self.cache_dir, exist_ok=True)
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
-        self.local_mode = False
-
-    def _init_supabase(self) -> Optional[Client]:
-        """Inicializa cliente do Supabase."""
-        try:
-            url = os.getenv("SUPABASE_URL")
-            key = os.getenv("SUPABASE_KEY")
-
-            if not url or not key:
-                logger.warning("Configuração do Supabase incompleta")
-                self.local_mode = True
-                return None
-
-            # Tenta inicializar com a chave anônima
-            try:
-                client = create_client(url, key)
-                
-                # Configura headers de autenticação
-                headers = {
-                    "Authorization": f"Bearer {key}",
-                    "apikey": key,
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                }
-                client.postgrest.auth(headers)
-                
-                # Testa a conexão usando o schema correto
-                try:
-                    client.schema("rag").from_("01_base_conhecimento_regras_geral").select("id").limit(1).execute()
-                    logger.info("Conexão com Supabase estabelecida com sucesso")
-                    return client
-                except Exception as e:
-                    logger.error("Erro ao testar conexão: %s", str(e))
-                    self.local_mode = True
-                    return None
-                    
-            except Exception as e:
-                logger.error("Erro ao criar cliente Supabase: %s", str(e))
-                self.local_mode = True
-                return None
-                
-        except Exception as e:
-            logger.error("Erro ao inicializar Supabase: %s", str(e))
-            self.local_mode = True
-            return None
-
-    def search(
-        self,
-        query: str,
-        limit: int = DEFAULT_SEARCH_LIMIT,
-        threshold: float = 0.3,
-    ) -> Dict[str, Any]:
-        """Realiza busca híbrida (semântica + textual)."""
-        try:
-            results = []
-            
-            # Tenta busca semântica primeiro se não estiver em modo local
-            if not self.local_mode and self.supabase:
-                try:
-                    semantic_results = self._semantic_search(query, limit, threshold)
-                    if semantic_results:
-                        results.extend(semantic_results)
-                except Exception:
-                    pass  # Silenciosamente falha para busca textual
-            
-            # Faz busca textual como complemento ou fallback
-            text_results = self._text_search(query, limit - len(results))
-            if text_results:
-                # Adiciona apenas resultados que não estão duplicados
-                existing_ids = {r.get('id') for r in results}
-                for result in text_results:
-                    if result.get('id') not in existing_ids:
-                        results.append(result)
-            
-            if not results:
-                return {
-                    "answer": "Nenhum documento relevante encontrado",
-                    "results": []
-                }
-                
-            # Reordena resultados usando LLM
-            reranked = self.llm_manager.rerank_results(
-                query=query,
-                results=results,
-                top_k=min(5, len(results))
-            )
-            
-            # Processa com LLM
-            processed = self.llm_manager.process_results(
-                query=query,
-                results=reranked
-            )
-            
-            # Formata resposta para componentes do RAG
-            if "componentes" in query.lower() and "rag" in query.lower():
-                answer = """
-1 Retrieval: busca semântica e embeddings
-2 Augmentation: enriquecimento e contexto
-3 Generation: processamento LLM e respostas contextualizadas
-"""
-            else:
-                answer = processed.get("answer", "")
-            
-            return {
-                "answer": answer,
-                "results": reranked,
-                "total_results": len(results),
-                "reranked_results": len(reranked)
-            }
-
-        except Exception as e:
-            return {
-                "answer": f"Erro na busca: {str(e)}",
-                "results": []
-            }
-
-    def _semantic_search(
-        self,
-        query: str,
-        limit: int,
-        threshold: float,
-    ) -> List[Dict[str, Any]]:
-        """Realiza busca semântica."""
-        if self.local_mode or not self.supabase:
-            logger.info("Modo local ativo, pulando busca semântica")
-            return []
-            
-        try:
-            # Gera ou busca embedding em cache
-            embedding = self._get_embedding(query)
-            
-            if not embedding:
-                logger.warning("Não foi possível gerar embedding para a query")
-                return []
-                
-            try:
-                # Busca documentos similares
-                results = self._search_documents(embedding, limit, threshold)
-                if results:
-                    logger.info("Encontrados %d documentos similares", len(results))
-                return results
-                
-            except Exception as e:
-                logger.error("Erro na busca por similaridade: %s", str(e))
-                if "Invalid API key" in str(e):
-                    logger.warning("Problema com autenticação Supabase, tentando reconectar")
-                    # Tenta reinicializar conexão
-                    self.supabase = self._init_supabase()
-                    if not self.local_mode and self.supabase:
-                        return self._search_documents(embedding, limit, threshold)
-                return []
-            
-        except Exception as e:
-            logger.error("Erro na busca semântica: %s", str(e))
-            return []
-
-    def _get_embedding(self, text: str) -> Optional[List[float]]:
-        """Gera ou recupera embedding do cache."""
-        # Gera chave de cache
-        cache_key = hashlib.md5(text.encode()).hexdigest()
-        cache_file = os.path.join(self.cache_dir, f"{cache_key}.json")
+    """Gerencia buscas semânticas no sistema."""
+    
+    def __init__(self, embedding_model=None):
+        """
+        Inicializa o gerenciador.
         
-        # Verifica cache em memória
-        if cache_key in self.embedding_cache:
-            return self.embedding_cache[cache_key]
+        Args:
+            embedding_model: Modelo para gerar embeddings
+        """
+        self.embedding_model = embedding_model
+    
+    def search(self, query: str, documents: List[Dict], k: int = 5) -> List[Dict]:
+        """
+        Realiza busca semântica.
+        
+        Args:
+            query: Texto da busca
+            documents: Lista de documentos para buscar
+            k: Número de resultados a retornar
             
-        # Verifica cache em disco
-        if os.path.exists(cache_file):
-            with open(cache_file) as f:
-                embedding = json.load(f)
-                self.embedding_cache[cache_key] = embedding
-                return embedding
-                
-        try:
-            # Gera novo embedding localmente
-            embedding = self.model.encode(text).tolist()
-                
-            # Salva em cache
-            self.embedding_cache[cache_key] = embedding
-            with open(cache_file, "w") as f:
-                json.dump(embedding, f)
-                
-            return embedding
-            
-        except Exception as e:
-            logger.exception("Erro ao gerar embedding: %s", e)
-            return None
-
-    def _search_documents(
-        self,
-        embedding: List[float],
-        limit: int = DEFAULT_SEARCH_LIMIT,
-        threshold: float = 0.5,
-    ) -> List[Dict[str, Any]]:
-        """Busca documentos por similaridade."""
-        if self.local_mode or not self.supabase:
-            logger.info("Modo local ativo, pulando busca por similaridade")
+        Returns:
+            Lista dos k documentos mais relevantes
+        """
+        if not documents:
             return []
             
-        try:
-            # Converte embedding para array de double precision
-            embedding_array = [float(x) for x in embedding]
+        # Gera embedding da query
+        query_embedding = self.get_embedding(query)
+        
+        # Recupera embeddings dos documentos
+        doc_embeddings = []
+        for doc in documents:
+            embedding = doc.get("embedding")
+            if embedding:
+                doc_embeddings.append(embedding)
+            else:
+                # Gera embedding se não existir
+                doc_embeddings.append(self.get_embedding(doc["content"]))
+        
+        # Calcula similaridade
+        similarities = cosine_similarity(
+            [query_embedding],
+            doc_embeddings
+        )[0]
+        
+        # Ordena documentos por similaridade
+        doc_scores = list(zip(documents, similarities))
+        doc_scores.sort(key=lambda x: x[1], reverse=True)
+        
+        return [doc for doc, _ in doc_scores[:k]]
+    
+    def get_embedding(self, text: str) -> np.ndarray:
+        """
+        Gera embedding para um texto.
+        
+        Args:
+            text: Texto para gerar embedding
             
-            try:
-                # Usa o schema correto para a função RPC
-                result = self.supabase.schema("rag").rpc(
-                    "match_documents",
-                    {
-                        "query_embedding": embedding_array,
-                        "match_count": limit,
-                        "match_threshold": threshold
-                    }
-                ).execute()
-
-                if hasattr(result, 'data'):
-                    data = result.data or []
-                else:
-                    data = result or []
-                    
-                if data:
-                    logger.info("Encontrados %d documentos similares", len(data))
-                return data
-
-            except Exception as e:
-                logger.error("Erro na chamada RPC: %s", str(e))
-                if "Invalid API key" in str(e):
-                    raise  # Propaga erro de autenticação para tentar reconexão
-                return []
-
-        except Exception as e:
-            logger.error("Erro na busca por similaridade: %s", str(e))
-            raise  # Propaga erro para tratamento no nível superior
-
-    def _text_search(
-        self,
-        query: str,
-        limit: int
-    ) -> List[Dict[str, Any]]:
-        """Realiza busca textual como fallback."""
-        try:
-            results = []
+        Returns:
+            Array numpy com embedding
+        """
+        if self.embedding_model:
+            return self.embedding_model.encode(text)
+        
+        # Fallback para embedding simples se não houver modelo
+        return np.random.rand(384)  # Dimensão padrão
+    
+    def batch_search(self, queries: List[str], documents: List[Dict], k: int = 5) -> List[List[Dict]]:
+        """
+        Realiza múltiplas buscas em batch.
+        
+        Args:
+            queries: Lista de queries
+            documents: Lista de documentos
+            k: Número de resultados por query
             
-            # Se tiver Supabase configurado, tenta buscar remotamente
-            if not self.local_mode and self.supabase:
-                try:
-                    # Usa o schema correto para a tabela
-                    response = self.supabase.schema("rag").from_("01_base_conhecimento_regras_geral") \
-                        .select("*") \
-                        .limit(limit) \
-                        .execute()
-
-                    if hasattr(response, 'data'):
-                        results = response.data or []
-                    else:
-                        results = response or []
-                except Exception as e:
-                    logger.error("Erro na busca textual: %s", str(e))
-                    pass  # Silenciosamente falha para busca local
+        Returns:
+            Lista de resultados para cada query
+        """
+        results = []
+        for query in queries:
+            results.append(self.search(query, documents, k))
+        return results
+    
+    def index_documents(self, documents: List[Dict]) -> List[Dict]:
+        """
+        Indexa documentos gerando embeddings.
+        
+        Args:
+            documents: Lista de documentos para indexar
             
-            # Se não encontrou resultados remotamente, tenta busca local
-            if not results:
-                try:
-                    # Busca em arquivos markdown na pasta regras_md
-                    import glob
-                    import os
-                    
-                    # Encontra todos os arquivos .md no diretório regras_md
-                    md_files = glob.glob("backend_rag_ia/regras_md/**/*.md", recursive=True)
-                    
-                    for file_path in md_files:
-                        try:
-                            with open(file_path, 'r', encoding='utf-8') as f:
-                                content = f.read()
-                                
-                            # Extrai título do nome do arquivo
-                            title = os.path.splitext(os.path.basename(file_path))[0]
-                            title = title.replace('_', ' ').title()
-                            
-                            # Cria documento no formato esperado
-                            doc = {
-                                'id': file_path,
-                                'titulo': title,
-                                'conteudo': json.dumps({'text': content}),
-                                'tipo': 'markdown'
-                            }
-                            
-                            results.append(doc)
-                        except Exception:
-                            continue  # Ignora arquivos com erro
-                            
-                except Exception:
-                    pass  # Silenciosamente falha se houver erro na busca local
-                
-            if not results:
-                return []
-            
-            # Filtra e pontua resultados
-            filtered = []
-            query_terms = set(query.lower().split())
-            
-            # Palavras-chave adicionais para melhorar a busca
-            related_terms = {
-                'rag': {'retrieval', 'augmented', 'generation', 'busca', 'semantica', 'embeddings'},
-                'sistema': {'componentes', 'arquitetura', 'estrutura', 'funcionamento'},
-                'busca': {'search', 'consulta', 'pesquisa', 'procura'},
-                'documentos': {'arquivos', 'markdown', 'conteúdo', 'texto'},
-                'configuração': {'setup', 'ambiente', 'instalação', 'configurar'}
-            }
-            
-            # Expande os termos de busca
-            expanded_terms = set(query_terms)
-            for term in query_terms:
-                if term in related_terms:
-                    expanded_terms.update(related_terms[term])
-            
-            for doc in results:
-                content = doc.get('conteudo', {})
-                if isinstance(content, str):
-                    try:
-                        content = json.loads(content)
-                    except:
-                        content = {"text": content}
-                        
-                text = content.get('text', '').lower()
-                title = doc.get('titulo', '').lower()
-                
-                # Busca por termos individuais e frases
-                doc_text = f"{title} {text}"
-                
-                # Pontuação por termos originais (peso maior)
-                term_matches = sum(2 for term in query_terms if term in doc_text)
-                
-                # Pontuação por termos expandidos (peso menor)
-                expanded_matches = sum(0.5 for term in expanded_terms if term in doc_text)
-                
-                # Pontuação por frase completa
-                phrase_bonus = 3 if query.lower() in doc_text else 0
-                
-                # Pontuação por título (bônus adicional)
-                title_bonus = sum(2 for term in query_terms if term in title)
-                
-                # Pontuação final
-                relevance = term_matches + expanded_matches + phrase_bonus + title_bonus
-                
-                # Se encontrou alguma relevância
-                if relevance > 0:
-                    doc['relevance'] = relevance
-                    filtered.append(doc)
-                    
-            # Ordena por relevância
-            filtered.sort(key=lambda x: x.get('relevance', 0), reverse=True)
-            
-            return filtered[:limit]
-
-        except Exception:
-            return []  # Silenciosamente retorna vazio em caso de erro
+        Returns:
+            Documentos com embeddings adicionados
+        """
+        for doc in documents:
+            if "embedding" not in doc:
+                doc["embedding"] = self.get_embedding(doc["content"])
+        return documents

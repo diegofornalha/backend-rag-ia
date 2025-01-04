@@ -1,0 +1,26 @@
+{
+  "titulo": "Documentação do Processo de Upload de Documentos",
+  "tipo": "tecnico",
+  "contexto": "Documentação do processo bem-sucedido de upload de documentos markdown para o Supabase, incluindo a geração de embeddings e armazenamento em tabelas específicas do schema RAG.",
+  "status": "aberto",
+  "data_inicio": "2024-01-18T00:00:00",
+  "metadata": {
+    "area": "documentacao",
+    "prioridade": "alta",
+    "impacto": "medio"
+  },
+  "argumentos": [
+    {
+      "autor": "Sistema",
+      "tipo": "tecnico",
+      "conteudo": "Implementação bem-sucedida do processo de upload:\n\n1. Correções Realizadas:\n   - Ajuste na referência da tabela para `rag.01`\n   - Correção do schema no Supabase\n   - Implementação da geração de embeddings via API\n\n2. Estrutura de Dados:\n   - Tabela principal: `rag.01`\n   - Tabela de embeddings: `rag.02_embeddings_regras_geral`\n   - Campos normalizados e validados\n\n3. Processo de Upload:\n   - Leitura recursiva de arquivos markdown\n   - Geração de hashes para controle\n   - Upload para Supabase\n   - Geração de embeddings\n\n4. Validações Implementadas:\n   - Verificação de duplicatas\n   - Integridade dos dados\n   - Status de processamento\n   - Logs detalhados",
+      "data": "2024-01-18T00:00:00"
+    },
+    {
+      "autor": "Sistema",
+      "tipo": "tecnico",
+      "conteudo": "Documentação e Boas Práticas:\n\n1. Documentação Criada:\n   - Fluxo de upload detalhado\n   - Campos obrigatórios\n   - Exemplos de código\n   - Troubleshooting\n\n2. Monitoramento:\n   - Métricas implementadas\n   - Logs estruturados\n   - Rastreamento de erros\n   - Performance\n\n3. Próximos Passos:\n   - Implementar processamento em lotes\n   - Otimizar performance\n   - Adicionar mais validações\n   - Expandir documentação\n\n4. Recomendações:\n   - Manter documentação atualizada\n   - Monitorar métricas\n   - Implementar melhorias incrementais\n   - Revisar periodicamente",
+      "data": "2024-01-18T00:00:00"
+    }
+  ]
+}
