@@ -3,9 +3,9 @@ Configuração centralizada para gerenciamento de variáveis de ambiente e confi
 """
 
 import os
-from typing import Optional
-from dotenv import load_dotenv
 from dataclasses import dataclass
+
+from dotenv import load_dotenv
 
 # Carrega variáveis de ambiente
 load_dotenv()
@@ -39,7 +39,7 @@ class AIConfig:
 class EnvConfig:
     """Gerenciador centralizado de configurações."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Inicializa as configurações."""
         self.supabase = self._load_supabase_config()
         self.api = self._load_api_config()
@@ -83,7 +83,7 @@ class EnvConfig:
             langchain_project=os.getenv("LANGCHAIN_PROJECT", "")
         )
     
-    def get_supabase_key(self, require_service_key: bool = False) -> Optional[str]:
+    def get_supabase_key(self, require_service_key: bool = False) -> str | None:
         """
         Retorna a chave apropriada do Supabase baseado no contexto.
         

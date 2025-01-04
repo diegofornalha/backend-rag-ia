@@ -1,42 +1,129 @@
-"""API principal do Backend RAG IA."""
+"""
+API principal do sistema.
 
-from fastapi import FastAPI, Request
+Este módulo configura e inicializa a API FastAPI com:
+- Rotas para documentos
+- Rotas para busca semântica
+- Rotas para estatísticas
+- Rotas para cache distribuído
+- Documentação interativa
+"""
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from .routes.documents import router as documents_router
+from .routes.health import router as health_router
+from .routes.search import router as search_router
+from .routes.statistics import router as statistics_router
+from .routes.cache import router as cache_router
 
-from .routes import (
-    search_router,
-    health_router,
-    documents_router,
-    statistics_router
-)
-from .middleware import (
-    logging_middleware,
-    error_handler,
-    environment_middleware
-)
-from ..config.settings import get_settings
-
-settings = get_settings()
-
+# Configuração da API
 app = FastAPI(
-    title=settings.API_TITLE,
-    description=settings.API_DESCRIPTION,
-    version=settings.API_VERSION,
+    title="Backend RAG IA",
+    description="""
+    API para busca semântica em documentos usando RAG (Retrieval Augmented Generation).
+    
+    ## Funcionalidades
+    
+    ### Documentos
+    - Upload de documentos (PDF, TXT, DOC)
+    - Listagem e busca de documentos
+    - Atualização e remoção de documentos
+    
+    ### Busca Semântica
+    - Busca por similaridade semântica
+    - Busca com filtros avançados
+    - Recomendação de documentos similares
+    
+    ### Estatísticas
+    - Métricas de uso do sistema
+    - Análise de performance
+    - Histórico de operações
+    
+    ### Cache Distribuído
+    - Cache com Redis
+    - Métricas de performance
+    - Monitoramento de saúde
+    
+    ## Autenticação
+    
+    A API usa autenticação via token JWT. Para usar a API:
+    1. Obtenha um token de acesso
+    2. Inclua o token no header Authorization
+    
+    ## Exemplos
+    
+    ### Python
+    ```python
+    import requests
+    
+    # Configuração
+    BASE_URL = "http://localhost:10000"
+    headers = {"Authorization": "Bearer seu-token"}
+    
+    # Upload de documento
+    files = {"file": open("documento.pdf", "rb")}
+    response = requests.post(f"{BASE_URL}/documents", files=files, headers=headers)
+    
+    # Busca semântica
+    query = "como usar python para análise de dados"
+    response = requests.get(
+        f"{BASE_URL}/search",
+        params={"query": query},
+        headers=headers
+    )
+    
+    # Estatísticas
+    response = requests.get(f"{BASE_URL}/statistics/system", headers=headers)
+    ```
+    
+    ### Curl
+    ```bash
+    # Upload de documento
+    curl -X POST "http://localhost:10000/documents" \
+         -H "Authorization: Bearer seu-token" \
+         -F "file=@documento.pdf"
+    
+    # Busca semântica
+    curl "http://localhost:10000/search?query=python" \
+         -H "Authorization: Bearer seu-token"
+    
+    # Estatísticas
+    curl "http://localhost:10000/statistics/system" \
+         -H "Authorization: Bearer seu-token"
+    ```
+    
+    ## Suporte
+    
+    Para dúvidas e suporte:
+    - Email: suporte@exemplo.com
+    - Documentação: https://docs.exemplo.com
+    - GitHub: https://github.com/exemplo/backend-rag-ia
+    """,
+    version="1.0.0",
     docs_url="/docs",
-    redoc_url=None  # Desabilitando ReDoc para evitar confusão
+    redoc_url="/redoc",
+    openapi_tags=[
+        {
+            "name": "Documentos",
+            "description": "Operações com documentos: upload, listagem, busca, atualização e remoção"
+        },
+        {
+            "name": "Busca",
+            "description": "Operações de busca semântica e recomendação de documentos similares"
+        },
+        {
+            "name": "Estatísticas",
+            "description": "Métricas de uso, performance e histórico do sistema"
+        },
+        {
+            "name": "Cache",
+            "description": "Operações com cache distribuído: métricas e monitoramento"
+        }
+    ]
 )
 
-# Middlewares
-app.middleware("http")(environment_middleware)
-app.middleware("http")(logging_middleware)
-
-# Handler global de erros
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    return await error_handler(request, exc)
-
-# Configuração CORS
+# Configuração de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -45,14 +132,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir rotas
-app.include_router(search_router, prefix="/api/v1", tags=["search"])
-app.include_router(health_router, prefix="/api/v1", tags=["health"])
-app.include_router(documents_router, prefix="/api/v1", tags=["documents"])
-app.include_router(statistics_router, prefix="/api/v1", tags=["statistics"])
+# Registro das rotas
+app.include_router(documents_router)
+app.include_router(search_router)
+app.include_router(statistics_router)
+app.include_router(health_router)
+app.include_router(cache_router)
 
-# Rota raiz com redirecionamento para /docs
-@app.get("/")
+@app.get("/", tags=["Root"])
 async def root():
-    """Redireciona para a documentação da API."""
-    return RedirectResponse(url="/docs") 
+    """
+    Rota raiz da API.
+    
+    Retorna informações básicas sobre a API e links úteis.
+    """
+    return {
+        "name": "Backend RAG IA",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "status": "online"
+    } 

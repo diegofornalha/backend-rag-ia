@@ -1,0 +1,40 @@
+{
+  "titulo": "Verifica\u00e7\u00e3o de Conformidade do Projeto",
+  "tipo": "tecnico",
+  "status": "aberto",
+  "contexto": "Verifica\u00e7\u00e3o autom\u00e1tica de conformidade do projeto, buscando inconsist\u00eancias no uso de schemas, tabelas e configura\u00e7\u00f5es.\n\nForam verificados:\n- 83 diret\u00f3rios\n- 273 arquivos\n- Encontrados 56 problemas\n\nTipos de problemas encontrados:\n- supabase_table\n- policy_incorreta\n- json_invalido\n- schema_incorreto\n- schema_publico",
+  "data_inicio": "2025-01-02T15:35:46.297796",
+  "argumentos": [
+    {
+      "autor": "verificador_conformidade",
+      "tipo": "tecnico",
+      "conteudo": "Recomenda\u00e7\u00f5es para corre\u00e7\u00e3o de problemas do tipo 'supabase_table':\n\n- Ao usar client.table(), sempre inclua o prefixo 'rag.'\n- Exemplo: client.table('rag.01_base_conhecimento_regras_geral')\n- Verifique se todas as chamadas de API incluem o schema correto",
+      "data": "2025-01-02T15:35:46.297826"
+    },
+    {
+      "autor": "verificador_conformidade",
+      "tipo": "tecnico",
+      "conteudo": "Recomenda\u00e7\u00f5es para corre\u00e7\u00e3o de problemas do tipo 'policy_incorreta':\n\n- Pol\u00edticas RLS devem ser criadas no schema 'rag'\n- Use 'CREATE POLICY nome_policy ON rag.nome_tabela'\n- Verifique se todas as pol\u00edticas existentes foram migradas",
+      "data": "2025-01-02T15:35:46.297828"
+    },
+    {
+      "autor": "verificador_conformidade",
+      "tipo": "tecnico",
+      "conteudo": "Recomenda\u00e7\u00f5es para corre\u00e7\u00e3o de problemas do tipo 'json_invalido':\n\n- Valide o JSON usando uma ferramenta online\n- Verifique a sintaxe (v\u00edrgulas, chaves, aspas)\n- Use um formatador de JSON",
+      "data": "2025-01-02T15:35:46.297829"
+    },
+    {
+      "autor": "verificador_conformidade",
+      "tipo": "tecnico",
+      "conteudo": "Recomenda\u00e7\u00f5es para corre\u00e7\u00e3o de problemas do tipo 'schema_incorreto':\n\n- Em scripts SQL, sempre especifique 'rag.' antes do nome da tabela\n- Use 'CREATE TABLE rag.nome_tabela'\n- Use 'ALTER TABLE rag.nome_tabela'\n- Use 'DROP TABLE rag.nome_tabela'",
+      "data": "2025-01-02T15:35:46.297830"
+    },
+    {
+      "autor": "verificador_conformidade",
+      "tipo": "tecnico",
+      "conteudo": "Recomenda\u00e7\u00f5es para corre\u00e7\u00e3o de problemas do tipo 'schema_publico':\n\n- Sempre use o schema 'rag.' ao inv\u00e9s de 'public'\n- Substitua refer\u00eancias diretas a 'documents' ou 'embeddings' por 'rag.01_base_conhecimento_regras_geral' e 'rag.02_embeddings_regras_geral'\n- Atualize queries para incluir o prefixo 'rag.'",
+      "data": "2025-01-02T15:35:46.297831"
+    }
+  ],
+  "arquivo": "embate_conformidade_20250102_153546.json"
+}

@@ -1,0 +1,16 @@
+ddos_stats:
+  alertas_recentes: 0
+  ips_bloqueados: 0
+  ultima_atualizacao: '2025-01-03T20:11:09.136419'
+embate_ativo: true
+limites_excedidos:
+  cpu: false
+  disco: false
+  memoria: true
+metricas_hidratacao:
+  cpu: 0.24
+  disco: 0.27
+  memoria: 0.838
+  rede: 0.0
+timestamp: '2025-01-03T20:11:09.136411'
+tools_count: 1

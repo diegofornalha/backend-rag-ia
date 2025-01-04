@@ -1,9 +1,11 @@
+import logging
+import time
+from collections.abc import Callable
+from datetime import datetime
+
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
-from typing import Callable
-import time
-import logging
-from datetime import datetime
+
 from ..config.settings import get_settings
 
 # Configuração do logger
@@ -52,7 +54,7 @@ async def logging_middleware(request: Request, call_next: Callable) -> Response:
         
     except Exception as e:
         # Log do erro
-        logger.error(f"Error processing request: {str(e)}")
+        logger.error(f"Error processing request: {e!s}")
         return JSONResponse(
             status_code=500,
             content={
@@ -65,7 +67,7 @@ async def logging_middleware(request: Request, call_next: Callable) -> Response:
 
 async def error_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handler global para tratamento de erros."""
-    logger.error(f"Error: {str(exc)}")
+    logger.error(f"Error: {exc!s}")
     return JSONResponse(
         status_code=500,
         content={

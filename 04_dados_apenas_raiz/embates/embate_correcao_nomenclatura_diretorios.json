@@ -1,0 +1,39 @@
+{
+  "titulo": "Correção de Nomenclatura: Padronização de Prefixos e Sufixos dos Diretórios",
+  "tipo": "arquitetura",
+  "contexto": "Identificados problemas na nomenclatura dos diretórios:\n1. Duplicidade do prefixo '02_' em dois diretórios\n2. Alguns diretórios não seguem o padrão de sufixo '_apenas_raiz'\n3. Inconsistência na nomenclatura prejudica a organização",
+  "status": "aberto",
+  "data_inicio": "2024-01-02T19:00:00",
+  "argumentos": [
+    {
+      "autor": "Arquiteto",
+      "tipo": "problema",
+      "conteudo": "Problemas Identificados:\n1. '02_documentacao' e '02_ferramentas_rag_apenas_raiz' violam a regra de número único\n2. '02_documentacao' e '03_dados' não seguem o padrão '_apenas_raiz'\n3. Inconsistência dificulta manutenção e entendimento",
+      "data": "2024-01-02T19:00:30"
+    },
+    {
+      "autor": "Desenvolvedor",
+      "tipo": "solucao",
+      "conteudo": "Proposta de Reorganização:\n\nAntes:\n00_testes_apenas_raiz\n01_regras_md_apenas_raiz\n02_documentacao              ← problema\n02_ferramentas_rag_apenas_raiz ← problema\n03_dados                    ← problema\n03_sql_apenas_raiz\n04_scripts_apenas_raiz\n05_monitoring_apenas_raiz\n\nDepois:\n00_testes_apenas_raiz\n01_regras_md_apenas_raiz\n02_documentacao_apenas_raiz     ← corrigido\n03_ferramentas_rag_apenas_raiz ← renumerado\n04_dados_apenas_raiz           ← corrigido\n05_sql_apenas_raiz\n06_scripts_apenas_raiz\n07_monitoring_apenas_raiz\n\nMudanças:\n1. Adicionado sufixo '_apenas_raiz' aos diretórios que faltavam\n2. Renumerados diretórios para evitar duplicidade\n3. Mantida a ordem lógica de prioridade",
+      "data": "2024-01-02T19:01:00"
+    },
+    {
+      "autor": "QA",
+      "tipo": "validacao",
+      "conteudo": "Critérios de Validação:\n1. Todos os diretórios devem seguir o padrão XX_nome_apenas_raiz\n2. Números devem ser únicos e sequenciais\n3. Imports e referências devem ser atualizados\n4. Documentação deve refletir nova estrutura\n5. Scripts de build e CI/CD devem ser atualizados",
+      "data": "2024-01-02T19:01:30"
+    },
+    {
+      "autor": "DevOps",
+      "tipo": "impacto",
+      "conteudo": "Impactos e Mitigações:\n1. Atualizar todos os imports no código\n2. Atualizar documentação e referências\n3. Verificar e atualizar scripts de build\n4. Comunicar equipe sobre mudanças\n5. Criar script de migração automática",
+      "data": "2024-01-02T19:02:00"
+    }
+  ],
+  "resolucao": null,
+  "metadata": {
+    "impacto": "médio",
+    "prioridade": "alta",
+    "tags": ["arquitetura", "organizacao", "nomenclatura"]
+  }
+}
