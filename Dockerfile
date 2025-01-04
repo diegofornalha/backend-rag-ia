@@ -1,49 +1,32 @@
 # Imagem base Python
 FROM python:3.11-slim
 
-# Variáveis de ambiente básicas
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PATH="$PATH:/root/.local/bin" \
-    PYTHONPATH=/app:$PYTHONPATH \
-    PORT=10000 \
-    HOST=0.0.0.0 \
-    OPERATION_MODE=render \
-    IS_RENDER=true \
-    ENVIRONMENT=production \
-    DEBUG=false
+# Criar usuário não-root
+RUN useradd -m -U appuser
 
-# Diretório de trabalho
+# Criar e configurar diretório da aplicação
 WORKDIR /app
+COPY . .
 
-# Instala dependências do sistema
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+# Criar e ativar ambiente virtual
+RUN python -m venv /app/venv
+ENV PATH="/app/venv/bin:$PATH"
 
-# Copia arquivos de dependências
-COPY requirements.txt ./
-COPY pyproject.toml ./
-COPY poetry.lock ./
+# Instalar dependências no ambiente virtual
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Instala dependências
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+# Mudar permissões
+RUN chown -R appuser:appuser /app
 
-# Copia o código da aplicação
-COPY backend_rag_ia /app/backend_rag_ia/
-COPY 07_monitoring_apenas_raiz /app/07_monitoring_apenas_raiz/
+# Trocar para usuário não-root
+USER appuser
 
 # Expõe a porta
-EXPOSE $PORT
+EXPOSE 10000
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:$PORT/ || exit 1
+    CMD curl -f http://localhost:10000/ || exit 1
 
 # Comando para iniciar a aplicação
-CMD ["sh", "-c", "uvicorn backend_rag_ia.api.main:app --host $HOST --port $PORT"]
+CMD ["uvicorn", "backend_rag_ia.api.main:app", "--host", "0.0.0.0", "--port", "10000"]
