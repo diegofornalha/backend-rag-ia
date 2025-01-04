@@ -11,7 +11,11 @@ Este módulo configura e inicializa a API FastAPI com:
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import documents_router, search_router, statistics_router, health_router, cache_router
+from .routes.documents import router as documents_router
+from .routes.health import router as health_router
+from .routes.search import router as search_router
+from .routes.statistics import router as statistics_router
+from .routes.cache import router as cache_router
 
 # Configuração da API
 app = FastAPI(
