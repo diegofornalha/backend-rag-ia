@@ -52,3 +52,5 @@ urllib3>=2.1.0        # Dependência do requests
 # Adicionar dependências para Gemini e LangChain
 google-generativeai>=0.3.0
 langchain-google-genai>=0.0.5 
+
+redis==5.0.1 
