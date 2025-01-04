@@ -1,0 +1,46 @@
+{
+  "titulo": "Plano de Organização Estrutural do Projeto",
+  "tipo": "tecnico",
+  "contexto": "O projeto apresenta diversos problemas estruturais como duplicação de arquivos, estrutura de pastas inconsistente, configurações técnicas desatualizadas e documentação fragmentada. É necessário um plano estruturado de reorganização para resolver estes problemas.",
+  "status": "aberto",
+  "data_inicio": "2024-01-04T00:00:00",
+  "metadata": {
+    "area": "arquitetura",
+    "prioridade": "alta",
+    "impacto": "alto",
+    "branch": "feature/organizacao-estrutural",
+    "auto_implementacao": true,
+    "commit_patterns": {
+      "status": "docs(embate): atualiza status do embate {embate_id}",
+      "resultado": "docs(embate): registra resultado {status}",
+      "cleanup": "chore: limpeza pós-reorganização {status}",
+      "final": "chore(org): finaliza reorganização {status}"
+    }
+  },
+  "argumentos": [
+    {
+      "autor": "Sistema",
+      "tipo": "problema",
+      "conteudo": "Problemas Estruturais Identificados:\n\n1. Duplicação de Arquivos:\n   - Mesmos arquivos em múltiplos locais\n   - Versões desatualizadas coexistindo\n   - Referências quebradas\n\n2. Estrutura de Pastas Inconsistente:\n   - Arquivos soltos na raiz\n   - Falta de padrão de nomenclatura\n   - Hierarquia confusa\n\n3. Configurações Técnicas:\n   - Python 3.12 incompatível\n   - Cache ineficiente\n   - Banco de dados não otimizado\n\n4. Documentação Fragmentada:\n   - Múltiplas fontes de verdade\n   - Falta de padrão\n   - Informações desatualizadas",
+      "data": "2024-01-04T00:00:00"
+    },
+    {
+      "autor": "Sistema",
+      "tipo": "solucao",
+      "conteudo": "Plano de Reorganização em 4 Semanas:\n\n1. Semana 1 - Limpeza e Organização:\n   - Nova Estrutura de Pastas:\n     backend_rag_ia/\n     ├── 1_core/\n     │   ├── config/\n     │   └── rules/\n     ├── 2_database/\n     │   ├── migrations/\n     │   └── schemas/\n     ├── 3_deployment/\n     │   ├── docker/\n     │   └── scripts/\n     └── 4_development/\n         ├── docs/\n         └── tests/\n\n2. Semana 2 - Configurações Técnicas:\n   - Python 3.11\n   - Cache distribuído\n   - Otimização pgvector\n\n3. Semana 3 - Documentação Unificada:\n   - Documento central\n   - Padrões de código\n   - Guias e exemplos\n\n4. Semana 4 - Validação e Testes:\n   - Testes estruturais\n   - Validação de configurações\n   - Verificação de documentação",
+      "data": "2024-01-04T00:00:00"
+    },
+    {
+      "autor": "Sistema",
+      "tipo": "implementacao",
+      "conteudo": "Checklist de Implementação:\n\n1. Limpeza (Semana 1):\n   [ ] Identificar arquivos duplicados\n   [ ] Criar nova estrutura de pastas\n   [ ] Mover arquivos\n   [ ] Atualizar referências\n\n2. Configuração (Semana 2):\n   [ ] Downgrade Python 3.11\n   [ ] Configurar cache distribuído\n   [ ] Otimizar banco de dados\n   [ ] Implementar métricas\n\n3. Documentação (Semana 3):\n   [ ] Criar estrutura central\n   [ ] Migrar documentação existente\n   [ ] Estabelecer padrões\n   [ ] Adicionar exemplos\n\n4. Validação (Semana 4):\n   [ ] Executar testes estruturais\n   [ ] Validar configurações\n   [ ] Verificar documentação\n   [ ] Coletar feedback",
+      "data": "2024-01-04T00:00:00"
+    },
+    {
+      "autor": "Sistema",
+      "tipo": "monitoramento",
+      "conteudo": "Métricas de Acompanhamento:\n\n1. Estrutura:\n   - Número de arquivos duplicados\n   - Conformidade com padrão de pastas\n   - Referências quebradas\n\n2. Performance:\n   - Tempo de build\n   - Uso de cache\n   - Performance de queries\n\n3. Documentação:\n   - Cobertura de documentação\n   - Links quebrados\n   - Feedback dos desenvolvedores\n\n4. Qualidade:\n   - Cobertura de testes\n   - Erros em produção\n   - Tempo de deploy",
+      "data": "2024-01-04T00:00:00"
+    }
+  ]
+}
