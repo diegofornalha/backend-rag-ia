@@ -1,7 +1,7 @@
 """Rotas para gerenciamento do cache distribuído."""
 
 from fastapi import APIRouter, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 import os
 
@@ -9,12 +9,12 @@ router = APIRouter(prefix="/cache", tags=["Cache"])
 
 class CacheHealth(BaseModel):
     """Status de saúde do cache."""
-    status: str
-    redis_connected: bool
-    metrics: dict
-    version: str
-    last_update: str
-    environment: str
+    status: str = Field(default="unknown")
+    redis_connected: bool = Field(default=False)
+    metrics: dict = Field(default_factory=dict)
+    version: str = Field(default="unknown")
+    last_update: str = Field(default="unknown")
+    environment: str = Field(default="unknown")
 
 @router.get("/health", response_model=CacheHealth)
 async def cache_health(response: Response) -> CacheHealth:
@@ -43,11 +43,4 @@ async def cache_health(response: Response) -> CacheHealth:
         )
     except Exception as e:
         response.status_code = 500
-        return CacheHealth(
-            status="unhealthy",
-            redis_connected=False,
-            metrics={},
-            version="unknown",
-            last_update="unknown",
-            environment="unknown"
-        ) 
+        return CacheHealth() # Usa os valores default 
