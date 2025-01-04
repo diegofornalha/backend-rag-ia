@@ -5,12 +5,17 @@ Este módulo configura e inicializa a API FastAPI com:
 - Rotas para documentos
 - Rotas para busca semântica
 - Rotas para estatísticas
+- Rotas para cache distribuído
 - Documentação interativa
 """
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import documents_router, search_router, statistics_router, health_router
+from .routes.documents import router as documents_router
+from .routes.health import router as health_router
+from .routes.search import router as search_router
+from .routes.statistics import router as statistics_router
+from .routes.cache import router as cache_router
 
 # Configuração da API
 app = FastAPI(
@@ -34,6 +39,11 @@ app = FastAPI(
     - Métricas de uso do sistema
     - Análise de performance
     - Histórico de operações
+    
+    ### Cache Distribuído
+    - Cache com Redis
+    - Métricas de performance
+    - Monitoramento de saúde
     
     ## Autenticação
     
@@ -70,16 +80,16 @@ app = FastAPI(
     ### Curl
     ```bash
     # Upload de documento
-    curl -X POST "http://localhost:10000/documents" \\
-         -H "Authorization: Bearer seu-token" \\
+    curl -X POST "http://localhost:10000/documents" \
+         -H "Authorization: Bearer seu-token" \
          -F "file=@documento.pdf"
     
     # Busca semântica
-    curl "http://localhost:10000/search?query=python" \\
+    curl "http://localhost:10000/search?query=python" \
          -H "Authorization: Bearer seu-token"
     
     # Estatísticas
-    curl "http://localhost:10000/statistics/system" \\
+    curl "http://localhost:10000/statistics/system" \
          -H "Authorization: Bearer seu-token"
     ```
     
@@ -105,6 +115,10 @@ app = FastAPI(
         {
             "name": "Estatísticas",
             "description": "Métricas de uso, performance e histórico do sistema"
+        },
+        {
+            "name": "Cache",
+            "description": "Operações com cache distribuído: métricas e monitoramento"
         }
     ]
 )
@@ -123,6 +137,7 @@ app.include_router(documents_router)
 app.include_router(search_router)
 app.include_router(statistics_router)
 app.include_router(health_router)
+app.include_router(cache_router)
 
 @app.get("/", tags=["Root"])
 async def root():
