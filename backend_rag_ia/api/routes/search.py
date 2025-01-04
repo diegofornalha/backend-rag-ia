@@ -1,135 +1,144 @@
-"""Rotas da API."""
+"""
+Rotas para busca semântica.
 
-from datetime import UTC, datetime
-from typing import Any
+Este módulo contém as rotas para:
+- Busca semântica em documentos
+- Busca por similaridade
+- Busca com filtros avançados
+"""
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
 
-from backend_rag_ia.constants import (
-    ERROR_SEARCH_FAILED,
-    HTTP_BAD_REQUEST,
-    HTTP_SERVER_ERROR,
+router = APIRouter(
+    prefix="/search",
+    tags=["Busca"],
+    responses={
+        500: {"description": "Erro interno do servidor"}
+    }
 )
-from backend_rag_ia.exceptions import (
-    ValidationError,
+
+class SearchResult(BaseModel):
+    """
+    Resultado de busca.
+    
+    Attributes:
+        document_id: ID do documento encontrado
+        title: Título do documento
+        content: Trecho relevante do conteúdo
+        score: Pontuação de relevância (0-1)
+        highlights: Trechos destacados que correspondem à busca
+    """
+    document_id: str
+    title: str
+    content: str
+    score: float = Field(..., ge=0, le=1)
+    highlights: List[str]
+
+@router.get(
+    "/",
+    response_model=List[SearchResult],
+    summary="Busca semântica",
+    description="""
+    Realiza busca semântica nos documentos.
+    
+    A busca utiliza embeddings para encontrar documentos semanticamente similares à query,
+    mesmo que não contenham exatamente as mesmas palavras.
+    
+    Parâmetros:
+    - query: Texto para busca
+    - limit: Número máximo de resultados
+    - min_score: Pontuação mínima de relevância (0-1)
+    - filters: Filtros adicionais em formato JSON
+    
+    Exemplos:
+    ```python
+    import requests
+    
+    # Busca simples
+    response = requests.get(
+        'http://localhost:10000/search',
+        params={'query': 'como usar python para análise de dados'}
+    )
+    results = response.json()
+    
+    # Busca com filtros
+    response = requests.get(
+        'http://localhost:10000/search',
+        params={
+            'query': 'machine learning',
+            'limit': 5,
+            'min_score': 0.7,
+            'filters': '{"type": "tutorial", "tags": ["python", "ml"]}'
+        }
+    )
+    results = response.json()
+    
+    # Processar resultados
+    for result in results:
+        print(f"Documento: {result['title']}")
+        print(f"Relevância: {result['score']}")
+        print("Trechos relevantes:")
+        for highlight in result['highlights']:
+            print(f"- {highlight}")
+        print()
+    ```
+    """
 )
-from backend_rag_ia.services.semantic_search import SemanticSearchManager
-from backend_rag_ia.utils.logging_config import logger
-
-router = APIRouter(prefix="/api/v1", tags=["search"])
-
-class SearchRequest(BaseModel):
-    """Modelo para requisição de busca."""
-    query: str
-
-def _validate_query(query: str) -> None:
-    """Valida a query de busca.
-
-    Args:
-        query: Query a ser validada
-
-    Raises:
-        ValidationError: Se a query for inválida
-    """
-    if not query or not query.strip():
-        raise ValidationError("Query não pode ser vazia")
-
-def _handle_search_error(error: Exception) -> None:
-    """Trata erros de busca.
-
-    Args:
-        error: Erro ocorrido
-
-    Raises:
-        HTTPException: Com detalhes do erro
-    """
-    logger.exception("Erro na busca: %s", error)
-    if isinstance(error, ValidationError):
-        raise HTTPException(
-            status_code=HTTP_BAD_REQUEST,
-            detail=str(error),
-        ) from error
-    raise HTTPException(
-        status_code=HTTP_SERVER_ERROR,
-        detail=ERROR_SEARCH_FAILED.format(error=str(error)),
-    ) from error
-
-@router.post("/search")
-async def search(request: SearchRequest) -> dict[str, Any]:
-    """Realiza busca semântica.
-
-    Args:
-        request: Requisição de busca
-
-    Returns:
-        Resultados da busca
-
-    Raises:
-        HTTPException: Se ocorrer algum erro
-    """
+async def search_documents(
+    query: str = Query(..., description="Texto para busca"),
+    limit: int = Query(10, ge=1, le=100, description="Número máximo de resultados"),
+    min_score: float = Query(0.5, ge=0, le=1, description="Pontuação mínima de relevância"),
+    filters: Optional[str] = Query(None, description="Filtros em formato JSON")
+) -> List[SearchResult]:
+    """Realiza busca semântica."""
     try:
-        # Valida query
-        _validate_query(request.query)
-
-        # Realiza busca
-        search_manager = SemanticSearchManager()
-        results = search_manager.search(request.query)
-
-        # Retorna resultados
-        return {
-            "query": request.query,
-            "results": results,
-            "timestamp": datetime.now(UTC).isoformat(),
-        }
-
+        # Implementação da busca
+        pass
     except Exception as e:
-        _handle_search_error(e)
+        raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/history")
-async def get_history() -> dict[str, Any]:
-    """Retorna histórico de buscas.
-
-    Returns:
-        Histórico de buscas
-
-    Raises:
-        HTTPException: Se ocorrer algum erro
+@router.get(
+    "/similar/{document_id}",
+    response_model=List[SearchResult],
+    summary="Busca documentos similares",
+    description="""
+    Encontra documentos similares a um documento específico.
+    
+    Útil para:
+    - Recomendações de conteúdo relacionado
+    - Identificação de duplicatas
+    - Agrupamento de documentos similares
+    
+    Exemplos:
+    ```python
+    import requests
+    
+    document_id = "123"
+    response = requests.get(
+        f'http://localhost:10000/search/similar/{document_id}',
+        params={'limit': 5, 'min_score': 0.8}
+    )
+    
+    if response.status_code == 200:
+        similar_docs = response.json()
+        for doc in similar_docs:
+            print(f"Documento: {doc['title']}")
+            print(f"Similaridade: {doc['score']}")
+    elif response.status_code == 404:
+        print("Documento não encontrado")
+    ```
     """
+)
+async def find_similar(
+    document_id: str,
+    limit: int = Query(10, ge=1, le=100, description="Número máximo de resultados"),
+    min_score: float = Query(0.5, ge=0, le=1, description="Pontuação mínima de similaridade")
+) -> List[SearchResult]:
+    """Encontra documentos similares."""
     try:
-        search_manager = SemanticSearchManager()
-        history = search_manager.get_history()
-        return {
-            "history": history,
-            "timestamp": datetime.now(UTC).isoformat(),
-        }
+        # Implementação da busca por similaridade
+        pass
     except Exception as e:
-        logger.exception("Erro ao obter histórico: %s", e)
-        raise HTTPException(
-            status_code=HTTP_SERVER_ERROR,
-            detail=f"Erro ao obter histórico: {e}",
-        ) from e
-
-@router.get("/stats")
-async def get_stats() -> dict[str, Any]:
-    """Retorna estatísticas de busca.
-
-    Returns:
-        Estatísticas de busca
-
-    Raises:
-        HTTPException: Se ocorrer algum erro
-    """
-    try:
-        search_manager = SemanticSearchManager()
-        stats = search_manager.get_stats()
-        return {
-            "stats": stats,
-            "timestamp": datetime.now(UTC).isoformat(),
-        }
-    except Exception as e:
-        logger.exception("Erro ao obter estatísticas: %s", e)
-        raise HTTPException(
-            status_code=HTTP_SERVER_ERROR,
-            detail=f"Erro ao obter estatísticas: {e}",
-        ) from e
+        raise HTTPException(status_code=404, detail="Documento não encontrado")

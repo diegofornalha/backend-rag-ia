@@ -1,0 +1,39 @@
+{
+    "titulo": "Sincronização de Embeddings via API",
+    "tipo": "tecnico",
+    "contexto": "Implementação de ferramenta para sincronização de embeddings usando a API do CoFlow, garantindo que todos os documentos em rag.01 tenham seus embeddings correspondentes em rag.02_embeddings_regras_geral.",
+    "status": "aberto",
+    "data_inicio": "2024-01-18T00:00:00",
+    "metadata": {
+        "area": "integracao",
+        "prioridade": "alta",
+        "impacto": "alto",
+        "embates_relacionados": [
+            "embate_upload_documentos.json",
+            "embate_documentacao_adicional.json"
+        ]
+    },
+    "argumentos": [
+        {
+            "autor": "Sistema",
+            "tipo": "tecnico",
+            "conteudo": "Estrutura da Ferramenta:\n\n1. Script Principal:\n   - Identificação de documentos sem embedding\n   - Geração via API CoFlow\n   - Upload para rag.02_embeddings_regras_geral\n   - Controle de status\n\n2. Processo Assíncrono:\n   - Processamento em lotes\n   - Rate limiting\n   - Retry automático\n   - Logging detalhado",
+            "data": "2024-01-18T00:00:00"
+        },
+        {
+            "autor": "Sistema",
+            "tipo": "tecnico",
+            "conteudo": "Implementação:\n\n1. Verificação:\n```python
+async def check_missing_embeddings():\n    return await supabase.table('rag.01')\n        .select('id', 'conteudo')\n        .not_.exists(\n            'id', \n            'document_id', \n            table='rag.02_embeddings_regras_geral'\n        ).execute()\n```\n\n2. Geração:\n```python
+async def generate_embeddings(docs):\n    for doc in docs:\n        embedding = await call_coflow_api(\n            doc['conteudo']['text']\n        )\n        await save_embedding(doc['id'], embedding)\n```\n\n3. Sincronização:\n```python
+async def sync_embeddings():\n    missing = await check_missing_embeddings()\n    await generate_embeddings(missing.data)\n    await update_status()\n```",
+            "data": "2024-01-18T00:00:00"
+        },
+        {
+            "autor": "Sistema",
+            "tipo": "tecnico",
+            "conteudo": "Monitoramento e Manutenção:\n\n1. Métricas:\n   - Total de documentos processados\n   - Taxa de sucesso/falha\n   - Tempo de processamento\n   - Uso de recursos\n\n2. Logs:\n   - Erros detalhados\n   - Status de processamento\n   - Performance\n   - Debugging\n\n3. Manutenção:\n   - Verificação periódica\n   - Limpeza de dados\n   - Otimização\n   - Backups",
+            "data": "2024-01-18T00:00:00"
+        }
+    ]
+} 

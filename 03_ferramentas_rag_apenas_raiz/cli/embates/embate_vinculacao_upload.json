@@ -1,0 +1,36 @@
+{
+  "titulo": "Vinculação e Documentação do Processo de Upload",
+  "tipo": "tecnico",
+  "contexto": "Vinculação das correções realizadas no processo de upload com os embates existentes e documentação do processo completo, incluindo testes e validações.",
+  "status": "aberto",
+  "data_inicio": "2024-01-18T00:00:00",
+  "metadata": {
+    "area": "integracao",
+    "prioridade": "alta",
+    "impacto": "alto",
+    "embates_relacionados": [
+      "embate_upload_documentos.json",
+      "embate_correcoes_upload.json"
+    ]
+  },
+  "argumentos": [
+    {
+      "autor": "Sistema",
+      "tipo": "tecnico",
+      "conteudo": "Integração com Sistema Existente:\n\n1. Testes Implementados:\n   - Testes unitários para SupabaseStorage\n   - Testes de integração para sincronização\n   - Validação de rate limits\n   - Tratamento de erros\n\n2. Estrutura de Armazenamento:\n   - Tabela principal no schema RAG\n   - Tabela de embeddings vinculada\n   - Campos normalizados\n   - Índices otimizados\n\n3. Processo de Upload:\n   - Verificação de duplicatas\n   - Geração de embeddings\n   - Controle de versão\n   - Logs detalhados",
+      "data": "2024-01-18T00:00:00"
+    },
+    {
+      "autor": "Sistema",
+      "tipo": "tecnico",
+      "conteudo": "Melhorias Implementadas:\n\n1. Correções de Schema:\n   - Remoção do prefixo 'public'\n   - Uso direto do schema RAG\n   - Validação de estrutura\n   - Controle de permissões\n\n2. Geração de Embeddings:\n   - Integração com API publicada\n   - Processo assíncrono\n   - Tratamento de erros\n   - Validação de resultados\n\n3. Documentação:\n   - Processo detalhado\n   - Exemplos de código\n   - Troubleshooting\n   - Boas práticas",
+      "data": "2024-01-18T00:00:00"
+    },
+    {
+      "autor": "Sistema",
+      "tipo": "tecnico",
+      "conteudo": "Recomendações de Uso:\n\n1. Monitoramento:\n   - Acompanhar logs de erro\n   - Verificar rate limits\n   - Monitorar performance\n   - Validar integridade\n\n2. Manutenção:\n   - Atualizar documentação\n   - Revisar testes\n   - Otimizar queries\n   - Manter índices\n\n3. Próximos Passos:\n   - Implementar processamento em lotes\n   - Adicionar mais validações\n   - Expandir testes\n   - Melhorar performance",
+      "data": "2024-01-18T00:00:00"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "total_embates": 1,
+  "total_state_changes": 1,
+  "avg_cycle_time_days": 2.000000000034722,
+  "state_distribution": {
+    "fechado": 1
+  },
+  "total_operations": 2,
+  "operations_breakdown": {
+    "state_change_aberto_to_em_andamento": 1,
+    "operation_create": 1
+  },
+  "generated_at": "2025-01-04T12:38:07.106456"
+}

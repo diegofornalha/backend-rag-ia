@@ -3,15 +3,37 @@ services:
   - type: web
     name: backend-rag-ia
     env: docker
-    region: oregon
-    plan: starter
-    healthCheckPath: /api/v1/health
-    buildCommand: ./build.sh
-    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: PYTHONPATH
-        value: /app
-    dockerCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+      - key: ENVIRONMENT
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: cache-distribuido
+          property: connectionString
+
+  - type: redis
+    name: cache-distribuido
+    ipAllowList: [] # Apenas serviços internos
+    plan: starter # Plano com persistência
+
+# Configuração de previews
+previews:
+  # Habilita previews automáticos para todos os PRs
+  enable: true
+  # Configurações específicas para os previews
+  spec:
+    # Usa as mesmas configurações do serviço principal
+    inheritEnvVars: true
+    # Adiciona variáveis específicas para ambiente de preview
+    envVars:
+      - key: ENVIRONMENT
+        value: preview
+      - key: DEBUG
+        value: true
+    # Configurações de recursos para os previews
+    plan: starter
+
 version: "1"
