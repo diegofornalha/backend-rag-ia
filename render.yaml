@@ -7,7 +7,7 @@ services:
     plan: starter
     # Configuração otimizada do health check
     healthCheckPath: /api/v1/health
-    healthCheckTimeout: 5
+    healthCheckTimeout: 30
     healthCheckInterval: 10
     buildCommand: ./build.sh
     startCommand: uvicorn backend_rag_ia.api.main:app --host 0.0.0.0 --port $PORT
