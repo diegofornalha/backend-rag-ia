@@ -27,12 +27,7 @@
   "metadata": {
     "impacto": "médio",
     "prioridade": "média",
-    "tags": [
-      "feature",
-      "cache",
-      "redis",
-      "performance"
-    ]
+    "tags": ["feature", "cache", "redis", "performance"]
   },
   "id": "0f6e382c-db58-494d-bc47-8cc6eeb3f854"
 }
