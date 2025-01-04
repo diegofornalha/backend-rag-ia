@@ -2,21 +2,26 @@
 FROM python:3.11-slim
 
 # Criar usuário não-root
-RUN useradd -m -U appuser
+RUN groupadd -r appgroup && useradd -r -g appgroup -d /app appuser
 
 # Criar e configurar diretório da aplicação
 WORKDIR /app
-COPY . .
 
-# Criar e ativar ambiente virtual
+# Criar ambiente virtual primeiro
 RUN python -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
+ENV VIRTUAL_ENV="/app/venv"
 
-# Instalar dependências no ambiente virtual
+# Copiar requirements primeiro para aproveitar cache
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Mudar permissões
-RUN chown -R appuser:appuser /app
+# Copiar o resto dos arquivos
+COPY . .
+
+# Ajustar permissões
+RUN chown -R appuser:appgroup /app && \
+    chmod -R g+w /app
 
 # Trocar para usuário não-root
 USER appuser
