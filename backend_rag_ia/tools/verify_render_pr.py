@@ -1,9 +1,12 @@
+<<<<<<< Updated upstream
 """Implementa validação de PRs no ambiente Render.
 
 Este módulo fornece classes e funções para validar a configuração
 do ambiente Render, incluindo render.yaml, Dockerfile e health checks.
 """
 
+=======
+>>>>>>> Stashed changes
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,6 +38,7 @@ class RenderValidationResult:
     errors: list[str]
     warnings: list[str]
     suggestions: list[str]
+<<<<<<< Updated upstream
 
 
 class RenderPRValidator:
@@ -45,6 +49,11 @@ class RenderPRValidator:
     configuração, variáveis de ambiente e health checks.
 
     """
+=======
+
+class RenderPRValidator:
+    """Validador para Pull Requests e ambiente Render."""
+>>>>>>> Stashed changes
 
     def __init__(self):
         """Inicializa o validador com configurações padrão."""

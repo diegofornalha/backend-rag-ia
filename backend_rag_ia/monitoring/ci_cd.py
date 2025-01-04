@@ -45,6 +45,7 @@ class Pipeline(BaseModel):
     tools_count: int = 0
 
     def incrementar_tools(self) -> bool:
+<<<<<<< Updated upstream
         """Incrementa contador de ferramentas e verifica limite.
 
         Returns
@@ -52,17 +53,28 @@ class Pipeline(BaseModel):
         bool
             True se ainda não atingiu limite, False caso contrário.
 
+=======
+        """
+        Incrementa contador de ferramentas e verifica limite.
+
+        Returns:
+            True se ainda não atingiu limite, False caso contrário
+>>>>>>> Stashed changes
         """
         self.tools_count += 1
         return self.tools_count < MAX_TOOLS
 
 class PipelineValidator:
+<<<<<<< Updated upstream
     """Valida pipelines de CI/CD.
 
     Esta classe implementa a validação de pipelines de CI/CD,
     verificando regras de duração, etapas obrigatórias e métricas.
 
     """
+=======
+    """Valida pipelines de CI/CD."""
+>>>>>>> Stashed changes
 
     def __init__(self):
         """Inicializa o validador com regras padrão."""
@@ -73,6 +85,7 @@ class PipelineValidator:
         }
 
     def validar_pipeline(self, pipeline: Pipeline) -> list[str]:
+<<<<<<< Updated upstream
         """Valida um pipeline.
 
         Parameters
@@ -85,6 +98,16 @@ class PipelineValidator:
         list[str]
             Lista de erros encontrados.
 
+=======
+        """
+        Valida um pipeline.
+
+        Args:
+            pipeline: Pipeline para validar
+
+        Returns:
+            Lista de erros encontrados
+>>>>>>> Stashed changes
         """
         erros = []
 
@@ -109,6 +132,7 @@ class PipelineValidator:
         return erros
 
     def validar_metricas(self, pipeline: Pipeline) -> list[str]:
+<<<<<<< Updated upstream
         """Valida métricas de um pipeline.
 
         Parameters
@@ -121,6 +145,16 @@ class PipelineValidator:
         list[str]
             Lista de avisos sobre métricas.
 
+=======
+        """
+        Valida métricas de um pipeline.
+
+        Args:
+            pipeline: Pipeline para validar
+
+        Returns:
+            Lista de avisos sobre métricas
+>>>>>>> Stashed changes
         """
         avisos = []
 
@@ -139,6 +173,7 @@ class PipelineValidator:
         return avisos
 
 class DependencyResolver:
+<<<<<<< Updated upstream
     """Resolve dependências entre pipelines.
 
     Esta classe gerencia as dependências entre diferentes pipelines,
@@ -160,12 +195,27 @@ class DependencyResolver:
         depende_de : str
             Pipeline que é dependência.
 
+=======
+    """Resolve dependências entre pipelines."""
+
+    def __init__(self):
+        self.dependencias: dict[str, list[str]] = {}
+
+    def adicionar_dependencia(self, pipeline: str, depende_de: str) -> None:
+        """
+        Adiciona uma dependência.
+
+        Args:
+            pipeline: Pipeline dependente
+            depende_de: Pipeline que é dependência
+>>>>>>> Stashed changes
         """
         if pipeline not in self.dependencias:
             self.dependencias[pipeline] = []
         self.dependencias[pipeline].append(depende_de)
 
     def get_dependencias(self, pipeline: str) -> list[str]:
+<<<<<<< Updated upstream
         """Retorna dependências de um pipeline.
 
         Parameters
@@ -178,10 +228,21 @@ class DependencyResolver:
         list[str]
             Lista de dependências.
 
+=======
+        """
+        Retorna dependências de um pipeline.
+
+        Args:
+            pipeline: Pipeline para verificar
+
+        Returns:
+            Lista de dependências
+>>>>>>> Stashed changes
         """
         return self.dependencias.get(pipeline, [])
 
     def verificar_ciclos(self) -> bool:
+<<<<<<< Updated upstream
         """Verifica se há ciclos nas dependências.
 
         Returns
@@ -189,6 +250,13 @@ class DependencyResolver:
         bool
             True se houver ciclos.
 
+=======
+        """
+        Verifica se há ciclos nas dependências.
+
+        Returns:
+            True se houver ciclos
+>>>>>>> Stashed changes
         """
         visitados = set()
         pilha = set()
@@ -213,6 +281,7 @@ class DependencyResolver:
         return any(tem_ciclo(p) for p in self.dependencias)
 
 class CICDMonitor:
+<<<<<<< Updated upstream
     """Monitora pipelines de CI/CD.
 
     Esta classe implementa o monitoramento de pipelines de CI/CD,
@@ -222,11 +291,17 @@ class CICDMonitor:
 
     def __init__(self):
         """Inicializa o monitor de CI/CD."""
+=======
+    """Monitor de pipelines de CI/CD."""
+
+    def __init__(self):
+>>>>>>> Stashed changes
         self.pipelines: list[Pipeline] = []
         self.resolver = DependencyResolver()
         self.validator = PipelineValidator()
 
     def iniciar_pipeline(self, nome: str, depende_de: Optional[list[str]] = None) -> Pipeline:
+<<<<<<< Updated upstream
         """Inicia um novo pipeline.
 
         Parameters
@@ -246,6 +321,17 @@ class CICDMonitor:
         ValueError
             Se o limite de ferramentas for atingido.
 
+=======
+        """
+        Inicia um novo pipeline.
+
+        Args:
+            nome: Nome do pipeline
+            depende_de: Lista de dependências
+
+        Returns:
+            Pipeline criado
+>>>>>>> Stashed changes
         """
         pipeline = Pipeline(
             nome=nome,
@@ -265,6 +351,7 @@ class CICDMonitor:
         return pipeline
 
     def finalizar_pipeline(self, pipeline: Pipeline, sucesso: bool = True) -> None:
+<<<<<<< Updated upstream
         """Finaliza um pipeline.
 
         Parameters
@@ -274,6 +361,14 @@ class CICDMonitor:
         sucesso : bool, optional
             Se foi bem sucedido, por padrão True.
 
+=======
+        """
+        Finaliza um pipeline.
+
+        Args:
+            pipeline: Pipeline a finalizar
+            sucesso: Se foi bem sucedido
+>>>>>>> Stashed changes
         """
         pipeline.fim = datetime.now()
         pipeline.status = "sucesso" if sucesso else "falha"
@@ -290,6 +385,7 @@ class CICDMonitor:
             pipeline.metricas["avisos"] = avisos
 
     def adicionar_metrica(self, pipeline: Pipeline, nome: str, valor: float) -> None:
+<<<<<<< Updated upstream
         """Adiciona uma métrica ao pipeline.
 
         Parameters
@@ -301,10 +397,20 @@ class CICDMonitor:
         valor : float
             Valor da métrica.
 
+=======
+        """
+        Adiciona uma métrica ao pipeline.
+
+        Args:
+            pipeline: Pipeline alvo
+            nome: Nome da métrica
+            valor: Valor da métrica
+>>>>>>> Stashed changes
         """
         pipeline.metricas[nome] = valor
 
     def get_metricas(self) -> dict:
+<<<<<<< Updated upstream
         """Retorna métricas agregadas dos pipelines.
 
         Returns
@@ -312,6 +418,13 @@ class CICDMonitor:
         dict
             Métricas calculadas.
 
+=======
+        """
+        Retorna métricas agregadas dos pipelines.
+
+        Returns:
+            Métricas calculadas
+>>>>>>> Stashed changes
         """
         metricas = {
             "total": len(self.pipelines),

@@ -5,12 +5,17 @@ Este módulo define as estruturas de dados básicas para o sistema de embates.
 
 from dataclasses import dataclass, field
 from datetime import datetime
+<<<<<<< Updated upstream
 from typing import Any, Optional
+=======
+from typing import Optional
+>>>>>>> Stashed changes
 
 @dataclass
 class Argumento:
     """Define um argumento em um embate.
 
+<<<<<<< Updated upstream
     Parameters
     ----------
     autor : str
@@ -23,6 +28,15 @@ class Argumento:
         Data e hora em que o argumento foi criado.
     metadata : dict[str, Any]
         Metadados adicionais do argumento.
+=======
+
+class Argumento(BaseModel):
+    """Modelo para argumentos de embates."""
+    nome: str
+    valor: str
+    tipo: str = "texto"
+    descricao: Optional[str] = None
+>>>>>>> Stashed changes
 
     """
 
@@ -65,6 +79,7 @@ class EmbateBase:
     contexto: str
     tipo: str = "refatoracao"
     status: str = "aberto"
+<<<<<<< Updated upstream
     data_inicio: datetime = field(default_factory=datetime.now)
     data_resolucao: Optional[datetime] = None
     argumentos: list[Argumento] = field(default_factory=list)
@@ -183,3 +198,10 @@ embate_formatacao = EmbateBase(
         )
     ]
 )
+=======
+    metadata: dict = Field(default_factory=dict)
+    argumentos: list[Argumento] = Field(default_factory=list)
+    criado_em: datetime = Field(default_factory=datetime.now)
+    atualizado_em: datetime = Field(default_factory=datetime.now)
+    id: Optional[str] = None
+>>>>>>> Stashed changes

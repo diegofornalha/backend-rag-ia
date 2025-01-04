@@ -11,6 +11,7 @@ from typing import Any
 
 @dataclass
 class MetricValue:
+<<<<<<< Updated upstream
     """Define um valor de métrica com metadados.
 
     Attributes
@@ -140,12 +141,46 @@ class MetricAggregator:
             Média dos valores ou None se a métrica não existe.
 
         """
+=======
+    value: float | int
+    timestamp: datetime = datetime.now()
+    metadata: dict[str, Any] | None = None
+
+class MetricCollector:
+    def __init__(self) -> None:
+        self._metrics: dict[str, list[MetricValue]] = {}
+
+    def record(self, name: str, value: float | int, metadata: dict[str, Any] | None = None) -> None:
+        if name not in self._metrics:
+            self._metrics[name] = []
+        self._metrics[name].append(MetricValue(value, metadata=metadata))
+
+    def get_metric(self, name: str) -> list[MetricValue] | None:
+        return self._metrics.get(name)
+
+    def get_latest(self, name: str) -> MetricValue | None:
+        values = self._metrics.get(name, [])
+        return values[-1] if values else None
+
+    def clear(self, name: str | None = None) -> None:
+        if name:
+            self._metrics.pop(name, None)
+        else:
+            self._metrics.clear()
+
+class MetricAggregator:
+    def __init__(self, collector: MetricCollector) -> None:
+        self.collector = collector
+
+    def average(self, name: str) -> float | None:
+>>>>>>> Stashed changes
         values = self.collector.get_metric(name)
         if not values:
             return None
         return sum(v.value for v in values) / len(values)
 
     def sum(self, name: str) -> float | None:
+<<<<<<< Updated upstream
         """Calcula a soma dos valores de uma métrica.
 
         Parameters
@@ -159,12 +194,15 @@ class MetricAggregator:
             Soma dos valores ou None se a métrica não existe.
 
         """
+=======
+>>>>>>> Stashed changes
         values = self.collector.get_metric(name)
         if not values:
             return None
         return sum(v.value for v in values)
 
     def count(self, name: str) -> int:
+<<<<<<< Updated upstream
         """Conta quantos valores uma métrica possui.
 
         Parameters
@@ -178,5 +216,7 @@ class MetricAggregator:
             Número de valores registrados.
 
         """
+=======
+>>>>>>> Stashed changes
         values = self.collector.get_metric(name)
         return len(values) if values else 0

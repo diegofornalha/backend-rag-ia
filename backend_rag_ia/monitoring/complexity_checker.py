@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ComplexityReport:
+<<<<<<< Updated upstream
     """Define um relatório de complexidade.
 
     Attributes
@@ -25,10 +26,13 @@ class ComplexityReport:
 
     """
 
+=======
+>>>>>>> Stashed changes
     file_path: str
     function_name: str
     complexity: int
     line_number: int
+<<<<<<< Updated upstream
 
 
 class ComplexityChecker(ast.NodeVisitor):
@@ -57,6 +61,11 @@ class ComplexityChecker(ast.NodeVisitor):
             Limite máximo de complexidade, por padrão 10.
 
         """
+=======
+
+class ComplexityChecker(ast.NodeVisitor):
+    def __init__(self, max_complexity: int = 10) -> None:
+>>>>>>> Stashed changes
         self.max_complexity = max_complexity
         self.complexity = 0
         self.reports: list[ComplexityReport] = []
@@ -64,6 +73,7 @@ class ComplexityChecker(ast.NodeVisitor):
         self._current_line: int = 0
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+<<<<<<< Updated upstream
         """Visita definição de função e calcula sua complexidade.
 
         Parameters
@@ -72,6 +82,8 @@ class ComplexityChecker(ast.NodeVisitor):
             Nó da AST representando a definição da função.
 
         """
+=======
+>>>>>>> Stashed changes
         old_complexity = self.complexity
         old_function = self._current_function
         self.complexity = 0
@@ -95,6 +107,7 @@ class ComplexityChecker(ast.NodeVisitor):
         self._current_function = old_function
 
     def visit_If(self, node: ast.If) -> None:
+<<<<<<< Updated upstream
         """Visita nó if e incrementa complexidade.
 
         Parameters
@@ -103,10 +116,13 @@ class ComplexityChecker(ast.NodeVisitor):
             Nó da AST representando uma estrutura if.
 
         """
+=======
+>>>>>>> Stashed changes
         self.complexity += 1
         self.generic_visit(node)
 
     def visit_While(self, node: ast.While) -> None:
+<<<<<<< Updated upstream
         """Visita nó while e incrementa complexidade.
 
         Parameters
@@ -115,10 +131,13 @@ class ComplexityChecker(ast.NodeVisitor):
             Nó da AST representando uma estrutura while.
 
         """
+=======
+>>>>>>> Stashed changes
         self.complexity += 1
         self.generic_visit(node)
 
     def visit_For(self, node: ast.For) -> None:
+<<<<<<< Updated upstream
         """Visita nó for e incrementa complexidade.
 
         Parameters
@@ -127,10 +146,13 @@ class ComplexityChecker(ast.NodeVisitor):
             Nó da AST representando uma estrutura for.
 
         """
+=======
+>>>>>>> Stashed changes
         self.complexity += 1
         self.generic_visit(node)
 
     def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+<<<<<<< Updated upstream
         """Visita nó except e incrementa complexidade.
 
         Parameters
@@ -139,10 +161,13 @@ class ComplexityChecker(ast.NodeVisitor):
             Nó da AST representando um bloco except.
 
         """
+=======
+>>>>>>> Stashed changes
         self.complexity += 1
         self.generic_visit(node)
 
     def check_file(self, file_path: str) -> list[ComplexityReport]:
+<<<<<<< Updated upstream
         """Analisa um arquivo e retorna relatórios de complexidade.
 
         Parameters
@@ -156,6 +181,8 @@ class ComplexityChecker(ast.NodeVisitor):
             Lista de relatórios de complexidade encontrados.
 
         """
+=======
+>>>>>>> Stashed changes
         with open(file_path, encoding='utf-8') as f:
             tree = ast.parse(f.read(), filename=file_path)
 

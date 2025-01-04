@@ -1,15 +1,27 @@
+<<<<<<< Updated upstream
 """Implementa sistema de feedback para embates.
+=======
+"""Sistema de feedback para embates.
+>>>>>>> Stashed changes
 
 Este módulo implementa funcionalidades para coletar e processar feedback
 dos usuários sobre os embates, permitindo melhorar a qualidade das respostas.
 """
 
+<<<<<<< Updated upstream
 from datetime import datetime
 from typing import Any, Optional
 
 
 class FeedbackEvent:
     """Define um evento de feedback do usuário.
+=======
+from typing import Any, Optional
+from datetime import datetime
+
+class FeedbackEvent:
+    """Representa um evento de feedback do usuário.
+>>>>>>> Stashed changes
 
     Esta classe fornece a estrutura para armazenar e processar feedback
     dos usuários sobre os embates.
@@ -52,7 +64,11 @@ class FeedbackEvent:
         self.timestamp = timestamp or datetime.now()
 
     def to_dict(self) -> dict[str, Any]:
+<<<<<<< Updated upstream
         """Retorna o evento de feedback como um dicionário.
+=======
+        """Converter o evento de feedback em um dicionário.
+>>>>>>> Stashed changes
 
         Returns
         -------

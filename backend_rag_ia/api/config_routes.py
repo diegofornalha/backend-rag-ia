@@ -9,6 +9,7 @@ from typing import ClassVar
 
 class CORSConfig:
     """Configuração de CORS para a API.
+<<<<<<< Updated upstream
 
     Attributes
     ----------
@@ -32,13 +33,40 @@ class CORSConfig:
 class RouteConfig:
     """Configuração de rotas da API.
 
+=======
+    
+    Attributes
+    ----------
+    ALLOW_ORIGINS : list[str]
+        Lista de origens permitidas.
+    ALLOW_CREDENTIALS : bool
+        Se credenciais são permitidas.
+    ALLOW_METHODS : list[str]
+        Lista de métodos HTTP permitidos.
+    ALLOW_HEADERS : list[str]
+        Lista de headers permitidos.
+    """
+
+    ALLOW_ORIGINS: ClassVar[list[str]] = ["*"]
+    ALLOW_CREDENTIALS: ClassVar[bool] = True
+    ALLOW_METHODS: ClassVar[list[str]] = ["*"]
+    ALLOW_HEADERS: ClassVar[list[str]] = ["*"]
+
+
+class RouteConfig:
+    """Configuração de rotas da API.
+    
+>>>>>>> Stashed changes
     Attributes
     ----------
     PREFIX : str
         Prefixo para todas as rotas.
     TAGS : list[str]
         Tags para documentação da API.
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     """
 
     PREFIX: ClassVar[str] = "/api/v1"

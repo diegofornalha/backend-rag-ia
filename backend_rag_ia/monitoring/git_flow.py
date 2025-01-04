@@ -40,6 +40,7 @@ class Commit:
     tools_count: int = 0
 
     def incrementar_tools(self) -> bool:
+<<<<<<< Updated upstream
         """Incrementa contador de ferramentas e verifica limite.
 
         Returns
@@ -47,6 +48,13 @@ class Commit:
         bool
             True se ainda não atingiu limite, False caso contrário.
 
+=======
+        """
+        Incrementa contador de ferramentas e verifica limite.
+
+        Returns:
+            True se ainda não atingiu limite, False caso contrário
+>>>>>>> Stashed changes
         """
         self.tools_count += 1
         return self.tools_count < MAX_TOOLS
@@ -71,12 +79,16 @@ class Branch:
     ultima_atualizacao: datetime
 
 class ChangelogGenerator:
+<<<<<<< Updated upstream
     """Gera changelogs a partir de commits.
 
     Esta classe implementa a geração de changelogs formatados
     a partir de commits, agrupando por tipo de mudança.
 
     """
+=======
+    """Gera changelogs a partir de commits."""
+>>>>>>> Stashed changes
 
     def __init__(self):
         """Inicializa o gerador de changelog."""
@@ -91,6 +103,7 @@ class ChangelogGenerator:
         }
 
     def gerar_changelog(self, commits: list[Commit], versao: str) -> str:
+<<<<<<< Updated upstream
         """Gera changelog para uma versão.
 
         Parameters
@@ -105,6 +118,17 @@ class ChangelogGenerator:
         str
             Changelog formatado em markdown.
 
+=======
+        """
+        Gera changelog para uma versão.
+
+        Args:
+            commits: Lista de commits
+            versao: Número da versão
+
+        Returns:
+            Changelog formatado
+>>>>>>> Stashed changes
         """
         # Agrupa commits por tipo
         por_tipo: dict[str, list[Commit]] = {}
@@ -168,6 +192,7 @@ class ChangelogGenerator:
         return msg[0].upper() + msg[1:]
 
 class BranchManager:
+<<<<<<< Updated upstream
     """Gerencia branches do Git Flow.
 
     Esta classe implementa operações de gerenciamento de branches,
@@ -177,10 +202,16 @@ class BranchManager:
 
     def __init__(self):
         """Inicializa o gerenciador de branches."""
+=======
+    """Gerencia branches do Git Flow."""
+
+    def __init__(self):
+>>>>>>> Stashed changes
         self.branches: dict[str, Branch] = {}
         self.protected_branches = ["main", "develop"]
 
     def criar_branch(self, nome: str, base: str) -> Branch:
+<<<<<<< Updated upstream
         """Cria uma nova branch.
 
         Parameters
@@ -200,6 +231,17 @@ class BranchManager:
         ValueError
             Se a branch já existe ou a base não existe.
 
+=======
+        """
+        Cria uma nova branch.
+
+        Args:
+            nome: Nome da branch
+            base: Branch base
+
+        Returns:
+            Branch criada
+>>>>>>> Stashed changes
         """
         if nome in self.branches:
             raise ValueError(f"Branch {nome} já existe")
@@ -216,6 +258,7 @@ class BranchManager:
         return branch
 
     def deletar_branch(self, nome: str) -> None:
+<<<<<<< Updated upstream
         """Deleta uma branch.
 
         Parameters
@@ -228,6 +271,13 @@ class BranchManager:
         ValueError
             Se a branch não existe ou é protegida.
 
+=======
+        """
+        Deleta uma branch.
+
+        Args:
+            nome: Nome da branch
+>>>>>>> Stashed changes
         """
         if nome in self.protected_branches:
             raise ValueError(f"Não é possível deletar branch protegida: {nome}")
@@ -238,6 +288,7 @@ class BranchManager:
         del self.branches[nome]
 
     def merge_branch(self, source: str, target: str) -> None:
+<<<<<<< Updated upstream
         """Faz merge de uma branch em outra.
 
         Parameters
@@ -252,6 +303,14 @@ class BranchManager:
         ValueError
             Se alguma das branches não existe.
 
+=======
+        """
+        Faz merge de uma branch em outra.
+
+        Args:
+            source: Branch origem
+            target: Branch destino
+>>>>>>> Stashed changes
         """
         if source not in self.branches:
             raise ValueError(f"Branch origem {source} não existe")
@@ -265,6 +324,7 @@ class BranchManager:
             self.branches[target].ultima_atualizacao = datetime.now()
 
     def get_branch_status(self, nome: str) -> dict:
+<<<<<<< Updated upstream
         """Retorna status de uma branch.
 
         Parameters
@@ -282,6 +342,16 @@ class BranchManager:
         ValueError
             Se a branch não existe.
 
+=======
+        """
+        Retorna status de uma branch.
+
+        Args:
+            nome: Nome da branch
+
+        Returns:
+            Status da branch
+>>>>>>> Stashed changes
         """
         if nome not in self.branches:
             raise ValueError(f"Branch {nome} não existe")
@@ -295,6 +365,7 @@ class BranchManager:
         }
 
 class GitFlowMonitor:
+<<<<<<< Updated upstream
     """Monitora o Git Flow.
 
     Esta classe implementa o monitoramento do Git Flow,
@@ -304,6 +375,11 @@ class GitFlowMonitor:
 
     def __init__(self):
         """Inicializa o monitor do Git Flow."""
+=======
+    """Monitor do Git Flow."""
+
+    def __init__(self):
+>>>>>>> Stashed changes
         self.branches: dict[str, Branch] = {}
         self.padrao_commit = re.compile(
             r"^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+"
@@ -341,6 +417,7 @@ class GitFlowMonitor:
         branch.ultima_atualizacao = max(branch.ultima_atualizacao, commit.data)
 
     def verificar_commit(self, commit: Commit) -> list[str]:
+<<<<<<< Updated upstream
         """Verifica se um commit segue as convenções.
 
         Parameters
@@ -354,6 +431,9 @@ class GitFlowMonitor:
             Lista de avisos sobre problemas encontrados.
 
         """
+=======
+        """Verifica se um commit segue as convenções."""
+>>>>>>> Stashed changes
         avisos = []
 
         if not self.padrao_commit.match(commit.mensagem):
@@ -369,6 +449,7 @@ class GitFlowMonitor:
         return avisos
 
     def get_metricas(self) -> dict:
+<<<<<<< Updated upstream
         """Retorna métricas do Git Flow.
 
         Returns
@@ -377,6 +458,9 @@ class GitFlowMonitor:
             Métricas calculadas.
 
         """
+=======
+        """Retorna métricas do Git Flow."""
+>>>>>>> Stashed changes
         total_commits = sum(len(b.commits) for b in self.branches.values())
 
         metricas = {
@@ -392,6 +476,7 @@ class GitFlowMonitor:
         return metricas
 
     def _contar_commits_por_tipo(self) -> dict[str, int]:
+<<<<<<< Updated upstream
         """Conta commits por tipo.
 
         Returns
@@ -400,6 +485,9 @@ class GitFlowMonitor:
             Contagem de commits por tipo.
 
         """
+=======
+        """Conta commits por tipo."""
+>>>>>>> Stashed changes
         contagem = {}
 
         for branch in self.branches.values():

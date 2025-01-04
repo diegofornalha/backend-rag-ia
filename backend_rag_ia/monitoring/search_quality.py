@@ -69,6 +69,7 @@ class LatencyMetric:
             self.amostras = []
 
     def adicionar_amostra(self, valor: float) -> None:
+<<<<<<< Updated upstream
         """Adiciona uma amostra de latência.
 
         Parameters
@@ -76,6 +77,13 @@ class LatencyMetric:
         valor : float
             Valor da latência a ser adicionado.
 
+=======
+        """
+        Adiciona uma amostra de latência.
+
+        Args:
+            valor: Valor da latência
+>>>>>>> Stashed changes
         """
         self.amostras.append(valor)
         self.min = min(self.min, valor)
@@ -92,6 +100,7 @@ class LatencyMetric:
 
 
 class SearchQualityMonitor:
+<<<<<<< Updated upstream
     """Monitora qualidade das buscas.
 
     Esta classe implementa o monitoramento e análise da qualidade
@@ -101,6 +110,11 @@ class SearchQualityMonitor:
 
     def __init__(self):
         """Inicializa o monitor de qualidade."""
+=======
+    """Monitor de qualidade de busca."""
+
+    def __init__(self):
+>>>>>>> Stashed changes
         self.buscas: list[ResultadoBusca] = []
         self.latency_metrics = LatencyMetric()
 
@@ -109,6 +123,7 @@ class SearchQualityMonitor:
                        resultados: list[str],
                        tempo_resposta: float,
                        feedback: Optional[str] = None) -> None:
+<<<<<<< Updated upstream
         """Registra uma busca realizada.
 
         Parameters
@@ -122,6 +137,16 @@ class SearchQualityMonitor:
         feedback : Optional[str], optional
             Feedback opcional do usuário, por padrão None.
 
+=======
+        """
+        Registra uma busca realizada.
+
+        Args:
+            query: Query de busca
+            resultados: Lista de resultados
+            tempo_resposta: Tempo de resposta em segundos
+            feedback: Feedback opcional do usuário
+>>>>>>> Stashed changes
         """
         busca = ResultadoBusca(
             query=query,
@@ -134,6 +159,7 @@ class SearchQualityMonitor:
         self.latency_metrics.adicionar_amostra(tempo_resposta)
 
     def get_metricas(self) -> dict:
+<<<<<<< Updated upstream
         """Calcula métricas de qualidade.
 
         Returns
@@ -143,6 +169,13 @@ class SearchQualityMonitor:
             tempo médio, taxa de feedback positivo, queries
             sem resultado e métricas de latência.
 
+=======
+        """
+        Calcula métricas de qualidade.
+
+        Returns:
+            Métricas calculadas
+>>>>>>> Stashed changes
         """
         if not self.buscas:
             return {
@@ -190,6 +223,7 @@ class SearchQualityMonitor:
         }
 
     def get_queries_problematicas(self) -> list[str]:
+<<<<<<< Updated upstream
         """Identifica queries problemáticas.
 
         Returns
@@ -199,6 +233,13 @@ class SearchQualityMonitor:
             incluindo queries sem resultado, com tempo alto
             ou feedback negativo.
 
+=======
+        """
+        Identifica queries problemáticas.
+
+        Returns:
+            Lista de queries com problemas
+>>>>>>> Stashed changes
         """
         problematicas = []
 

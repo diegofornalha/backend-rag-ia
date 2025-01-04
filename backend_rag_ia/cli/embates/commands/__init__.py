@@ -4,6 +4,7 @@ Este módulo fornece comandos de linha de comando para interagir
 com o sistema de embates, permitindo criar, listar e visualizar embates.
 """
 
+
 import click
 
 from ..manager import EmbateManager

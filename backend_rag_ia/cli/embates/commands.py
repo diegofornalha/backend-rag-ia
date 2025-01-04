@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 """Implementa gerenciamento de comandos de embates.
+=======
+"""Módulo para gerenciamento de comandos de embates.
+>>>>>>> Stashed changes
 
 Este módulo fornece classes e funções para gerenciar comandos
 executados durante os embates, incluindo registro e execução.
@@ -110,8 +114,13 @@ async def listar(query: str = None, status: str = None):
 
 @dataclass
 class Command:
+<<<<<<< Updated upstream
     """Define um comando do embate.
 
+=======
+    """Representa um comando do embate.
+    
+>>>>>>> Stashed changes
     Attributes
     ----------
     name : str
@@ -126,9 +135,13 @@ class Command:
         Resultado da execução.
     error : Optional[str]
         Erro ocorrido durante a execução.
+<<<<<<< Updated upstream
 
     """
 
+=======
+    """
+>>>>>>> Stashed changes
     name: str
     args: dict[str, Any]
     created_at: datetime = datetime.now()
@@ -143,7 +156,10 @@ class Command:
         ------
         Exception
             Se ocorrer algum erro durante a execução.
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         """
         try:
             # Implementação da execução

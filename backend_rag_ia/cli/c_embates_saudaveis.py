@@ -6,6 +6,11 @@ incluindo criação, edição, adição de argumentos e condensação de embates
 
 from typing import Optional
 
+<<<<<<< Updated upstream
+=======
+from typing import Optional
+
+>>>>>>> Stashed changes
 import numpy as np
 
 from .embates.manager import EmbateManager
@@ -33,6 +38,7 @@ def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
     norm2 = np.linalg.norm(vec2)
     return dot / (norm1 * norm2)
 
+<<<<<<< Updated upstream
 
 async def iniciar(tipo: str, titulo: str, contexto: str) -> dict:
     """Inicia um novo embate.
@@ -51,6 +57,19 @@ async def iniciar(tipo: str, titulo: str, contexto: str) -> dict:
     dict
         Dados do embate criado.
 
+=======
+async def iniciar(tipo: str, titulo: str, contexto: str) -> dict:
+    """
+    Inicia um novo embate.
+
+    Args:
+        tipo: Tipo do embate
+        titulo: Título do embate
+        contexto: Contexto do embate
+
+    Returns:
+        Dados do embate criado
+>>>>>>> Stashed changes
     """
     manager = EmbateManager()
 
@@ -63,6 +82,7 @@ async def iniciar(tipo: str, titulo: str, contexto: str) -> dict:
     result = await manager.create_embate(embate)
     return result
 
+<<<<<<< Updated upstream
 
 async def edit_embate(embate_id: str, updates: dict) -> dict:
     """Edita um embate existente.
@@ -84,6 +104,18 @@ async def edit_embate(embate_id: str, updates: dict) -> dict:
     ValueError
         Se o embate não for encontrado.
 
+=======
+async def edit_embate(embate_id: str, updates: dict) -> dict:
+    """
+    Edita um embate existente.
+
+    Args:
+        embate_id: ID do embate
+        updates: Dados para atualizar
+
+    Returns:
+        Dados atualizados
+>>>>>>> Stashed changes
     """
     manager = EmbateManager()
     embate = await manager.get_embate(embate_id)
@@ -97,6 +129,7 @@ async def edit_embate(embate_id: str, updates: dict) -> dict:
     result = await manager.create_embate(embate)
     return result
 
+<<<<<<< Updated upstream
 
 async def adicionar_argumento(embate_id: str, argumento: Argumento) -> dict:
     """Adiciona um argumento a um embate.
@@ -118,6 +151,18 @@ async def adicionar_argumento(embate_id: str, argumento: Argumento) -> dict:
     ValueError
         Se o embate não for encontrado.
 
+=======
+async def adicionar_argumento(embate_id: str, argumento: Argumento) -> dict:
+    """
+    Adiciona um argumento a um embate.
+
+    Args:
+        embate_id: ID do embate
+        argumento: Argumento a adicionar
+
+    Returns:
+        Dados atualizados
+>>>>>>> Stashed changes
     """
     manager = EmbateManager()
     embate = await manager.get_embate(embate_id)
@@ -129,6 +174,7 @@ async def adicionar_argumento(embate_id: str, argumento: Argumento) -> dict:
     result = await manager.create_embate(embate)
     return result
 
+<<<<<<< Updated upstream
 
 async def export_embates(filtros: Optional[dict] = None) -> list[dict]:
     """Exporta embates.
@@ -143,6 +189,17 @@ async def export_embates(filtros: Optional[dict] = None) -> list[dict]:
     list[dict]
         Lista de embates exportados.
 
+=======
+async def export_embates(filtros: Optional[dict] = None) -> list[dict]:
+    """
+    Exporta embates.
+
+    Args:
+        filtros: Filtros opcionais
+
+    Returns:
+        Lista de embates exportados
+>>>>>>> Stashed changes
     """
     manager = EmbateManager()
     embates = await manager.list_embates()
@@ -163,6 +220,7 @@ async def export_embates(filtros: Optional[dict] = None) -> list[dict]:
 
 
 class CondensadorEmbates:
+<<<<<<< Updated upstream
     """Condensa embates similares.
 
     Esta classe fornece funcionalidades para condensar embates similares,
@@ -199,6 +257,22 @@ class CondensadorEmbates:
         list[Embate]
             Lista de embates condensada.
 
+=======
+    """Condensa embates similares."""
+
+    def __init__(self, manager: Optional[EmbateManager] = None):
+        self.manager = manager or EmbateManager()
+
+    async def condensar(self, embates: list[Embate]) -> list[Embate]:
+        """
+        Condensa embates similares.
+
+        Args:
+            embates: Lista de embates
+
+        Returns:
+            Lista condensada
+>>>>>>> Stashed changes
         """
         if not embates:
             return []
@@ -218,6 +292,7 @@ class CondensadorEmbates:
         return condensados
 
     def _condensar_grupo(self, grupo: list[Embate]) -> list[Embate]:
+<<<<<<< Updated upstream
         """Condensa um grupo de embates do mesmo tipo.
 
         Parameters
@@ -231,6 +306,9 @@ class CondensadorEmbates:
             Lista de embates condensada.
 
         """
+=======
+        """Condensa um grupo de embates do mesmo tipo."""
+>>>>>>> Stashed changes
         if len(grupo) <= 1:
             return grupo
 

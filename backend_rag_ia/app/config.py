@@ -22,7 +22,10 @@ def get_supabase_client() -> Client:
     ------
     ValueError
         Se as variáveis de ambiente necessárias não estiverem definidas.
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     """
     load_dotenv()
 

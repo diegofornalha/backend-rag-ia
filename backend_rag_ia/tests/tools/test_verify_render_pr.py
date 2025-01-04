@@ -1,9 +1,12 @@
+<<<<<<< Updated upstream
 """Implementa testes para validação de PRs no Render.
 
 Este módulo contém testes para verificar a validação de configurações
 do Render, incluindo render.yaml, Dockerfile e health checks.
 """
 
+=======
+>>>>>>> Stashed changes
 from pathlib import Path
 from unittest.mock import Mock, mock_open, patch
 

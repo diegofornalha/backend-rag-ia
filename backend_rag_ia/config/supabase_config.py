@@ -8,6 +8,7 @@ from .env_config import config
 
 
 class SupabaseConfig:
+<<<<<<< Updated upstream
     """Gerencia configuração do Supabase.
 
     Esta classe gerencia a configuração e inicialização do cliente Supabase,
@@ -28,6 +29,16 @@ class SupabaseConfig:
         ValueError
             Se as configurações do Supabase forem inválidas ou incompletas.
 
+=======
+    """Gerenciador de configuração do Supabase."""
+
+    def __init__(self, require_service_key: bool = True):
+        """
+        Inicializa o cliente Supabase.
+
+        Args:
+            require_service_key: Se True, usa apenas service_key; se False, pode usar anon_key
+>>>>>>> Stashed changes
         """
         if not config.validate():
             raise ValueError("Configurações do Supabase inválidas ou incompletas")
@@ -42,6 +53,7 @@ class SupabaseConfig:
         self.client: Client = create_client(self.url, self.key)
 
     def generate_embedding(self, text: str) -> list[float]:
+<<<<<<< Updated upstream
         """Gera embedding para o texto usando função RPC do Supabase.
 
         Parameters
@@ -54,6 +66,16 @@ class SupabaseConfig:
         list[float]
             Lista de embeddings ou lista vazia em caso de erro.
 
+=======
+        """
+        Gera embedding para o texto usando função RPC do Supabase.
+
+        Args:
+            text: Texto para gerar embedding
+
+        Returns:
+            List[float]: Lista de embeddings ou lista vazia em caso de erro
+>>>>>>> Stashed changes
         """
         try:
             response = self.client.rpc(
@@ -71,6 +93,7 @@ class SupabaseConfig:
         match_threshold: float = 0.7,
         match_count: int = 10
     ) -> list[dict[Any, Any]]:
+<<<<<<< Updated upstream
         """Busca documentos similares usando função RPC do Supabase.
 
         Parameters
@@ -87,6 +110,18 @@ class SupabaseConfig:
         list[dict[Any, Any]]
             Lista de documentos encontrados ou lista vazia em caso de erro.
 
+=======
+        """
+        Busca documentos similares usando função RPC do Supabase.
+
+        Args:
+            query_embedding: Embedding da consulta
+            match_threshold: Limite mínimo de similaridade
+            match_count: Número máximo de documentos a retornar
+
+        Returns:
+            List[Dict]: Lista de documentos encontrados ou lista vazia em caso de erro
+>>>>>>> Stashed changes
         """
         try:
             response = self.client.rpc(
@@ -103,6 +138,7 @@ class SupabaseConfig:
             return []
 
     def search_documents(self, query: str) -> list[dict[Any, Any]]:
+<<<<<<< Updated upstream
         """Realiza busca semântica completa.
 
         Parameters
@@ -115,6 +151,16 @@ class SupabaseConfig:
         list[dict[Any, Any]]
             Lista de documentos encontrados ou lista vazia em caso de erro.
 
+=======
+        """
+        Realiza busca semântica completa.
+
+        Args:
+            query: Texto da consulta
+
+        Returns:
+            List[Dict]: Lista de documentos encontrados ou lista vazia em caso de erro
+>>>>>>> Stashed changes
         """
         try:
             embedding = self.generate_embedding(query)

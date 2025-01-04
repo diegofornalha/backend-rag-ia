@@ -25,7 +25,10 @@ class DocumentBase(BaseModel):
         Embedding vetorial do documento.
 
     """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     titulo: str
     conteudo: str
     metadata: dict | None = None
@@ -38,7 +41,10 @@ class DocumentCreate(DocumentBase):
     Herda todos os campos de DocumentBase.
 
     """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     pass
 
 
@@ -55,7 +61,10 @@ class DocumentUpdate(BaseModel):
         Novos metadados do documento.
 
     """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     titulo: Optional[str] = None
     conteudo: Optional[str] = None
     metadata: Optional[dict] = None
@@ -76,7 +85,10 @@ class Document(DocumentBase):
         Data da última atualização do embedding.
 
     """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     id: str
     created_at: datetime | None = None
     updated_at: datetime | None = None
@@ -84,7 +96,10 @@ class Document(DocumentBase):
 
     class Config:
         """Configuração do modelo."""
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         orm_mode = True
 
 
@@ -97,7 +112,10 @@ class EmbeddingCreate(BaseModel):
         Texto para gerar o embedding.
 
     """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     text: str
 
 
@@ -118,7 +136,10 @@ class Embedding(BaseModel):
         Data da última atualização.
 
     """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     id: str
     document_id: str
     vector: list[float]
@@ -127,7 +148,10 @@ class Embedding(BaseModel):
 
     class Config:
         """Configuração do modelo."""
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         orm_mode = True
 
 
@@ -148,7 +172,10 @@ class Statistics(BaseModel):
         Data de criação da estatística.
 
     """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     id: str
     total_documents: int
     documents_with_embedding: int
@@ -157,7 +184,10 @@ class Statistics(BaseModel):
 
     class Config:
         """Configuração do modelo."""
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         orm_mode = True
 
 
@@ -178,7 +208,10 @@ class LogEntry(BaseModel):
         Data de criação do log.
 
     """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     id: str
     level: str
     message: str
@@ -209,7 +242,10 @@ class BatchOperation(BaseModel):
         Data da última atualização.
 
     """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     id: str
     operation_type: str
     status: str
@@ -221,7 +257,10 @@ class BatchOperation(BaseModel):
 
     class Config:
         """Configuração do modelo."""
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         orm_mode = True
 
 
@@ -238,7 +277,10 @@ class HealthCheck(BaseModel):
         Data e hora da verificação.
 
     """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     status: str
     version: str
     timestamp: datetime | None = None

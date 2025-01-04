@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 """Implementa sistema de eventos para embates.
+=======
+"""Sistema de eventos para embates.
+>>>>>>> Stashed changes
 
 Este módulo implementa um sistema de eventos para gerenciar e monitorar embates,
 incluindo detecção de alucinações e outros eventos relevantes.
@@ -10,7 +14,11 @@ from typing import Any, Optional
 
 
 class EmbateEvent:
+<<<<<<< Updated upstream
     """Define um evento do sistema de embates.
+=======
+    """Representa um evento do sistema de embates.
+>>>>>>> Stashed changes
 
     Esta classe fornece a estrutura básica para eventos no sistema,
     incluindo tipo, dados e timestamp.
@@ -47,7 +55,11 @@ class EmbateEvent:
         self.timestamp = timestamp or datetime.now()
 
     def to_dict(self) -> dict[str, Any]:
+<<<<<<< Updated upstream
         """Retorna o evento como um dicionário.
+=======
+        """Converter o evento em um dicionário.
+>>>>>>> Stashed changes
 
         Returns
         -------
@@ -172,7 +184,11 @@ class EmbateEventManager:
         self.eventos = []
 
     def export_eventos(self) -> list[dict[str, Any]]:
+<<<<<<< Updated upstream
         """Retorna todos os eventos como dicionários.
+=======
+        """Exporta todos os eventos como dicionários.
+>>>>>>> Stashed changes
 
         Returns
         -------
@@ -184,7 +200,11 @@ class EmbateEventManager:
 
 
 class HallucinationEvent(EmbateEvent):
+<<<<<<< Updated upstream
     """Define um evento específico para detecção de alucinações.
+=======
+    """Evento específico para detecção de alucinações.
+>>>>>>> Stashed changes
 
     Esta classe representa eventos relacionados à detecção de alucinações
     em embates, incluindo métricas e indicadores.

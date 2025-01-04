@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 """Implementa configuração da aplicação.
+=======
+"""Módulo de configuração da aplicação.
+>>>>>>> Stashed changes
 
 Este módulo fornece as configurações da aplicação através de variáveis de ambiente.
 """
@@ -11,7 +15,11 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+<<<<<<< Updated upstream
     """Define configurações da aplicação usando variáveis de ambiente.
+=======
+    """Configurações da aplicação usando variáveis de ambiente.
+>>>>>>> Stashed changes
 
     Esta classe gerencia todas as configurações da aplicação, incluindo
     configurações da API, CORS, Supabase e ambiente de execução.
@@ -65,7 +73,11 @@ class Settings(BaseSettings):
     LOCAL_URL: str = "http://localhost:10000"
 
     class Config:
+<<<<<<< Updated upstream
         """Define configurações do Pydantic.
+=======
+        """Configurações do Pydantic.
+>>>>>>> Stashed changes
 
         Attributes
         ----------
@@ -77,7 +89,10 @@ class Settings(BaseSettings):
             Permite variáveis extras.
 
         """
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         env_file = ".env"
         case_sensitive = True
         extra = "allow"  # Permite variáveis extras
