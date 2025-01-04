@@ -3,37 +3,21 @@ services:
   - type: web
     name: backend-rag-ia
     env: docker
-    region: oregon
-    plan: starter
-    # Configuração otimizada do health check
-    healthCheckPath: /api/v1/health
-    healthCheckTimeout: 30
-    healthCheckInterval: 10
-    buildCommand: ./build.sh
-    startCommand: uvicorn backend_rag_ia.api.main:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: PYTHONPATH
-        value: /app
-      - key: PORT
-        value: 10000
-      - key: HOST
-        value: 0.0.0.0
-      - key: OPERATION_MODE
-        value: render
-      - key: IS_RENDER
-        value: true
       - key: ENVIRONMENT
-        value: preview
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_KEY
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-    dockerCommand: uvicorn backend_rag_ia.api.main:app --host 0.0.0.0 --port $PORT
-    autoDeploy: false
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: cache-distribuido
+          property: connectionString
+
+  - type: redis
+    name: cache-distribuido
+    ipAllowList: [] # Apenas serviços internos
+    plan: starter # Plano com persistência
 
 # Configuração de previews
 previews:
