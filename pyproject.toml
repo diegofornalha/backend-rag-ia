@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 [project]
 name = "backend_rag_ia"
 version = "1.0.0"
@@ -15,6 +16,14 @@ dependencies = [
     "agentops>=0.1.0",
 ]
 requires-python = ">=3.11"
+=======
+
+[tool.poetry]
+name = "backend-rag-ia"
+version = "0.1.0"
+description = "Backend RAG IA"
+authors = ["Diego Fornalha <diegofornalha@gmail.com>"]
+>>>>>>> Stashed changes
 readme = "README.md"
 license = {text = "MIT"}
 

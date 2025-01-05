@@ -1,0 +1,114 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          poetry config virtualenvs.create false
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Cache PyTorch and Transformers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/huggingface
+          key: ${{ runner.os }}-huggingface-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Run Ruff check
+        run: poetry run ruff check .
+
+      - name: Run tests
+        run: poetry run pytest
+        env:
+          REDIS_URL: "redis://localhost:6379"
+
+  build:
+    needs: validate
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:5.0.1
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and test main image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: app:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and test search image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile.search
+          push: false
+          load: true
+          tags: search:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test containers
+        run: |
+          docker run --network=host --rm app:test pytest
+          docker run --network=host --rm search:test pytest
+
+  security:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run dependency audit
+        run: |
+          pip install safety
+          safety check
+
+  deploy-approval:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [validate, build, security]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+            -H "accept: application/json" \
+            -H "authorization: Bearer ${{ secrets.RENDER_API_KEY }}"
