@@ -2,51 +2,46 @@
 Aplicação principal da API.
 """
 
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend_rag_ia.services.llm_manager import LLMManager
-from backend_rag_ia.api.middleware.multiagent_middleware import MultiAgentMiddleware
-from backend_rag_ia.api.routes import health, documents
-from backend_rag_ia.config.multiagent_config import MONITORING_CONFIG
+from .middleware import MultiAgentMiddleware
+from .config_routes import configure_routes
 
-# Inicialização do app
+# Configurações do ambiente
+PORT = int(os.getenv("PORT", "8000"))
+HOST = os.getenv("HOST", "0.0.0.0")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+# Cria aplicação
 app = FastAPI(
     title="Backend RAG IA",
-    description="API com suporte a RAG e sistema multiagente",
-    version="1.0.0"
+    description="API para processamento de texto usando RAG e IA",
+    version="1.0.0",
+    docs_url="/docs" if ENVIRONMENT == "development" else None,
+    redoc_url="/redoc" if ENVIRONMENT == "development" else None
 )
 
-# Configuração CORS
+# Configura CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
 
-# Inicialização do LLM Manager com suporte multiagente
-llm_manager = LLMManager()
+# Adiciona middleware multiagente
+app.add_middleware(MultiAgentMiddleware)
 
-# Adição do middleware multiagente
-app.add_middleware(
-    MultiAgentMiddleware,
-    llm_manager=llm_manager
-)
+# Configura rotas
+configure_routes(app)
 
-# Registro das rotas
-app.include_router(health.router, prefix="/health", tags=["health"])
-app.include_router(documents.router, prefix="/documents", tags=["documents"])
-
-# Eventos do ciclo de vida
-@app.on_event("startup")
-async def startup_event():
-    """Evento de inicialização da aplicação."""
-    if MONITORING_CONFIG["enable_logging"]:
-        print("Sistema multiagente inicializado com sucesso!")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Evento de encerramento da aplicação."""
-    if MONITORING_CONFIG["enable_logging"]:
-        print("Sistema multiagente finalizado com sucesso!") 
+# Rota de healthcheck
+@app.get("/health")
+async def health_check():
+    """Verifica saúde da aplicação."""
+    return {
+        "status": "healthy",
+        "environment": ENVIRONMENT
+    } 

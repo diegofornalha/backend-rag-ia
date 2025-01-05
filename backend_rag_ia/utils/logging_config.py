@@ -1,26 +1,47 @@
-"""Configuração de logging para o projeto."""
+"""
+Configuração de logging para o sistema.
+"""
 
 import logging
+import sys
+from typing import Optional
 
-
-def setup_logging() -> logging.Logger:
-    """Configura o sistema de logging."""
-    # Configurar logger
-    logger = logging.getLogger("backend_rag_ia")
-    logger.setLevel(logging.INFO)
+def setup_logger(
+    name: str,
+    level: Optional[str] = None,
+    format_str: Optional[str] = None
+) -> logging.Logger:
+    """
+    Configura um logger com formatação padrão.
     
-    # Configurar formato do log
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    Args:
+        name: Nome do logger
+        level: Nível de logging opcional
+        format_str: String de formatação opcional
+        
+    Returns:
+        Logger configurado
+    """
+    logger = logging.getLogger(name)
     
-    # Configurar handler para console
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
+    # Define nível
+    logger.setLevel(level or "INFO")
+    
+    # Adiciona handler se não existir
+    if not logger.handlers:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(level or "INFO")
+        
+        # Define formatação
+        formatter = logging.Formatter(
+            format_str or '[%(asctime)s] %(levelname)s [%(name)s] %(message)s'
+        )
+        handler.setFormatter(formatter)
+        
+        logger.addHandler(handler)
     
     return logger
 
 
 # Criar instância global do logger
-logger = setup_logging()
+logger = setup_logger("backend_rag_ia")

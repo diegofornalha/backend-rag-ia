@@ -1,8 +1,9 @@
 from functools import lru_cache
-from typing import Literal
+from typing import Literal, Dict, Any
 import os
 
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 
 
 class Settings(BaseSettings):
@@ -30,10 +31,34 @@ class Settings(BaseSettings):
     RENDER_URL: str = "https://rag-api.onrender.com"
     LOCAL_URL: str = "http://localhost:10000"
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "allow"  # Permite variáveis extras
+    # Configurações do Sistema MultiAgente
+    MULTIAGENT_CONFIG: Dict[str, Any] = {
+        "gemini_api_key": os.getenv("GEMINI_API_KEY"),
+        "max_retries": 3,
+        "timeout": 30,
+        "tracking_enabled": True,
+        "log_level": "INFO"
+    }
+    
+    # Configurações dos Agentes
+    AGENT_CONFIG: Dict[str, Any] = {
+        "max_concurrent_tasks": 5,
+        "task_timeout": 60,
+        "retry_delay": 1.0
+    }
+    
+    # Configurações do LLM
+    LLM_CONFIG: Dict[str, Any] = {
+        "model": "gemini-pro",
+        "temperature": 0.7,
+        "max_tokens": 1024
+    }
+    
+    model_config = ConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="allow"
+    )
 
     @property
     def is_render_environment(self) -> bool:

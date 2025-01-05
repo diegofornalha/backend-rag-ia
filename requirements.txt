@@ -9,10 +9,10 @@
 # ===========================================
 
 # API Framework
-fastapi>=0.109.0
-uvicorn>=0.27.0
-python-dotenv>=1.0.0
-gunicorn>=21.2.0
+fastapi==0.104.1
+uvicorn==0.24.0
+python-dotenv==1.0.0
+gunicorn==21.2.0
 
 # Machine Learning e IA
 langchain>=0.1.0
@@ -28,17 +28,18 @@ psycopg2-binary>=2.9.9
 pgvector>=0.2.4  # Para busca vetorial no Postgres
 
 # Utilitários
-pydantic>=2.5.3
-pydantic-settings>=2.1.0
+pydantic==2.5.2
+pydantic-settings==2.1.0
 python-multipart>=0.0.9
-httpx>=0.26.0
+httpx==0.25.2
 
 # Cache e Performance
 cachetools>=5.3.2
 
 # Testes
-pytest>=8.0.0
-pytest-asyncio>=0.23.5
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
 
 # CLI
 click>=8.1.7
@@ -50,7 +51,18 @@ requests>=2.31.0      # Importante para requisições HTTP
 urllib3>=2.1.0        # Dependência do requests 
 
 # Adicionar dependências para Gemini e LangChain
-google-generativeai>=0.3.0
+google-generativeai==0.3.1
 langchain-google-genai>=0.0.5 
 
 redis==5.0.1 
+
+# Adicionar dependências adicionais
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+tenacity==8.2.3
+structlog==23.2.0
+prometheus-client==0.19.0
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+opentelemetry-exporter-otlp==1.21.0 

@@ -2,38 +2,49 @@
 services:
   - type: web
     name: backend-rag-ia
-    env: docker
-    dockerfilePath: ./Dockerfile
-    healthCheckPath: /
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -c gunicorn.conf.py backend_rag_ia.main:app
+    healthCheckPath: /health
     envVars:
       - key: ENVIRONMENT
         value: production
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: cache-distribuido
-          property: connectionString
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: PORT
+        value: 10000
+      - key: HOST
+        value: 0.0.0.0
+      - key: WORKERS
+        value: 4
+      - key: TIMEOUT
+        value: 120
+      - key: LOG_LEVEL
+        value: info
+    autoDeploy: true
+    domains:
+      - backend-rag-ia.onrender.com
+    disk:
+      name: tmp
+      mountPath: /tmp
+      sizeGB: 1
 
   - type: redis
     name: cache-distribuido
-    ipAllowList: [] # Apenas serviços internos
-    plan: starter # Plano com persistência
+    ipAllowList: []
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
 
 # Configuração de previews
 previews:
-  # Habilita previews automáticos para todos os PRs
   enable: true
-  # Configurações específicas para os previews
   spec:
-    # Usa as mesmas configurações do serviço principal
     inheritEnvVars: true
-    # Adiciona variáveis específicas para ambiente de preview
     envVars:
       - key: ENVIRONMENT
         value: preview
       - key: DEBUG
         value: true
-    # Configurações de recursos para os previews
     plan: starter
 
 version: "1"
