@@ -1,57 +1,51 @@
-[tool.poetry]
+[project]
 name = "backend-rag-ia"
-version = "0.1.0"
-description = "Backend RAG IA"
-authors = ["Diego Fornalha <diegofornalha@gmail.com>"]
-readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.11"
-sentence-transformers = "2.2.2"
-torch = "2.2.0"
-transformers = "4.30.2"
-huggingface-hub = "0.16.4"
-supabase = "1.0.3"
-rich = "13.4.2"
-python-dotenv = "1.0.0"
-numpy = "1.24.3"
-fastapi = "^0.104.1"
-uvicorn = "^0.24.0"
-ruff = "^0.1.6"
-pydantic-settings = "^2.1.0"
+version = "1.0.0"
+description = "Backend com RAG e sistema multiagente"
+authors = [
+    {name = "Flow", email = "flow@example.com"}
+]
+dependencies = [
+    "fastapi>=0.104.1",
+    "uvicorn>=0.24.0",
+    "python-dotenv>=1.0.0",
+    "google-generativeai>=0.8.0",
+    "rich>=13.7.0",
+    "pydantic>=2.5.2",
+    "python-multipart>=0.0.6",
+    "httpx>=0.25.2"
+]
+requires-python = ">=3.9"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "pytest>=7.4.3",
+    "black>=23.11.0",
+    "isort>=5.12.0",
+    "mypy>=1.7.1",
+    "ruff>=0.1.6"
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
-extend-exclude = ["docs/*", "tests/*"]
-
-[tool.ruff.lint]
-select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "C",  # flake8-comprehensions
-    "B",  # flake8-bugbear
-    "UP", # pyupgrade
-]
-
-ignore = [
-    "E501",  # line too long
-    "B008",  # do not perform function calls in argument defaults
-]
-
-[tool.ruff.lint.isort]
-known-first-party = ["backend_rag_ia"]
-known-third-party = ["rich", "supabase", "sentence_transformers"]
-
-[tool.ruff.lint.flake8-quotes]
-docstring-quotes = "double"
-inline-quotes = "double"
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
+target-version = "py39"
