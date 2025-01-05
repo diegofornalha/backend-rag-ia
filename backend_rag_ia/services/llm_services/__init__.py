@@ -1,8 +1,8 @@
 """
-Serviços de LLM para o sistema.
+Serviços de LLM do sistema.
 """
 
 from .providers.gemini import GeminiProvider
 from .tracker import LlmTracker
 
-__all__ = ["GeminiProvider", "LlmTracker"]
+__all__ = ['GeminiProvider', 'LlmTracker']

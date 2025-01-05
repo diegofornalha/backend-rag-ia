@@ -7,7 +7,7 @@ import argparse
 from typing import Optional
 from rich.console import Console
 from rich.table import Table
-from MultiAgente_gemini import MultiAgentSystem
+from backend_rag_ia.services.agent_services.multi_agent import MultiAgentSystem
 from backend_rag_ia.config.multiagent_config import AGENT_CONFIG, GEMINI_CONFIG
 
 console = Console()

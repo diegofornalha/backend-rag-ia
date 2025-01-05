@@ -1,7 +1,7 @@
 """
-Serviços de agentes para o sistema multi-agente.
+Serviços de agentes do sistema.
 """
 
 from .coordinator import AgentCoordinator
 
-__all__ = ["AgentCoordinator"] 
+__all__ = ['AgentCoordinator'] 

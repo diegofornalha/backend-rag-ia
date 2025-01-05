@@ -2,6 +2,7 @@
 Configurações do sistema multiagente.
 """
 
+import os
 from typing import Dict, Any
 
 # Configurações do Gemini
@@ -11,7 +12,8 @@ GEMINI_CONFIG = {
     "top_p": 0.95,
     "top_k": 40,
     "max_output_tokens": 2048,
-    "timeout": 30
+    "timeout": 30,
+    "api_key": os.getenv("GEMINI_API_KEY")
 }
 
 # Configurações dos Agentes

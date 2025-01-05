@@ -7,10 +7,11 @@ Este módulo implementa a integração do sistema multiagente com o backend prin
 import os
 from typing import Optional, Dict, Any
 
+# Importações diretas dos serviços
 from .llm_services.providers.gemini import GeminiProvider
 from .agent_services.coordinator import AgentCoordinator
+from .suggestion_services.cursor_ai import CursorAI
 from .llm_services.tracker import LlmTracker
-from .suggestion_services.interfaces import CursorAI
 
 class MultiAgentSystem:
     """Sistema MultiAgente integrado."""
