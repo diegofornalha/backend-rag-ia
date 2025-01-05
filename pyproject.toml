@@ -1,85 +1,47 @@
 [project]
-name = "backend-rag-ia"
+name = "backend_rag_ia"
 version = "1.0.0"
-description = "Backend com RAG e sistema multiagente"
-authors = [
-    {name = "Flow", email = "flow@example.com"}
-]
+description = "Backend com RAG e sistema multi-agente integrado"
+authors = [{name = "Flow", email = "flow@example.com"}]
 dependencies = [
     "fastapi>=0.104.1",
     "uvicorn>=0.24.0",
-    "python-dotenv>=1.0.0",
-    "google-generativeai>=0.8.0",
-    "rich>=13.7.0",
-    "pydantic>=2.5.2",
     "python-multipart>=0.0.6",
-    "httpx>=0.25.2"
+    "python-dotenv>=1.0.0",
+    "google-generativeai>=0.3.1",
+    "langchain-google-genai>=0.0.5",
+    "sentence-transformers>=2.2.2",
+    "supabase>=2.0.3",
+    "agentops>=0.1.0",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+[project.urls]
+Homepage = "https://github.com/flow/backend-rag-ia"
+Repository = "https://github.com/flow/backend-rag-ia.git"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.rye]
-managed = true
-dev-dependencies = [
-    "pytest>=7.4.3",
-    "black>=23.11.0",
-    "isort>=5.12.0",
-    "mypy>=1.7.1",
-    "ruff>=0.1.6"
-]
-
-[tool.black]
-line-length = 100
-target-version = ["py39"]
-
-[tool.isort]
-profile = "black"
-line_length = 100
-multi_line_output = 3
-
-[tool.mypy]
-python_version = "3.9"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-
 [tool.ruff]
-line-length = 100
+line-length = 88
 target-version = "py311"
+select = ["E", "F"]
+ignore = ["E501"]
+exclude = [".bzr", ".direnv", ".eggs", ".git", ".git-rewrite", ".hg", ".mypy_cache", ".nox", ".pants.d", ".pytype", ".ruff_cache", ".svn", ".tox", ".venv", "__pypackages__", "_build", "buck-out", "build", "dist", "node_modules", "venv"]
 
-[tool.ruff.lint]
-select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "C",  # flake8-comprehensions
-    "B",  # flake8-bugbear
-]
-ignore = []
+[tool.ruff.mccabe]
+max-complexity = 10
+
+[tool.ruff.isort]
+known-first-party = ["backend_rag_ia"]
 
 [tool.ruff.format]
-quote-style = "double"
+line-length = 88
+quote-style = "single"
 indent-style = "space"
 skip-magic-trailing-comma = false
-line-ending = "auto"
-
-[tool.black]
-line-length = 100
-target-version = ['py311']
-include = '\.pyi?$'
-
-[tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q"
-testpaths = [
-    "tests",
-]
-python_files = ["test_*.py", "*_test.py"]
-filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::UserWarning",
-]
+docstring-code-format = true

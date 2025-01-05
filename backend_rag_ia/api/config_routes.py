@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from typing import List, Dict, Any
+from typing import Dict, Any
 
 # Importações diretas dos serviços
-from ..services.interfaces import SuggestionInterface
 from ..services.llm_services.providers.gemini import GeminiProvider
 from ..services.agent_services.coordinator import AgentCoordinator
 from ..services.embedding_services.vector_store import VectorStore
