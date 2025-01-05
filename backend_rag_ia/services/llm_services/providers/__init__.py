@@ -1,5 +1,5 @@
 """
-Providers para diferentes modelos de linguagem.
+Provedores de LLM.
 """
 
 from .gemini import GeminiProvider

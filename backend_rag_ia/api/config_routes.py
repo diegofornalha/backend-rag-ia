@@ -1,43 +1,73 @@
-import os
-from enum import Enum
+from fastapi import APIRouter, Depends, HTTPException
+from typing import List, Dict, Any
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from ..services.llm_services.providers.gemini import GeminiProvider
+from ..services.agent_services.coordinator import AgentCoordinator
+from ..services.suggestion_services.interfaces import SuggestionInterface
+from ..services.embedding_services.vector_store import VectorStore
 
-router = APIRouter(prefix="/api/v1/config", tags=["config"])
+router = APIRouter()
 
-class SemanticMode(str, Enum):
-    LOCAL = "local"
-    RENDER = "render"
-    AUTO = "auto"
+def get_vector_store():
+    return VectorStore()
 
-class SemanticModeUpdate(BaseModel):
-    mode: SemanticMode
+def get_llm_provider():
+    return GeminiProvider()
 
-@router.get("/semantic-mode")
-async def get_semantic_mode():
-    """Retorna o modo atual da busca semântica."""
-    current_mode = os.getenv("SEMANTIC_SEARCH_MODE", "local")
-    return {
-        "mode": current_mode,
-        "description": {
-            "local": "Usando busca semântica local via Docker",
-            "render": "Usando busca semântica remota via Render",
-            "auto": "Modo automático com fallback"
-        }.get(current_mode, "Modo desconhecido")
-    }
+def get_agent_coordinator(
+    llm_provider: GeminiProvider = Depends(get_llm_provider),
+    vector_store: VectorStore = Depends(get_vector_store)
+):
+    return AgentCoordinator(llm_provider=llm_provider, vector_store=vector_store)
 
-@router.post("/semantic-mode")
-async def update_semantic_mode(update: SemanticModeUpdate):
-    """Atualiza o modo da busca semântica."""
+@router.post("/analyze")
+async def analyze_content(
+    content: Dict[str, Any],
+    coordinator: AgentCoordinator = Depends(get_agent_coordinator)
+):
     try:
-        os.environ["SEMANTIC_SEARCH_MODE"] = update.mode.value
+        # Primeiro, armazena o conteúdo no vector store
+        vector_store = get_vector_store()
+        embeddings = await vector_store.store_content(content["text"])
+        
+        # Usa o multi-agente para análise
+        result = await coordinator.process_task({
+            "type": "analysis",
+            "content": content["text"],
+            "embeddings": embeddings
+        })
+        
         return {
-            "message": f"Modo alterado para {update.mode}",
-            "mode": update.mode
+            "status": "success",
+            "result": result,
+            "embeddings_stored": True
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao atualizar modo: {e!s}"
-        ) from e
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/suggestions/{query}")
+async def get_suggestions(
+    query: str,
+    coordinator: AgentCoordinator = Depends(get_agent_coordinator)
+):
+    try:
+        # Busca conteúdo similar usando embeddings
+        vector_store = get_vector_store()
+        similar_content = await vector_store.search_similar(query)
+        
+        # Usa o multi-agente para gerar sugestões
+        result = await coordinator.process_task({
+            "type": "suggestion",
+            "query": query,
+            "similar_content": similar_content
+        })
+        
+        return {
+            "status": "success",
+            "suggestions": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+def configure_routes(app):
+    app.include_router(router, prefix="/api/v1", tags=["content"])

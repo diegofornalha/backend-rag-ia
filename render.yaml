@@ -1,4 +1,20 @@
 # Exported from Render on 2024-12-27T10:09:24Z
+databases:
+  - name: vector_store
+    databaseName: embeddings
+    user: postgres
+    plan: starter
+    postgresMajorVersion: 15
+    ipAllowList: []
+    extensions:
+      - vector
+
+  - name: cache
+    type: redis
+    ipAllowList: []
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+
 services:
   - type: web
     name: backend-rag-ia
@@ -21,19 +37,27 @@ services:
         value: 120
       - key: LOG_LEVEL
         value: info
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: VECTOR_STORE_TYPE
+        value: pgvector
+      - key: EMBEDDINGS_MODEL
+        value: text-embedding-ada-002
+      - key: MAX_TOKENS
+        value: 8192
+      - key: CHUNK_SIZE
+        value: 1000
+      - key: CHUNK_OVERLAP
+        value: 200
     autoDeploy: true
-    domains:
-      - backend-rag-ia.onrender.com
     disk:
       name: tmp
       mountPath: /tmp
       sizeGB: 1
-
-  - type: redis
-    name: cache-distribuido
-    ipAllowList: []
-    plan: starter
-    maxmemoryPolicy: allkeys-lru
 
 # Configuração de previews
 previews:

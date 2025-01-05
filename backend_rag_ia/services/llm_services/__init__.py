@@ -1,14 +1,8 @@
 """
-Módulo de gerenciamento de modelos de linguagem.
+Serviços de LLM para o sistema.
 """
 
-from .providers import GeminiProvider
+from .providers.gemini import GeminiProvider
 from .tracker import LlmTracker
-from .gemini_config import get_model_config, GENERATION_CONFIG
 
-__all__ = [
-    "GeminiProvider",
-    "LlmTracker",
-    "get_model_config",
-    "GENERATION_CONFIG"
-]
+__all__ = ["GeminiProvider", "LlmTracker"]
