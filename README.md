@@ -112,20 +112,6 @@ Execute os testes com:
 pytest backend_rag_ia/tests/
 ```
 
-## Estrutura do Projeto
-
-```
-backend_rag_ia/
-├── cli/                    # Interface de linha de comando
-├── storage/               # Sistema de armazenamento
-├── notifications/         # Sistema de notificações
-├── reports/              # Geração de relatórios
-├── metrics/              # Coleta de métricas
-├── templates/            # Templates de embates
-├── validators/           # Validadores
-└── tests/               # Testes
-```
-
 ## Contribuindo
 
 1. Fork o projeto
