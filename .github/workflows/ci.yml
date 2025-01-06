@@ -40,7 +40,7 @@ jobs:
       - name: Verificar status do deploy
         run: |
           echo "Verificando status do deploy..."
-          for i in {1..180}; do
+          for i in {1..360}; do
             STATUS=$(curl -H "authorization: Bearer $RENDER_API_KEY" \
               "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/${{ steps.deploy.outputs.deploy_id }}" \
               | jq -r '.status')
@@ -56,5 +56,5 @@ jobs:
             echo "Deploy em andamento... ($STATUS)"
             sleep 10
           done
-          echo "Timeout ao aguardar deploy"
+          echo "Timeout ao aguardar deploy após 1 hora"
           exit 1
