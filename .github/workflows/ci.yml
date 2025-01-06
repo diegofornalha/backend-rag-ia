@@ -2,6 +2,7 @@ name: CI Pipeline
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
     branches: [main]
   push:
     branches: [main]
@@ -13,7 +14,7 @@ on:
 
 # Evita execução duplicada se houver PR e push simultaneamente
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -22,8 +23,10 @@ permissions:
 
 jobs:
   validate:
-    # Não executa se for push em PR
-    if: github.event_name != 'push' || github.event.pull_request == null
+    name: ${{ github.event_name == 'push' && 'Deploy' || 'CI' }}
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -128,7 +131,10 @@ jobs:
 
   build:
     needs: validate
-    if: github.event_name != 'push' || github.event.pull_request == null
+    name: ${{ github.event_name == 'push' && 'Deploy Build' || 'CI Build' }}
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]'))
     runs-on: ubuntu-latest
     services:
       redis:
@@ -178,7 +184,10 @@ jobs:
 
   security:
     needs: build
-    if: github.event_name != 'push' || github.event.pull_request == null
+    name: ${{ github.event_name == 'push' && 'Deploy Security' || 'CI Security' }}
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -196,8 +205,12 @@ jobs:
           pip freeze > requirements-lock.txt
           safety check -r requirements-lock.txt
 
-  deploy-approval:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  deploy:
+    name: Deploy to Render
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      !contains(github.event.head_commit.message, '[skip ci]')
     needs: [validate, build, security]
     runs-on: ubuntu-latest
     environment: production
