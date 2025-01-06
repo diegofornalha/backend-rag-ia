@@ -8,23 +8,23 @@ Este módulo contém as rotas para:
 - Histórico de operações
 """
 
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 router = APIRouter(
     prefix="/statistics",
     tags=["Estatísticas"],
-    responses={
-        500: {"description": "Erro interno do servidor"}
-    }
+    responses={500: {"description": "Erro interno do servidor"}},
 )
+
 
 class SystemStats(BaseModel):
     """
     Estatísticas gerais do sistema.
-    
+
     Attributes:
         total_documents: Total de documentos no sistema
         total_searches: Total de buscas realizadas
@@ -32,41 +32,47 @@ class SystemStats(BaseModel):
         storage_used: Espaço em disco usado (MB)
         last_update: Data da última atualização
     """
+
     total_documents: int
     total_searches: int
     avg_search_time: float
     storage_used: float
     last_update: datetime
 
+
 class UsageMetrics(BaseModel):
     """
     Métricas de uso do sistema.
-    
+
     Attributes:
         daily_searches: Buscas por dia
         daily_uploads: Uploads por dia
         active_users: Usuários ativos
         popular_queries: Queries mais populares
     """
+
     daily_searches: int
     daily_uploads: int
     active_users: int
-    popular_queries: List[str]
+    popular_queries: list[str]
+
 
 class PerformanceMetrics(BaseModel):
     """
     Métricas de performance.
-    
+
     Attributes:
         cpu_usage: Uso de CPU (%)
         memory_usage: Uso de memória (MB)
         response_times: Tempos de resposta (ms)
         error_rate: Taxa de erros (%)
     """
+
     cpu_usage: float
     memory_usage: float
-    response_times: List[float]
+    response_times: list[float]
     error_rate: float
+
 
 @router.get(
     "/system",
@@ -93,7 +99,7 @@ class PerformanceMetrics(BaseModel):
     print(f"Tempo médio de busca: {stats['avg_search_time']}ms")
     print(f"Última atualização: {stats['last_update']}")
     ```
-    """
+    """,
 )
 async def get_system_stats() -> SystemStats:
     """Retorna estatísticas do sistema."""
@@ -102,6 +108,7 @@ async def get_system_stats() -> SystemStats:
         pass
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get(
     "/usage",
@@ -137,11 +144,11 @@ async def get_system_stats() -> SystemStats:
     for query in metrics['popular_queries']:
         print(f"- {query}")
     ```
-    """
+    """,
 )
 async def get_usage_metrics(
     days: int = Query(30, ge=1, le=365, description="Número de dias para análise"),
-    include_queries: bool = Query(True, description="Se deve incluir queries populares")
+    include_queries: bool = Query(True, description="Se deve incluir queries populares"),
 ) -> UsageMetrics:
     """Retorna métricas de uso."""
     try:
@@ -149,6 +156,7 @@ async def get_usage_metrics(
         pass
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get(
     "/performance",
@@ -187,15 +195,15 @@ async def get_usage_metrics(
     avg_time = sum(times) / len(times)
     print(f"Tempo médio de resposta: {avg_time}ms")
     ```
-    """
+    """,
 )
 async def get_performance_metrics(
     window: int = Query(15, ge=1, le=60, description="Janela de tempo em minutos"),
-    detailed: bool = Query(False, description="Se deve incluir métricas detalhadas")
+    detailed: bool = Query(False, description="Se deve incluir métricas detalhadas"),
 ) -> PerformanceMetrics:
     """Retorna métricas de performance."""
     try:
         # Implementação das métricas
         pass
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))

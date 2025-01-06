@@ -21,9 +21,7 @@ def check_supabase_connection() -> tuple[bool, Client]:
         supabase_key = os.getenv("SUPABASE_KEY")
 
         if not supabase_url or not supabase_key:
-            console.print(
-                "❌ SUPABASE_URL e SUPABASE_KEY devem estar definidos no .env"
-            )
+            console.print("❌ SUPABASE_URL e SUPABASE_KEY devem estar definidos no .env")
             return False, None
 
         console.print("\n🔌 Conectando ao Supabase...")
@@ -44,9 +42,7 @@ def get_documents_count(supabase: Client) -> dict[str, Any]:
 
         # Debug do formato dos documentos
         console.print("\n🔍 Formato dos documentos:")
-        console.print(
-            json.dumps(documents[:2], indent=2)
-        )  # Mostra apenas 2 para não poluir
+        console.print(json.dumps(documents[:2], indent=2))  # Mostra apenas 2 para não poluir
 
         return {"count": len(documents), "documents": documents}
     except Exception as e:
@@ -68,7 +64,7 @@ def display_documents_table(documents: list[dict]) -> None:
 
     for doc in documents:
         content = doc.get("conteudo", {}).get("text", "N/A")
-        
+
         # Limita o tamanho do conteúdo
         if len(content) > 47:
             content = content[:47] + "..."
@@ -86,8 +82,10 @@ def display_documents_table(documents: list[dict]) -> None:
 def count_documents(supabase: Client) -> int:
     """Conta o número de documentos na base."""
     try:
-        response = supabase.from_("01_base_conhecimento_regras_geral").select("*", count="exact").execute()
-        return response.count if hasattr(response, 'count') else 0
+        response = (
+            supabase.from_("01_base_conhecimento_regras_geral").select("*", count="exact").execute()
+        )
+        return response.count if hasattr(response, "count") else 0
     except Exception as e:
         print(f"Erro ao contar documentos: {e}")
         return 0

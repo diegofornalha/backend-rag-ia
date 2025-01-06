@@ -1,1 +1,1 @@
-"""Módulo da API do Backend RAG IA.""" 
+"""Módulo da API do Backend RAG IA."""
