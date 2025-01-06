@@ -28,7 +28,7 @@ jobs:
         run: |
           echo "line-length = 100
           target-version = 'py311'
-          extend-exclude = ['docs/*', 'tests/*']
+          extend-exclude = ['docs/*']
 
           [lint]
           select = [
@@ -43,10 +43,24 @@ jobs:
           ignore = [
               'E501',  # line too long
               'B008',  # do not perform function calls in argument defaults
-          ]" > ruff.toml
+          ]
+
+          [format]
+          quote-style = 'double'
+          indent-style = 'space'
+          skip-magic-trailing-comma = false
+          line-ending = 'auto'" > ruff.toml
+
+      - name: Format code with Ruff
+        run: |
+          ruff format .
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "style: format code with ruff"
 
       - name: Run Ruff check
-        run: ruff check .
+        run: ruff check . --fix
 
       - name: Run tests with coverage
         run: |
