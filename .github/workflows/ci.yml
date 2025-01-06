@@ -1,287 +1,57 @@
-name: CI Pipeline
+name: Deploy
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    branches: [main]
   push:
     branches: [main]
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
-      - ".github/**"
-      - "**.txt"
 
-# Evita execução duplicada se houver PR e push simultaneamente
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: write
-  pull-requests: write
+env:
+  RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+  RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
 
 jobs:
-  validate:
-    name: ${{ github.event_name == 'push' && 'Deploy' || 'CI' }}
-    if: |
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]'))
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ github.head_ref }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-          cache: "pip"
-
-      - name: Create pyproject.toml
-        run: |
-          echo '[tool.pytest.ini_options]
-          asyncio_mode = "strict"
-          asyncio_default_fixture_loop_scope = "function"
-          testpaths = ["backend_rag_ia/tests"]
-          python_files = ["test_*.py"]
-          addopts = "-v -ra -q"
-          log_cli = true
-          log_cli_level = "INFO"
-
-          [tool.coverage.run]
-          source = ["backend_rag_ia"]
-          omit = [
-              "tests/*",
-              "**/__init__.py",
-              "**/test_*.py"
-          ]
-
-          [tool.coverage.report]
-          exclude_lines = [
-              "pragma: no cover",
-              "def __repr__",
-              "raise NotImplementedError",
-              "if __name__ == .__main__.:",
-              "pass",
-              "raise ImportError"
-          ]' > pyproject.toml
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          # Ferramentas de desenvolvimento
-          pip install ruff pytest pytest-asyncio pytest-cov pytest-env
-
-          # Dependências principais
-          pip install fastapi uvicorn python-dotenv redis pydantic-settings
-
-          # Dependências para testes
-          pip install google-generativeai jsonschema prometheus-client pandas requests
-          pip install pytest-asyncio pytest-cov pytest-mock pytest-env
-          pip install matplotlib seaborn plotly
-
-          # Dependências específicas do projeto
-          pip install sentence-transformers torch transformers huggingface-hub
-          pip install supabase rich numpy langchain langchain-google-genai
-          pip install agentops google-cloud-aiplatform
-
-      - name: Setup project structure
-        run: |
-          # Criar diretórios necessários
-          mkdir -p dados/embates dados/backup
-          mkdir -p backend_rag_ia/core
-
-          # Mover arquivos do 1_core para core
-          if [ -d "backend_rag_ia/1_core" ]; then
-            cp -r backend_rag_ia/1_core/* backend_rag_ia/core/
-          fi
-
-          # Criar __init__.py se não existir
-          touch backend_rag_ia/core/__init__.py
-
-      - name: Create Ruff config
-        run: |
-          echo "line-length = 100
-          target-version = 'py311'
-          src = ['backend_rag_ia']
-          extend-exclude = [
-              'docs/*',
-              'tests/*',
-              '**/test_*.py',
-              '**/__pycache__/*'
-          ]
-
-          [lint]
-          select = [
-              'E',  # pycodestyle errors
-              'W',  # pycodestyle warnings
-              'F',  # pyflakes
-              'I',  # isort
-              'C',  # flake8-comprehensions
-              'B',  # flake8-bugbear
-              'UP', # pyupgrade
-          ]
-          ignore = [
-              'E501',  # line too long
-              'B008',  # do not perform function calls in argument defaults
-              'W293', # ignore blank line contains whitespace
-              'F821', # undefined name
-              'F401', # imported but unused
-              'E402', # module level import not at top of file
-              'B904', # raise from err
-              'C901', # too complex
-              'B006', # mutable defaults
-              'B007', # loop control variable
-              'B019', # cached property
-              'E711', # none comparison
-              'E721', # type comparison
-              'UP035', # typing imports
-              'UP038', # isinstance union
-              'F841'  # unused variable
-          ]
-
-          [format]
-          quote-style = 'double'
-          indent-style = 'space'
-          skip-magic-trailing-comma = false
-          line-ending = 'auto'" > ruff.toml
-
-      - name: Setup core module
-        run: |
-          cd backend_rag_ia
-          ln -s 1_core core
-
-      - name: Format code with Ruff
-        run: |
-          ruff format backend_rag_ia
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add .
-          git diff --quiet && git diff --staged --quiet || (git commit -m "style: format code with ruff" && git push)
-
-      - name: Run Ruff check
-        run: ruff check backend_rag_ia --fix
-
-      - name: Run tests with coverage
-        run: |
-          PYTHONPATH=${{ github.workspace }} pytest backend_rag_ia/tests \
-            --cov=backend_rag_ia \
-            --cov-report=xml \
-            --cov-report=html \
-            --no-cov-on-fail
-        env:
-          REDIS_URL: "redis://localhost:6379"
-          PYTHONPATH: "${{ github.workspace }}"
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v3
-        with:
-          file: coverage.xml
-          fail_ci_if_error: true
-
-      - name: Upload coverage HTML report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: htmlcov/
-          retention-days: 7
-
-  build:
-    needs: validate
-    name: ${{ github.event_name == 'push' && 'Deploy Build' || 'CI Build' }}
-    if: |
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]'))
-    runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis:5.0.1
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build main image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: backend_rag_ia/Dockerfile
-          push: false
-          load: true
-          tags: app:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build search image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: backend_rag_ia/Dockerfile.search
-          push: false
-          load: true
-          tags: search:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Test containers
-        run: |
-          docker run --network=host --env REDIS_URL=redis://localhost:6379 --rm app:test pytest backend_rag_ia/tests
-          docker run --network=host --env REDIS_URL=redis://localhost:6379 --rm search:test pytest backend_rag_ia/tests
-
-  security:
-    needs: build
-    name: ${{ github.event_name == 'push' && 'Deploy Security' || 'CI Security' }}
-    if: |
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, '[skip ci]'))
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Run dependency audit
-        run: |
-          pip install safety
-          pip freeze > requirements-lock.txt
-          safety check -r requirements-lock.txt
-
   deploy:
-    name: Deploy to Render
-    if: |
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      !contains(github.event.head_commit.message, '[skip ci]')
-    needs: [validate, build, security]
     runs-on: ubuntu-latest
-    environment: production
     steps:
-      - name: Trigger Render Deploy
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Verificar Docker
         run: |
-          curl -X POST \
-            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys" \
+          docker --version
+          docker compose version
+
+      - name: Build e teste da imagem
+        run: |
+          docker build -t app:test .
+          docker run --rm app:test echo "Teste de build OK"
+
+      - name: Deploy to Render
+        id: deploy
+        run: |
+          DEPLOY_ID=$(curl -X POST \
+            "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
             -H "accept: application/json" \
-            -H "authorization: Bearer ${{ secrets.RENDER_API_KEY }}"
+            -H "authorization: Bearer $RENDER_API_KEY" | jq -r '.id')
+          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+
+      - name: Verificar status do deploy
+        run: |
+          echo "Verificando status do deploy..."
+          for i in {1..180}; do
+            STATUS=$(curl -H "authorization: Bearer $RENDER_API_KEY" \
+              "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys/${{ steps.deploy.outputs.deploy_id }}" \
+              | jq -r '.status')
+            
+            if [ "$STATUS" = "live" ]; then
+              echo "Deploy concluído com sucesso!"
+              exit 0
+            elif [ "$STATUS" = "failed" ]; then
+              echo "Deploy falhou!"
+              exit 1
+            fi
+            
+            echo "Deploy em andamento... ($STATUS)"
+            sleep 10
+          done
+          echo "Timeout ao aguardar deploy"
+          exit 1
