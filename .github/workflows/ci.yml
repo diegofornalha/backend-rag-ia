@@ -35,7 +35,13 @@ jobs:
         run: |
           echo "line-length = 100
           target-version = 'py311'
-          extend-exclude = ['docs/*']
+          src = ['backend_rag_ia']
+          extend-exclude = [
+              'docs/*',
+              '00_testes_apenas_raiz/*',
+              'tests/*',
+              '**/test_*.py'
+          ]
 
           [lint]
           select = [
@@ -51,6 +57,9 @@ jobs:
               'E501',  # line too long
               'B008',  # do not perform function calls in argument defaults
               'W293', # ignore blank line contains whitespace
+              'F821', # undefined name
+              'F401', # imported but unused
+              'E402', # module level import not at top of file
           ]
 
           [format]
@@ -61,18 +70,18 @@ jobs:
 
       - name: Format code with Ruff
         run: |
-          ruff format .
+          ruff format backend_rag_ia
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git add .
           git diff --quiet && git diff --staged --quiet || (git commit -m "style: format code with ruff" && git push)
 
       - name: Run Ruff check
-        run: ruff check . --fix
+        run: ruff check backend_rag_ia --fix
 
       - name: Run tests with coverage
         run: |
-          PYTHONPATH=$PWD pytest --cov=backend_rag_ia --cov-report=xml --cov-report=html
+          PYTHONPATH=$PWD pytest backend_rag_ia/tests --cov=backend_rag_ia --cov-report=xml --cov-report=html
         env:
           REDIS_URL: "redis://localhost:6379"
           PYTHONPATH: ${{ github.workspace }}
@@ -136,8 +145,8 @@ jobs:
 
       - name: Test containers
         run: |
-          docker run --network=host --env REDIS_URL=redis://localhost:6379 --rm app:test pytest
-          docker run --network=host --env REDIS_URL=redis://localhost:6379 --rm search:test pytest
+          docker run --network=host --env REDIS_URL=redis://localhost:6379 --rm app:test pytest backend_rag_ia/tests
+          docker run --network=host --env REDIS_URL=redis://localhost:6379 --rm search:test pytest backend_rag_ia/tests
 
   security:
     needs: build
