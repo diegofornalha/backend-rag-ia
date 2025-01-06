@@ -81,11 +81,16 @@ jobs:
           # Dependências para testes
           pip install google-generativeai jsonschema prometheus-client pandas requests
           pip install pytest-asyncio pytest-cov pytest-mock pytest-env
+          pip install matplotlib seaborn plotly
 
           # Dependências específicas do projeto
           pip install sentence-transformers torch transformers huggingface-hub
           pip install supabase rich numpy langchain langchain-google-genai
           pip install agentops google-cloud-aiplatform
+
+      - name: Create test directories
+        run: |
+          mkdir -p dados/embates dados/backup
 
       - name: Create Ruff config
         run: |
@@ -147,14 +152,14 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          PYTHONPATH=${{ github.workspace }} pytest backend_rag_ia/tests \
+          PYTHONPATH=${{ github.workspace }}/backend_rag_ia:${{ github.workspace }}/backend_rag_ia/1_core pytest backend_rag_ia/tests \
             --cov=backend_rag_ia \
             --cov-report=xml \
             --cov-report=html \
             --no-cov-on-fail
         env:
           REDIS_URL: "redis://localhost:6379"
-          PYTHONPATH: ${{ github.workspace }}
+          PYTHONPATH: "${{ github.workspace }}/backend_rag_ia:${{ github.workspace }}/backend_rag_ia/1_core"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
