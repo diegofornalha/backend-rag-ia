@@ -1,56 +1,26 @@
-<<<<<<< Updated upstream
-[project]
-name = "backend_rag_ia"
-version = "1.0.0"
-description = "Backend com RAG e sistema multi-agente integrado"
-authors = [{name = "Flow", email = "flow@example.com"}]
-dependencies = [
-    "fastapi>=0.104.1",
-    "uvicorn>=0.24.0",
-    "python-multipart>=0.0.6",
-    "python-dotenv>=1.0.0",
-    "google-generativeai>=0.3.1",
-    "langchain-google-genai>=0.0.5",
-    "sentence-transformers>=2.2.2",
-    "supabase>=2.0.3",
-    "agentops>=0.1.0",
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["backend_rag_ia/tests"]
+python_files = ["test_*.py"]
+addopts = "-v -ra -q"
+log_cli = true
+log_cli_level = "INFO"
+
+[tool.coverage.run]
+source = ["backend_rag_ia"]
+omit = [
+    "tests/*",
+    "**/__init__.py",
+    "**/test_*.py"
 ]
-requires-python = ">=3.11"
-=======
 
-[tool.poetry]
-name = "backend-rag-ia"
-version = "0.1.0"
-description = "Backend RAG IA"
-authors = ["Diego Fornalha <diegofornalha@gmail.com>"]
->>>>>>> Stashed changes
-readme = "README.md"
-license = {text = "MIT"}
-
-[project.urls]
-Homepage = "https://github.com/flow/backend-rag-ia"
-Repository = "https://github.com/flow/backend-rag-ia.git"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.ruff]
-line-length = 88
-target-version = "py311"
-select = ["E", "F"]
-ignore = ["E501"]
-exclude = [".bzr", ".direnv", ".eggs", ".git", ".git-rewrite", ".hg", ".mypy_cache", ".nox", ".pants.d", ".pytype", ".ruff_cache", ".svn", ".tox", ".venv", "__pypackages__", "_build", "buck-out", "build", "dist", "node_modules", "venv"]
-
-[tool.ruff.mccabe]
-max-complexity = 10
-
-[tool.ruff.isort]
-known-first-party = ["backend_rag_ia"]
-
-[tool.ruff.format]
-line-length = 88
-quote-style = "single"
-indent-style = "space"
-skip-magic-trailing-comma = false
-docstring-code-format = true
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError"
+]
