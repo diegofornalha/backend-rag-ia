@@ -9,6 +9,9 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend_rag_ia
     steps:
       - uses: actions/checkout@v3
 
@@ -18,35 +21,26 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          poetry config virtualenvs.create false
-
-      - name: Cache Poetry dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pypoetry
-          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
-
       - name: Install dependencies
-        run: poetry install
-
-      - name: Cache PyTorch and Transformers
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/huggingface
-          key: ${{ runner.os }}-huggingface-${{ hashFiles('**/poetry.lock') }}
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff pytest pytest-asyncio pytest-cov
+          pip install -r requirements.txt
 
       - name: Run Ruff check
-        run: poetry run ruff check .
+        run: ruff check .
 
-      - name: Run tests
-        run: poetry run pytest
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=backend_rag_ia --cov-report=xml
         env:
           REDIS_URL: "redis://localhost:6379"
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true
 
   build:
     needs: validate
@@ -65,8 +59,8 @@ jobs:
       - name: Build and test main image
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./backend_rag_ia
+          file: ./backend_rag_ia/Dockerfile
           push: false
           load: true
           tags: app:test
@@ -76,8 +70,8 @@ jobs:
       - name: Build and test search image
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./Dockerfile.search
+          context: ./backend_rag_ia
+          file: ./backend_rag_ia/Dockerfile.search
           push: false
           load: true
           tags: search:test
@@ -85,6 +79,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Test containers
+        working-directory: ./backend_rag_ia
         run: |
           docker run --network=host --rm app:test pytest
           docker run --network=host --rm search:test pytest
@@ -96,9 +91,10 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Run dependency audit
+        working-directory: ./backend_rag_ia
         run: |
           pip install safety
-          safety check
+          safety check -r requirements.txt
 
   deploy-approval:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
