@@ -4,53 +4,173 @@ databases:
     databaseName: embeddings
     user: postgres
     plan: starter
+    region: oregon
     postgresMajorVersion: 15
     ipAllowList: []
     backup:
       enabled: true
       schedule: 0 0 * * * # Backup diário à meia-noite
+      retentionPeriodDays: 7 # Retenção de 7 dias
+      backupWindow: "00:00-02:00" # Janela de backup
+      alertOnFailure: true # Alerta em falha de backup
     extensions:
       - vector
+    diskSizeGB: 20
+    securityConfig:
+      requireSSL: true
+      enableIAMAuth: true
+      sslMode: verify-full
+      sslCert: auto # Certificado gerenciado automaticamente
 
   - name: cache
     type: redis
     ipAllowList: []
+    region: oregon
     plan: starter
     maxmemoryPolicy: allkeys-lru
     backup:
       enabled: true
-      schedule: 0 0 * * * # Backup diário à meia-noite
+      schedule: 0 0 * * *
+      retentionPeriodDays: 7
+      backupWindow: "02:00-04:00"
+      alertOnFailure: true
+    diskSizeGB: 10
+    securityConfig:
+      requireAuth: true
+      enableTLS: true
+      tlsVersion: "1.3"
 
 services:
   - type: web
     name: backend-rag-ia
     env: python
-    buildCommand: pip install -r requirements.txt
+    region: oregon
+    buildCommand: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+      pip install gunicorn uvicorn pytest pytest-asyncio
+      python -m pytest tests/ # Testes antes do build
+    preDeployCommand: |
+      python -c "import sys; sys.exit(0 if all(p.exists() for p in ['requirements.txt', 'gunicorn.conf.py']) else 1)"
+      python -m pytest tests/health/ # Testes de saúde específicos
     startCommand: gunicorn -c gunicorn.conf.py backend_rag_ia.main:app
     healthCheckPath: /health
     healthCheckTimeout: 60
+    healthCheckInterval: 10
+    healthCheckGracePeriod: 300
+    healthCheckRetries: 5 # Número de tentativas antes de falhar
+    healthCheckMinSuccessfulAttempts: 3 # Mínimo de sucessos consecutivos
     autoscaling:
-      min: 1
+      min: 2
       max: 3
+      targetMemoryPercent: 80
+      targetCPUPercent: 70
+      scaleDownStabilizationWindowSeconds: 300 # Janela de estabilização
+      scaleUpStabilizationWindowSeconds: 60
+      cooldownPeriod: 300 # Período de cooldown após scaling
+      metrics:
+        - type: cpu
+          target: 70
+        - type: memory
+          target: 80
+        - type: latency
+          target: 500
     resources:
       cpu: 1000
       memory: 1024
       storage: 512
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 10
+      backupSchedule: "0 0 * * *" # Backup diário
+      retentionDays: 7
+    network:
+      - port: 10000
+        protocol: tcp
+    restartPolicyType: on-failure
+    restartPolicyMaxRetries: 3
+    pythonVersion: 3.11.0
+    maxShutdownDelaySeconds: 60
+    gracefulShutdownTimeout: 30
+    zeroDowntimeDeployment: false # Desabilitado devido ao disco persistente
+    pullRequestPreviewsEnabled: true
+    rollbackOnError: true
+    rollbackTimeoutSeconds: 300
+    circuitBreaker:
+      enabled: true
+      errorThreshold: 50
+      successThreshold: 10
+      timeout: 30
+      resetTimeout: 60
+    retryPolicy:
+      enabled: true
+      maxRetries: 3
+      initialInterval: 1
+      maxInterval: 10
+      backoffMultiplier: 2
+    buildFilter:
+      paths:
+        - backend_rag_ia/**
+        - requirements.txt
+        - gunicorn.conf.py
+        - tests/**
+      ignoredPaths:
+        - docs/**
+        - README.md
+        - .git/**
+    securityConfig:
+      enableHTTPS: true
+      forceHTTPS: true
+      httpsTiming: immediate
+      sslCert: auto
+      hsts:
+        enabled: true
+        maxAge: 31536000 # 1 ano
+        includeSubdomains: true
+        preload: true
+      rateLimiting:
+        enabled: true
+        requestsPerSecond: 100
+        burstSize: 200
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        compress: "true"
+        labels: "app=backend-rag-ia,env=production"
+      aggregation:
+        enabled: true
+        interval: "1m"
+        retentionDays: 30
     envVars:
       - key: ENVIRONMENT
         value: production
-      - key: GEMINI_API_KEY
-        sync: false
+      - key: PYTHONPATH
+        value: .
       - key: PORT
         value: 10000
       - key: HOST
         value: 0.0.0.0
       - key: WORKERS
         value: 4
+      - key: WORKER_CLASS
+        value: uvicorn.workers.UvicornWorker
       - key: TIMEOUT
+        value: 120
+      - key: KEEPALIVE
+        value: 65
+      - key: MAX_REQUESTS
+        value: 1000
+      - key: MAX_REQUESTS_JITTER
+        value: 50
+      - key: GRACEFUL_TIMEOUT
         value: 120
       - key: LOG_LEVEL
         value: info
+      - key: SSL_REDIRECT
+        value: "true"
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
@@ -67,14 +187,43 @@ services:
         value: 1000
       - key: CHUNK_OVERLAP
         value: 200
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vector_store
+          property: connectionString
+      - key: REDIS_URL
+        fromDatabase:
+          name: cache
+          property: connectionString
+      - key: DEPLOY_VERSION
+        generateValue: true
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: DATA_DIR
+        value: /data
     autoDeploy: true
-    disk:
-      name: tmp
-      mountPath: /tmp
-      sizeGB: 1
     metrics:
       enabled: true
       path: /metrics
+      port: 10000
+      scrapeInterval: 30
+      retention: 7d # Retenção de métricas por 7 dias
+      labels:
+        app: backend-rag-ia
+        env: production
+      alerts:
+        - name: high_error_rate
+          query: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+          for: 5m
+          severity: critical
+        - name: high_latency
+          query: http_request_duration_seconds{quantile="0.95"} > 2
+          for: 10m
+          severity: warning
+        - name: low_success_rate
+          query: rate(http_requests_total{status=~"2.."}[5m]) / rate(http_requests_total[5m]) < 0.95
+          for: 5m
+          severity: warning
 
 # Configuração de previews
 previews:
@@ -86,9 +235,42 @@ previews:
         value: preview
       - key: DEBUG
         value: true
+      - key: SSL_REDIRECT
+        value: "true"
+      - key: WORKER_CLASS
+        value: uvicorn.workers.UvicornWorker
+      - key: DATA_DIR
+        value: /data
     plan: starter
     resources:
       cpu: 500
       memory: 512
+    disk:
+      name: data-preview
+      mountPath: /data
+      sizeGB: 5
+    region: oregon
+    healthCheck:
+      path: /health
+      interval: 30
+      timeout: 30
+      retries: 3
+      startPeriod: 60
+    buildCommand: |
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt pytest pytest-asyncio
+      pip install gunicorn uvicorn
+      python -m pytest tests/ --quick # Testes rápidos para preview
+    securityConfig:
+      enableHTTPS: true
+      forceHTTPS: true
+      sslCert: auto
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+        compress: "true"
+        labels: "app=backend-rag-ia,env=preview"
 
 version: "1"
