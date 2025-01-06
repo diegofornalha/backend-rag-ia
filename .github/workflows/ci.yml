@@ -40,22 +40,40 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Create pytest.ini
+      - name: Create pyproject.toml
         run: |
-          echo "[pytest]
-          asyncio_mode = strict
-          asyncio_default_fixture_loop_scope = function
-          testpaths = backend_rag_ia/tests
-          python_files = test_*.py
-          addopts = -v -ra -q
+          echo '[tool.pytest.ini_options]
+          asyncio_mode = "strict"
+          asyncio_default_fixture_loop_scope = "function"
+          testpaths = ["backend_rag_ia/tests"]
+          python_files = ["test_*.py"]
+          addopts = "-v -ra -q"
           log_cli = true
-          log_cli_level = INFO" > pytest.ini
+          log_cli_level = "INFO"
+
+          [tool.coverage.run]
+          source = ["backend_rag_ia"]
+          omit = [
+              "tests/*",
+              "**/__init__.py",
+              "**/test_*.py"
+          ]
+
+          [tool.coverage.report]
+          exclude_lines = [
+              "pragma: no cover",
+              "def __repr__",
+              "raise NotImplementedError",
+              "if __name__ == .__main__.:",
+              "pass",
+              "raise ImportError"
+          ]' > pyproject.toml
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           # Ferramentas de desenvolvimento
-          pip install ruff pytest pytest-asyncio pytest-cov
+          pip install ruff pytest pytest-asyncio pytest-cov pytest-env
 
           # Dependências principais
           pip install fastapi uvicorn python-dotenv redis pydantic-settings
@@ -129,11 +147,10 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest backend_rag_ia/tests \
+          PYTHONPATH=${{ github.workspace }} pytest backend_rag_ia/tests \
             --cov=backend_rag_ia \
             --cov-report=xml \
             --cov-report=html \
-            --cov-config=.coveragerc \
             --no-cov-on-fail
         env:
           REDIS_URL: "redis://localhost:6379"
