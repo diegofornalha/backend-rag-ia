@@ -19,31 +19,45 @@ jobs:
           cache: "pip"
 
       - name: Install dependencies
-        working-directory: ./backend_rag_ia
         run: |
           python -m pip install --upgrade pip
           pip install ruff pytest pytest-asyncio pytest-cov
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          else
-            pip install fastapi uvicorn python-dotenv redis pydantic-settings
-          fi
+          pip install fastapi uvicorn python-dotenv redis pydantic-settings
+
+      - name: Create Ruff config
+        run: |
+          echo "line-length = 100
+          target-version = 'py311'
+          extend-exclude = ['docs/*', 'tests/*']
+
+          [lint]
+          select = [
+              'E',  # pycodestyle errors
+              'W',  # pycodestyle warnings
+              'F',  # pyflakes
+              'I',  # isort
+              'C',  # flake8-comprehensions
+              'B',  # flake8-bugbear
+              'UP', # pyupgrade
+          ]
+          ignore = [
+              'E501',  # line too long
+              'B008',  # do not perform function calls in argument defaults
+          ]" > ruff.toml
 
       - name: Run Ruff check
-        working-directory: ./backend_rag_ia
         run: ruff check .
 
       - name: Run tests with coverage
-        working-directory: ./backend_rag_ia
         run: |
-          pytest --cov=backend_rag_ia --cov-report=xml
+          PYTHONPATH=$PWD pytest --cov=backend_rag_ia --cov-report=xml
         env:
           REDIS_URL: "redis://localhost:6379"
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
-          file: ./backend_rag_ia/coverage.xml
+          file: coverage.xml
           fail_ci_if_error: true
 
   build:
@@ -54,28 +68,34 @@ jobs:
         image: redis:5.0.1
         ports:
           - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build and test main image
+      - name: Build main image
         uses: docker/build-push-action@v4
         with:
-          context: ./backend_rag_ia
-          file: ./backend_rag_ia/Dockerfile
+          context: .
+          file: backend_rag_ia/Dockerfile
           push: false
           load: true
           tags: app:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build and test search image
+      - name: Build search image
         uses: docker/build-push-action@v4
         with:
-          context: ./backend_rag_ia
-          file: ./backend_rag_ia/Dockerfile.search
+          context: .
+          file: backend_rag_ia/Dockerfile.search
           push: false
           load: true
           tags: search:test
@@ -83,10 +103,9 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Test containers
-        working-directory: ./backend_rag_ia
         run: |
-          docker run --network=host --rm app:test pytest
-          docker run --network=host --rm search:test pytest
+          docker run --network=host --env REDIS_URL=redis://localhost:6379 --rm app:test pytest
+          docker run --network=host --env REDIS_URL=redis://localhost:6379 --rm search:test pytest
 
   security:
     needs: build
@@ -94,16 +113,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
       - name: Run dependency audit
-        working-directory: ./backend_rag_ia
         run: |
           pip install safety
-          if [ -f requirements.txt ]; then
-            safety check -r requirements.txt
-          else
-            pip freeze > temp-requirements.txt
-            safety check -r temp-requirements.txt
-          fi
+          pip freeze > requirements-lock.txt
+          safety check -r requirements-lock.txt
 
   deploy-approval:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
