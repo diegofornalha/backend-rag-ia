@@ -4,7 +4,7 @@ services:
     name: backend-rag-ia
     env: docker
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /
+    healthCheckPath: /api/v1/health
     envVars:
       - key: ENVIRONMENT
         value: production
