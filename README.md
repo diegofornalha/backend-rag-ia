@@ -1,6 +1,6 @@
 # Sistema de Embates
 
-Sistema para gerenciamento e controle de embates (discussões técnicas).
+Sistema para gerenciamento e controle de embates
 
 ## Funcionalidades
 
