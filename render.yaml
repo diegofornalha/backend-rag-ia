@@ -21,11 +21,20 @@ services:
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn -c gunicorn.conf.py backend_rag_ia.main:app
-    healthCheckPath: /health
+    healthCheckPath: /api/v1/health
+    autoDeploy: false
+    maxShutdownDelaySeconds: 60
+
     envVars:
       - key: ENVIRONMENT
         value: production
       - key: GEMINI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
         sync: false
       - key: PORT
         value: 10000
@@ -37,23 +46,13 @@ services:
         value: 120
       - key: LOG_LEVEL
         value: info
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_KEY
-        sync: false
-      - key: SUPABASE_SERVICE_KEY
-        sync: false
-      - key: VECTOR_STORE_TYPE
-        value: pgvector
-      - key: EMBEDDINGS_MODEL
-        value: text-embedding-ada-002
-      - key: MAX_TOKENS
-        value: 8192
-      - key: CHUNK_SIZE
-        value: 1000
-      - key: CHUNK_OVERLAP
-        value: 200
-    autoDeploy: true
+
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetMemoryPercent: 60
+      targetCPUPercent: 60
+
     disk:
       name: tmp
       mountPath: /tmp
@@ -61,7 +60,7 @@ services:
 
 # Configuração de previews
 previews:
-  enable: true
+  generation: automatic
   spec:
     inheritEnvVars: true
     envVars:
