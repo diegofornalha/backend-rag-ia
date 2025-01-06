@@ -6,11 +6,18 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -43,6 +50,7 @@ jobs:
           ignore = [
               'E501',  # line too long
               'B008',  # do not perform function calls in argument defaults
+              'W293', # ignore blank line contains whitespace
           ]
 
           [format]
@@ -57,22 +65,30 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
           git add .
-          git diff --quiet && git diff --staged --quiet || git commit -m "style: format code with ruff"
+          git diff --quiet && git diff --staged --quiet || (git commit -m "style: format code with ruff" && git push)
 
       - name: Run Ruff check
         run: ruff check . --fix
 
       - name: Run tests with coverage
         run: |
-          PYTHONPATH=$PWD pytest --cov=backend_rag_ia --cov-report=xml
+          PYTHONPATH=$PWD pytest --cov=backend_rag_ia --cov-report=xml --cov-report=html
         env:
           REDIS_URL: "redis://localhost:6379"
+          PYTHONPATH: ${{ github.workspace }}
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
           file: coverage.xml
           fail_ci_if_error: true
+
+      - name: Upload coverage HTML report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: htmlcov/
+          retention-days: 7
 
   build:
     needs: validate
@@ -90,6 +106,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -126,6 +144,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v4
