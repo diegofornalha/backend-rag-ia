@@ -1,3 +1,39 @@
+[tool.poetry]
+name = "backend-rag-ia"
+version = "0.1.0"
+description = "Backend RAG IA"
+authors = ["Diego Fornalha <diegofornalha@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+sentence-transformers = "2.2.2"
+torch = "2.2.0"
+transformers = "4.30.2"
+huggingface-hub = "0.16.4"
+supabase = "1.0.3"
+rich = "13.4.2"
+python-dotenv = "1.0.1"
+numpy = "1.24.3"
+fastapi = "^0.115.6"
+uvicorn = "^0.24.0"
+ruff = "^0.1.6"
+pydantic-settings = "^2.1.0"
+redis = "5.2.1"
+python-jose = {extras = ["cryptography"], version = "3.3.0"}
+passlib = {extras = ["bcrypt"], version = "1.7.4"}
+tenacity = "8.2.3"
+structlog = "23.2.0"
+prometheus-client = "0.19.0"
+opentelemetry-api = "1.21.0"
+opentelemetry-sdk = "1.21.0"
+opentelemetry-instrumentation-fastapi = "0.42b0"
+opentelemetry-exporter-otlp = "1.21.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
 asyncio_default_fixture_loop_scope = "function"
@@ -23,4 +59,20 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "pass",
     "raise ImportError"
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["docs/*", "tests/*"]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "UP"  # pyupgrade
 ]
