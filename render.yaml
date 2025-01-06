@@ -6,6 +6,9 @@ databases:
     plan: starter
     postgresMajorVersion: 15
     ipAllowList: []
+    backup:
+      enabled: true
+      schedule: 0 0 * * * # Backup diário à meia-noite
     extensions:
       - vector
 
@@ -14,6 +17,9 @@ databases:
     ipAllowList: []
     plan: starter
     maxmemoryPolicy: allkeys-lru
+    backup:
+      enabled: true
+      schedule: 0 0 * * * # Backup diário à meia-noite
 
 services:
   - type: web
@@ -21,20 +27,19 @@ services:
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn -c gunicorn.conf.py backend_rag_ia.main:app
-    healthCheckPath: /api/v1/health
-    autoDeploy: false
-    maxShutdownDelaySeconds: 60
-
+    healthCheckPath: /health
+    healthCheckTimeout: 60
+    autoscaling:
+      min: 1
+      max: 3
+    resources:
+      cpu: 1000
+      memory: 1024
+      storage: 512
     envVars:
       - key: ENVIRONMENT
         value: production
       - key: GEMINI_API_KEY
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_KEY
-        sync: false
-      - key: SUPABASE_SERVICE_KEY
         sync: false
       - key: PORT
         value: 10000
@@ -46,21 +51,34 @@ services:
         value: 120
       - key: LOG_LEVEL
         value: info
-
-    scaling:
-      minInstances: 1
-      maxInstances: 3
-      targetMemoryPercent: 60
-      targetCPUPercent: 60
-
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: VECTOR_STORE_TYPE
+        value: pgvector
+      - key: EMBEDDINGS_MODEL
+        value: text-embedding-ada-002
+      - key: MAX_TOKENS
+        value: 8192
+      - key: CHUNK_SIZE
+        value: 1000
+      - key: CHUNK_OVERLAP
+        value: 200
+    autoDeploy: true
     disk:
       name: tmp
       mountPath: /tmp
       sizeGB: 1
+    metrics:
+      enabled: true
+      path: /metrics
 
 # Configuração de previews
 previews:
-  generation: automatic
+  enable: true
   spec:
     inheritEnvVars: true
     envVars:
@@ -69,5 +87,8 @@ previews:
       - key: DEBUG
         value: true
     plan: starter
+    resources:
+      cpu: 500
+      memory: 512
 
 version: "1"
