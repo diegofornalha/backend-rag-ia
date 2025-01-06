@@ -139,6 +139,11 @@ jobs:
           skip-magic-trailing-comma = false
           line-ending = 'auto'" > ruff.toml
 
+      - name: Setup core module
+        run: |
+          cd backend_rag_ia
+          ln -s 1_core core
+
       - name: Format code with Ruff
         run: |
           ruff format backend_rag_ia
@@ -149,11 +154,6 @@ jobs:
 
       - name: Run Ruff check
         run: ruff check backend_rag_ia --fix
-
-      - name: Setup core module
-        run: |
-          cd backend_rag_ia
-          ln -s 1_core core
 
       - name: Run tests with coverage
         run: |
