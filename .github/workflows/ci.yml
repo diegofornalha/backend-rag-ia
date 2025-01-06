@@ -5,6 +5,16 @@ on:
     branches: [main]
   push:
     branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".github/**"
+      - "**.txt"
+
+# Evita execução duplicada se houver PR e push simultaneamente
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -12,6 +22,8 @@ permissions:
 
 jobs:
   validate:
+    # Não executa se for push em PR
+    if: github.event_name != 'push' || github.event.pull_request == null
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -91,7 +103,12 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          PYTHONPATH=$PWD pytest backend_rag_ia/tests --cov=backend_rag_ia --cov-report=xml --cov-report=html
+          pytest backend_rag_ia/tests \
+            --cov=backend_rag_ia \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-config=.coveragerc \
+            --no-cov-on-fail
         env:
           REDIS_URL: "redis://localhost:6379"
           PYTHONPATH: ${{ github.workspace }}
@@ -111,6 +128,7 @@ jobs:
 
   build:
     needs: validate
+    if: github.event_name != 'push' || github.event.pull_request == null
     runs-on: ubuntu-latest
     services:
       redis:
@@ -160,6 +178,7 @@ jobs:
 
   security:
     needs: build
+    if: github.event_name != 'push' || github.event.pull_request == null
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
