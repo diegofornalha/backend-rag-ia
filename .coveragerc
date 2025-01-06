@@ -1,0 +1,17 @@
+[run]
+branch = True
+source = backend_rag_ia
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    raise ImportError
+ignore_errors = True
+
+[html]
+directory = htmlcov 
