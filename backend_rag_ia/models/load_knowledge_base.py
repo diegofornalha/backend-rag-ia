@@ -55,9 +55,7 @@ def load_knowledge_base(vector_store):
                         if "metadata" in data["document"]:
                             metadata.update(data["document"]["metadata"])
 
-                        doc = Document(
-                            content=data["document"]["content"], metadata=metadata
-                        )
+                        doc = Document(content=data["document"]["content"], metadata=metadata)
                         documents.append(doc)
                         print(f"Documento {filename} processado com sucesso")
 

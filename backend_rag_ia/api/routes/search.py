@@ -12,17 +12,14 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 router = APIRouter(
-    prefix="/search",
-    tags=["Busca"],
-    responses={
-        500: {"description": "Erro interno do servidor"}
-    }
+    prefix="/search", tags=["Busca"], responses={500: {"description": "Erro interno do servidor"}}
 )
+
 
 class SearchResult(BaseModel):
     """
     Resultado de busca.
-    
+
     Attributes:
         document_id: ID do documento encontrado
         title: Título do documento
@@ -30,11 +27,13 @@ class SearchResult(BaseModel):
         score: Pontuação de relevância (0-1)
         highlights: Trechos destacados que correspondem à busca
     """
+
     document_id: str
     title: str
     content: str
     score: float = Field(..., ge=0, le=1)
     highlights: List[str]
+
 
 @router.get(
     "/",
@@ -84,13 +83,13 @@ class SearchResult(BaseModel):
             print(f"- {highlight}")
         print()
     ```
-    """
+    """,
 )
 async def search_documents(
     query: str = Query(..., description="Texto para busca"),
     limit: int = Query(10, ge=1, le=100, description="Número máximo de resultados"),
     min_score: float = Query(0.5, ge=0, le=1, description="Pontuação mínima de relevância"),
-    filters: Optional[str] = Query(None, description="Filtros em formato JSON")
+    filters: Optional[str] = Query(None, description="Filtros em formato JSON"),
 ) -> List[SearchResult]:
     """Realiza busca semântica."""
     try:
@@ -98,6 +97,7 @@ async def search_documents(
         pass
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get(
     "/similar/{document_id}",
@@ -129,12 +129,12 @@ async def search_documents(
     elif response.status_code == 404:
         print("Documento não encontrado")
     ```
-    """
+    """,
 )
 async def find_similar(
     document_id: str,
     limit: int = Query(10, ge=1, le=100, description="Número máximo de resultados"),
-    min_score: float = Query(0.5, ge=0, le=1, description="Pontuação mínima de similaridade")
+    min_score: float = Query(0.5, ge=0, le=1, description="Pontuação mínima de similaridade"),
 ) -> List[SearchResult]:
     """Encontra documentos similares."""
     try:

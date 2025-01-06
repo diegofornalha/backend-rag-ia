@@ -9,73 +9,75 @@ from supabase import Client, create_client
 
 from ..models import Embate
 
+
 class SupabaseStorage:
     """Gerencia armazenamento de embates no Supabase."""
-    
+
     def __init__(self, url: str, key: str):
         """
         Inicializa o storage.
-        
+
         Args:
             url: URL do projeto Supabase
             key: Chave de API do Supabase
         """
         self.client = create_client(url, key)
-        
+
     async def save(self, embate: Embate) -> Dict:
         """
         Salva um embate.
-        
+
         Args:
             embate: Embate a ser salvo
-            
+
         Returns:
             Dados do embate salvo
         """
         data = embate.dict()
         data["criado_em"] = data["criado_em"].isoformat()
         data["atualizado_em"] = data["atualizado_em"].isoformat()
-        
+
         response = await self.client.table("rag.embates").insert(data).execute()
         return response.data[0]
-        
+
     async def get(self, id: str) -> Optional[Embate]:
         """
         Busca um embate por ID.
-        
+
         Args:
             id: ID do embate
-            
+
         Returns:
             Embate encontrado ou None
         """
         response = await self.client.table("rag.embates").select("*").eq("id", id).execute()
-        
+
         if not response.data:
             return None
-            
+
         data = response.data[0]
         data["criado_em"] = datetime.fromisoformat(data["criado_em"])
         data["atualizado_em"] = datetime.fromisoformat(data["atualizado_em"])
-        
+
         return Embate(**data)
-        
+
     async def list(self) -> List[Embate]:
         """
         Lista todos os embates.
-        
+
         Returns:
             Lista de embates
         """
         response = await self.client.table("rag.embates").select("*").execute()
-        
+
         embates = []
         for data in response.data:
             data["criado_em"] = datetime.fromisoformat(data["criado_em"])
             data["atualizado_em"] = datetime.fromisoformat(data["atualizado_em"])
             embates.append(Embate(**data))
-            
+
         return embates
+
 
 """Storage para embates."""
 
@@ -84,27 +86,28 @@ from datetime import datetime
 
 from ..models import Embate
 
+
 class MemoryStorage:
     """Storage em memória para testes."""
-    
+
     def __init__(self):
         self.embates: Dict[str, Embate] = {}
         self._call_count = 0
         self._last_call = None
-        
+
     def _check_embate_trigger(self) -> List[Embate]:
         """Verifica se deve iniciar embates."""
         now = datetime.now()
-        
+
         if self._last_call:
             elapsed = (now - self._last_call).total_seconds()
         else:
             elapsed = 0
-            
+
         self._last_call = now
-        
+
         embates = []
-        
+
         if self._call_count >= 3:
             # Cria embate sobre uso intensivo do storage
             embate = Embate(
@@ -124,14 +127,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumento técnico
-            embate.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": f"""
+            embate.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": f"""
                 Métricas de uso do storage:
                 - Total de chamadas: {self._call_count}
                 - Intervalo médio: {elapsed:.2f}s
@@ -142,11 +146,12 @@ class MemoryStorage:
                 2. Adicionar rate limiting por cliente
                 3. Criar alertas de uso intensivo
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate)
-            
+
             # Cria embate sobre migração para JSONB
             embate_jsonb = Embate(
                 titulo="Migração para JSONB",
@@ -175,14 +180,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_jsonb.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_jsonb.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Campos Identificados para Migração:
@@ -202,13 +208,15 @@ class MemoryStorage:
                    d) Remover coluna antiga
                    e) Atualizar código
                 """,
-                "data": now
-            })
-            
-            embate_jsonb.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_jsonb.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -227,11 +235,12 @@ class MemoryStorage:
                    - Rollback plan
                    - Migração em ambiente de staging primeiro
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_jsonb)
-            
+
             # Cria embate sobre padronização de logs
             embate_logs = Embate(
                 titulo="Padronização de Logs e Monitoramento",
@@ -258,14 +267,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_logs.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_logs.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Estrutura de Logs:
@@ -284,13 +294,15 @@ class MemoryStorage:
                    - Alertas de erros
                    - Dashboard de operações
                 """,
-                "data": now
-            })
-            
-            embate_logs.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_logs.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -309,11 +321,12 @@ class MemoryStorage:
                    - Compressão
                    - Retenção configurável
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_logs)
-            
+
             # Cria embate sobre integração com Gemini
             embate_gemini = Embate(
                 titulo="Integração do Gemini com Sistema de Embates",
@@ -340,14 +353,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_gemini.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_gemini.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Pontos de Integração:
@@ -368,13 +382,15 @@ class MemoryStorage:
                    - Taxa de aceitação
                    - Uso de recursos
                 """,
-                "data": now
-            })
-            
-            embate_gemini.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_gemini.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -395,11 +411,12 @@ class MemoryStorage:
                    - Validação humana
                    - Fallback local
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_gemini)
-            
+
             # Cria embate sobre integração com CI/CD
             embate_cicd = Embate(
                 titulo="Integração com CI/CD para Validação de Embates",
@@ -426,14 +443,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_cicd.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_cicd.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Pontos de Integração:
@@ -454,13 +472,15 @@ class MemoryStorage:
                    - Taxa de sucesso
                    - Cobertura de testes
                 """,
-                "data": now
-            })
-            
-            embate_cicd.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_cicd.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -481,11 +501,12 @@ class MemoryStorage:
                    - Execução paralela
                    - Timeouts adequados
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_cicd)
-            
+
             # Agora vou criar um embate sobre sistema de priorização
             embate_priorizacao = Embate(
                 titulo="Sistema de Priorização de Embates",
@@ -512,14 +533,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_priorizacao.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_priorizacao.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Critérios de Priorização:
@@ -540,13 +562,15 @@ class MemoryStorage:
                    - Satisfação da equipe
                    - ROI das mudanças
                 """,
-                "data": now
-            })
-            
-            embate_priorizacao.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_priorizacao.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -567,11 +591,12 @@ class MemoryStorage:
                    - Ajustes iterativos
                    - Documentação clara
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_priorizacao)
-            
+
             # Cria embate sobre análise de dependências
             embate_deps = Embate(
                 titulo="Análise de Dependências entre Embates",
@@ -598,14 +623,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_deps.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_deps.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Tipos de Dependência:
@@ -626,13 +652,15 @@ class MemoryStorage:
                    - Gemini para análise
                    - Storage para histórico
                 """,
-                "data": now
-            })
-            
-            embate_deps.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_deps.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -653,11 +681,12 @@ class MemoryStorage:
                    - Validação manual
                    - Documentação clara
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_deps)
-            
+
             # E agora vou criar um embate sobre dashboard de métricas
             embate_dashboard = Embate(
                 titulo="Dashboard de Métricas de Embates",
@@ -684,14 +713,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_dashboard.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_dashboard.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Métricas Principais:
@@ -712,13 +742,15 @@ class MemoryStorage:
                    - CI/CD pipeline
                    - Alertas e notificações
                 """,
-                "data": now
-            })
-            
-            embate_dashboard.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_dashboard.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -739,11 +771,12 @@ class MemoryStorage:
                    - Componentização
                    - Testes E2E
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_dashboard)
-            
+
             # Cria embate sobre integração com sistemas externos
             embate_external = Embate(
                 titulo="Integração com Sistemas Externos",
@@ -771,14 +804,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_external.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_external.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Pontos de Integração:
@@ -799,13 +833,15 @@ class MemoryStorage:
                    - Logs estruturados
                    - Alertas automáticos
                 """,
-                "data": now
-            })
-            
-            embate_external.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_external.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -826,11 +862,12 @@ class MemoryStorage:
                    - Monitoramento proativo
                    - Documentação detalhada
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_external)
-            
+
             # Cria embate sobre segurança e autenticação
             embate_security = Embate(
                 titulo="Segurança e Autenticação do Sistema",
@@ -859,14 +896,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_security.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_security.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Componentes de Segurança:
@@ -887,13 +925,15 @@ class MemoryStorage:
                    - Uso de recursos
                    - Alertas de segurança
                 """,
-                "data": now
-            })
-            
-            embate_security.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_security.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -914,11 +954,12 @@ class MemoryStorage:
                    - Monitoramento constante
                    - Atualizações regulares
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_security)
-            
+
             # Cria embate sobre documentação e API Docs
             embate_docs = Embate(
                 titulo="Documentação e API Docs do Sistema",
@@ -948,14 +989,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_docs.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_docs.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Componentes:
@@ -976,13 +1018,15 @@ class MemoryStorage:
                    - Feedback forms
                    - Error tracking
                 """,
-                "data": now
-            })
-            
-            embate_docs.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_docs.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -1003,11 +1047,12 @@ class MemoryStorage:
                    - Review process
                    - Feedback loop
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_docs)
-            
+
             # Cria embate sobre testes automatizados
             embate_tests = Embate(
                 titulo="Testes Automatizados e Cobertura de Código",
@@ -1037,14 +1082,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_tests.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_tests.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Componentes:
@@ -1065,13 +1111,15 @@ class MemoryStorage:
                    - Performance stats
                    - Quality gates
                 """,
-                "data": now
-            })
-            
-            embate_tests.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_tests.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -1092,11 +1140,12 @@ class MemoryStorage:
                    - Regular updates
                    - Team training
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_tests)
-            
+
             # Cria embate sobre gerenciamento de versões
             embate_versions = Embate(
                 titulo="Gerenciamento de Versões e Releases",
@@ -1126,14 +1175,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_versions.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_versions.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Componentes:
@@ -1154,13 +1204,15 @@ class MemoryStorage:
                    - Usage tracking
                    - Feedback loop
                 """,
-                "data": now
-            })
-            
-            embate_versions.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_versions.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -1181,11 +1233,12 @@ class MemoryStorage:
                    - Release checks
                    - Rollback plan
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_versions)
-            
+
             # Cria embate sobre otimização de performance
             embate_perf = Embate(
                 titulo="Otimização de Performance e Escalabilidade",
@@ -1215,14 +1268,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_perf.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_perf.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Componentes:
@@ -1243,13 +1297,15 @@ class MemoryStorage:
                    - Error rates
                    - Response times
                 """,
-                "data": now
-            })
-            
-            embate_perf.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_perf.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -1270,11 +1326,12 @@ class MemoryStorage:
                    - Documentation
                    - Rollback plan
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_perf)
-            
+
             # Cria embate sobre arquitetura
             embate_arch = Embate(
                 titulo="Arquitetura e Design Patterns",
@@ -1304,14 +1361,15 @@ class MemoryStorage:
                 status="aberto",
                 data_inicio=now,
                 metadata={"is_trigger_embate": True},
-                argumentos=[]
+                argumentos=[],
             )
-            
+
             # Adiciona argumentos técnicos
-            embate_arch.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+            embate_arch.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Análise Técnica:
                 
                 1. Componentes:
@@ -1332,13 +1390,15 @@ class MemoryStorage:
                    - Pattern usage
                    - Dependencies
                 """,
-                "data": now
-            })
-            
-            embate_arch.argumentos.append({
-                "autor": "Sistema",
-                "tipo": "tecnico",
-                "conteudo": """
+                    "data": now,
+                }
+            )
+
+            embate_arch.argumentos.append(
+                {
+                    "autor": "Sistema",
+                    "tipo": "tecnico",
+                    "conteudo": """
                 Impacto e Riscos:
                 
                 1. Impacto no Código:
@@ -1359,80 +1419,87 @@ class MemoryStorage:
                    - Code reviews
                    - Gradual changes
                 """,
-                "data": now
-            })
-            
+                    "data": now,
+                }
+            )
+
             embates.append(embate_arch)
-            
+
         return embates
-        
+
     async def save(self, embate: Embate) -> Dict:
         """Salva um embate."""
         if not embate.id:
             embate.id = f"local-{datetime.now().isoformat()}"
-            
+
         self.embates[embate.id] = embate
-        
+
         # Incrementa contador apenas se não for um embate de trigger
         if not embate.metadata.get("is_trigger_embate"):
             self._call_count += 1
-            
+
             # Verifica se deve iniciar embates
             trigger_embates = self._check_embate_trigger()
             if trigger_embates:
                 # Verifica se já existe um embate de trigger
                 trigger_exists = any(
-                    e.metadata.get("is_trigger_embate") 
-                    for e in self.embates.values()
+                    e.metadata.get("is_trigger_embate") for e in self.embates.values()
                 )
                 if not trigger_exists:
                     for trigger_embate in trigger_embates:
                         await self.save(trigger_embate)
                     # Faz commit e push após criar os embates técnicos
                     await self._commit_and_push()
-            
+
         return {"data": {"id": embate.id}}
-        
+
     async def get(self, id: str) -> Optional[Embate]:
         """Busca um embate por ID."""
         return self.embates.get(id)
-        
+
     async def list(self) -> List[Embate]:
         """Lista todos os embates."""
         return list(self.embates.values())
-        
+
     async def delete(self, id: str) -> None:
         """Remove um embate."""
         if id in self.embates:
             embate = self.embates[id]
             del self.embates[id]
-            
+
             # Se for um embate de trigger, reseta o contador
             if embate.metadata.get("is_trigger_embate"):
                 self._call_count = 0
                 self._last_call = None
-                
+
     async def _commit_and_push(self) -> None:
         """Executa commit e push das alterações do ciclo de embates."""
         try:
             import subprocess
             from datetime import datetime
-            
+
             # Verifica se há alterações para commitar
-            status = subprocess.run(['git', 'status', '--porcelain'], 
-                                capture_output=True, 
-                                text=True, 
-                                check=True)
-            
+            status = subprocess.run(
+                ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
+            )
+
             if status.stdout.strip():
                 # Há alterações para commitar
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                
-                subprocess.run(['git', 'add', '.'], check=True)
-                subprocess.run(['git', 'commit', '-m', f'✨ Ciclo de embates {timestamp}: Melhorias automáticas'], check=True)
-                
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+                subprocess.run(["git", "add", "."], check=True)
+                subprocess.run(
+                    [
+                        "git",
+                        "commit",
+                        "-m",
+                        f"✨ Ciclo de embates {timestamp}: Melhorias automáticas",
+                    ],
+                    check=True,
+                )
+
                 # Push para o repositório remoto
-                subprocess.run(['git', 'push'], check=True)
+                subprocess.run(["git", "push"], check=True)
                 print(f"\n✅ Commit e push do ciclo {timestamp} realizados com sucesso!")
             else:
                 print("\n⏭️  Ciclo sem alterações para commitar")

@@ -16,8 +16,8 @@ MODEL_CONFIG = {
         "harassment": "block_none",
         "hate_speech": "block_none",
         "sexually_explicit": "block_none",
-        "dangerous_content": "block_none"
-    }
+        "dangerous_content": "block_none",
+    },
 }
 
 # Configurações de geração
@@ -26,16 +26,11 @@ GENERATION_CONFIG = {
     "top_p": MODEL_CONFIG["top_p"],
     "top_k": MODEL_CONFIG["top_k"],
     "max_output_tokens": MODEL_CONFIG["max_output_tokens"],
-    "stop_sequences": MODEL_CONFIG["stop_sequences"]
+    "stop_sequences": MODEL_CONFIG["stop_sequences"],
 }
 
 # Configurações de chamada
-CALL_CONFIG = {
-    "timeout": 30,
-    "retry_count": 3,
-    "backoff_factor": 1.5,
-    "stream": False
-}
+CALL_CONFIG = {"timeout": 30, "retry_count": 3, "backoff_factor": 1.5, "stream": False}
 
 # Configurações de prompt
 PROMPT_CONFIG = {
@@ -49,8 +44,9 @@ Suas principais capacidades incluem:
 
 Por favor, forneça respostas claras e objetivas.""",
     "max_prompt_tokens": 30720,
-    "token_limit_buffer": 1000
+    "token_limit_buffer": 1000,
 }
+
 
 def get_model_config() -> Dict[str, Any]:
     """Retorna a configuração completa do modelo."""
@@ -58,13 +54,15 @@ def get_model_config() -> Dict[str, Any]:
         "model": MODEL_CONFIG,
         "generation": GENERATION_CONFIG,
         "call": CALL_CONFIG,
-        "prompt": PROMPT_CONFIG
+        "prompt": PROMPT_CONFIG,
     }
+
 
 def get_generation_config() -> Dict[str, Any]:
     """Retorna apenas as configurações de geração."""
     return GENERATION_CONFIG
 
+
 def get_safety_settings() -> Dict[str, str]:
     """Retorna as configurações de segurança."""
-    return MODEL_CONFIG["safety_settings"] 
+    return MODEL_CONFIG["safety_settings"]

@@ -20,7 +20,9 @@ class MistralProvider(InstrumentedProvider):
         super().__init__(client)
         self._provider_name = "Mistral"
 
-    def handle_response(self, response, kwargs, init_timestamp, session: Optional[Session] = None) -> dict:
+    def handle_response(
+        self, response, kwargs, init_timestamp, session: Optional[Session] = None
+    ) -> dict:
         """Handle responses for Mistral"""
         from mistralai import Chat
         from mistralai.types import UNSET, UNSET_SENTINEL

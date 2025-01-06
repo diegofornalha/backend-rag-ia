@@ -167,7 +167,11 @@ class AnthropicProvider(InstrumentedProvider):
                 llm_event.model = response_data["model"]
                 llm_event.completion = {
                     "role": response_data.get("role"),
-                    "content": (response_data.get("content")[0].get("text") if response_data.get("content") else ""),
+                    "content": (
+                        response_data.get("content")[0].get("text")
+                        if response_data.get("content")
+                        else ""
+                    ),
                 }
                 if usage := response_data.get("usage"):
                     llm_event.prompt_tokens = usage.get("input_tokens")
@@ -246,7 +250,9 @@ class AnthropicProvider(InstrumentedProvider):
                             f"{pprint.pformat(completion_override)}"
                         )
                         return None
-                    return self.handle_response(result_model, kwargs, init_timestamp, session=session)
+                    return self.handle_response(
+                        result_model, kwargs, init_timestamp, session=session
+                    )
 
                 # Call the original function with its original arguments
                 original_func = self.original_create_beta if is_beta else self.original_create
@@ -311,10 +317,14 @@ class AnthropicProvider(InstrumentedProvider):
                         )
                         return None
 
-                    return self.handle_response(result_model, kwargs, init_timestamp, session=session)
+                    return self.handle_response(
+                        result_model, kwargs, init_timestamp, session=session
+                    )
 
                 # Call the original function with its original arguments
-                original_func = self.original_create_async_beta if is_beta else self.original_create_async
+                original_func = (
+                    self.original_create_async_beta if is_beta else self.original_create_async
+                )
                 result = await original_func(*args, **kwargs)
                 return self.handle_response(result, kwargs, init_timestamp, session=session)
 

@@ -18,27 +18,30 @@ router = APIRouter(
     tags=["Documentos"],
     responses={
         404: {"description": "Documento não encontrado"},
-        500: {"description": "Erro interno do servidor"}
-    }
+        500: {"description": "Erro interno do servidor"},
+    },
 )
+
 
 class Document(BaseModel):
     """
     Modelo de documento.
-    
+
     Attributes:
         id: Identificador único do documento
         title: Título do documento
         content: Conteúdo do documento
         metadata: Metadados adicionais (opcional)
     """
+
     id: str
     title: str
     content: str
     metadata: Optional[dict] = None
 
+
 @router.post(
-    "/", 
+    "/",
     response_model=Document,
     summary="Upload de documento",
     description="""
@@ -62,10 +65,10 @@ class Document(BaseModel):
     response = requests.post('http://localhost:10000/documents', files=files)
     document = response.json()
     ```
-    """
+    """,
 )
 async def upload_document(
-    file: UploadFile = File(..., description="Arquivo do documento a ser enviado")
+    file: UploadFile = File(..., description="Arquivo do documento a ser enviado"),
 ) -> Document:
     """Upload de documento."""
     try:
@@ -73,6 +76,7 @@ async def upload_document(
         pass
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get(
     "/",
@@ -98,12 +102,12 @@ async def upload_document(
     response = requests.get('http://localhost:10000/documents?search=python')
     documents = response.json()
     ```
-    """
+    """,
 )
 async def list_documents(
     limit: int = Query(10, description="Número máximo de documentos a retornar"),
     offset: int = Query(0, description="Número de documentos a pular"),
-    search: Optional[str] = Query(None, description="Termo para busca no título/conteúdo")
+    search: Optional[str] = Query(None, description="Termo para busca no título/conteúdo"),
 ) -> List[Document]:
     """Lista documentos."""
     try:
@@ -111,6 +115,7 @@ async def list_documents(
         pass
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get(
     "/{document_id}",
@@ -134,7 +139,7 @@ async def list_documents(
         document = response.json()
         print(document['title'])
     ```
-    """
+    """,
 )
 async def get_document(document_id: str) -> Document:
     """Busca documento por ID."""
@@ -143,6 +148,7 @@ async def get_document(document_id: str) -> Document:
         pass
     except Exception as e:
         raise HTTPException(status_code=404, detail="Documento não encontrado")
+
 
 @router.delete(
     "/{document_id}",
@@ -164,7 +170,7 @@ async def get_document(document_id: str) -> Document:
     elif response.status_code == 404:
         print("Documento não encontrado")
     ```
-    """
+    """,
 )
 async def delete_document(document_id: str):
     """Remove documento."""
@@ -173,6 +179,7 @@ async def delete_document(document_id: str):
         pass
     except Exception as e:
         raise HTTPException(status_code=404, detail="Documento não encontrado")
+
 
 @router.put(
     "/{document_id}",
@@ -209,7 +216,7 @@ async def delete_document(document_id: str):
     elif response.status_code == 404:
         print("Documento não encontrado")
     ```
-    """
+    """,
 )
 async def update_document(document_id: str, document: Document) -> Document:
     """Atualiza documento."""
@@ -217,4 +224,4 @@ async def update_document(document_id: str, document: Document) -> Document:
         # Implementação da atualização
         pass
     except Exception as e:
-        raise HTTPException(status_code=404, detail="Documento não encontrado") 
+        raise HTTPException(status_code=404, detail="Documento não encontrado")

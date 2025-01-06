@@ -7,9 +7,4 @@ from .analyst import AnalystAgent
 from .improver import ImproverAgent
 from .synthesizer import SynthesizerAgent
 
-__all__ = [
-    "ResearcherAgent",
-    "AnalystAgent", 
-    "ImproverAgent",
-    "SynthesizerAgent"
-] 
+__all__ = ["ResearcherAgent", "AnalystAgent", "ImproverAgent", "SynthesizerAgent"]

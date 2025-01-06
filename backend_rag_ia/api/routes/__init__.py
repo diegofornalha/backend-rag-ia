@@ -7,9 +7,9 @@ from .statistics import router as statistics_router
 from .cache import router as cache_router
 
 __all__ = [
-    'search_router',
-    'health_router',
-    'documents_router',
-    'statistics_router',
-    'cache_router'
-] 
+    "search_router",
+    "health_router",
+    "documents_router",
+    "statistics_router",
+    "cache_router",
+]

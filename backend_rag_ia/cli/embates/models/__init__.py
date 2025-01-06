@@ -7,15 +7,19 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
+
 class Argumento(BaseModel):
     """Modelo para argumentos de embates."""
+
     nome: str
     valor: str
     tipo: str = "texto"
     descricao: Optional[str] = None
 
+
 class Embate(BaseModel):
     """Modelo para embates."""
+
     titulo: str
     tipo: str
     contexto: str

@@ -19,7 +19,9 @@ class TaskWeaverProvider(InstrumentedProvider):
         self._provider_name = "TaskWeaver"
         self.client.add_default_tags(["taskweaver"])
 
-    def handle_response(self, response, kwargs, init_timestamp, session: Optional[Session] = None) -> dict:
+    def handle_response(
+        self, response, kwargs, init_timestamp, session: Optional[Session] = None
+    ) -> dict:
         """Handle responses for TaskWeaver"""
         llm_event = LLMEvent(init_timestamp=init_timestamp, params=kwargs)
         action_event = ActionEvent(init_timestamp=init_timestamp)
@@ -33,7 +35,9 @@ class TaskWeaverProvider(InstrumentedProvider):
             self._safe_record(session, action_event)
         except Exception as e:
             error_event = ErrorEvent(
-                trigger_event=action_event, exception=e, details={"response": str(response), "kwargs": str(kwargs)}
+                trigger_event=action_event,
+                exception=e,
+                details={"response": str(response), "kwargs": str(kwargs)},
             )
             self._safe_record(session, error_event)
             kwargs_str = pprint.pformat(kwargs)
@@ -57,7 +61,9 @@ class TaskWeaverProvider(InstrumentedProvider):
 
         except Exception as e:
             error_event = ErrorEvent(
-                trigger_event=llm_event, exception=e, details={"response": str(response), "kwargs": str(kwargs)}
+                trigger_event=llm_event,
+                exception=e,
+                details={"response": str(response), "kwargs": str(kwargs)},
             )
             self._safe_record(session, error_event)
             kwargs_str = pprint.pformat(kwargs)
@@ -106,7 +112,9 @@ class TaskWeaverProvider(InstrumentedProvider):
                                 accumulated_content += chunk
                             yield chunk
                         accumulated_content = json.loads(accumulated_content)
-                        return self.handle_response(accumulated_content, kwargs, init_timestamp, session=session)
+                        return self.handle_response(
+                            accumulated_content, kwargs, init_timestamp, session=session
+                        )
                     else:
                         return self.handle_response(result, kwargs, init_timestamp, session=session)
 
@@ -141,6 +149,8 @@ class TaskWeaverProvider(InstrumentedProvider):
             config = service.config
             if hasattr(config, "model"):
                 model_name = config.model or "unknown"
-            elif hasattr(config, "llm_module_config") and hasattr(config.llm_module_config, "model"):
+            elif hasattr(config, "llm_module_config") and hasattr(
+                config.llm_module_config, "model"
+            ):
                 model_name = config.llm_module_config.model or "unknown"
         return model_name

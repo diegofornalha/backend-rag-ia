@@ -6,9 +6,7 @@ class MarkdownConverter:
     @staticmethod
     def create_document(title, content, document_type, source_info):
         """Cria estrutura do documento no formato esperado pelo Supabase."""
-        document_id = hashlib.md5(
-            f"{title}-{datetime.now().isoformat()}".encode()
-        ).hexdigest()
+        document_id = hashlib.md5(f"{title}-{datetime.now().isoformat()}".encode()).hexdigest()
 
         return {
             "metadata_global": {
@@ -64,14 +62,10 @@ class MarkdownConverter:
         sections = MarkdownConverter.extract_content_from_md(md_content)
 
         # Define o título como a primeira seção ou usa o fornecido
-        title = metadata.get(
-            "title", sections[0][0] if sections else "Documento sem título"
-        )
+        title = metadata.get("title", sections[0][0] if sections else "Documento sem título")
 
         # Combina todas as seções em um único conteúdo
-        main_content = "\n\n".join(
-            [f"{title}:\n{content}" for title, content in sections]
-        )
+        main_content = "\n\n".join([f"{title}:\n{content}" for title, content in sections])
 
         # Cria o documento final
         document = MarkdownConverter.create_document(

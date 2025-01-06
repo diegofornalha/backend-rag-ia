@@ -11,10 +11,4 @@ from .agent_services.coordinator import AgentCoordinator
 from .llm_services.providers.gemini import GeminiProvider
 from .embedding_services.vector_store import VectorStore
 
-__all__ = [
-    'SuggestionInterface',
-    'CursorAI',
-    'AgentCoordinator',
-    'GeminiProvider',
-    'VectorStore'
-] 
+__all__ = ["SuggestionInterface", "CursorAI", "AgentCoordinator", "GeminiProvider", "VectorStore"]

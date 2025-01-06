@@ -13,7 +13,7 @@ GEMINI_CONFIG = {
     "top_k": 40,
     "max_output_tokens": 2048,
     "timeout": 30,
-    "api_key": os.getenv("GEMINI_API_KEY")
+    "api_key": os.getenv("GEMINI_API_KEY"),
 }
 
 # Configurações dos Agentes
@@ -27,9 +27,9 @@ AGENT_CONFIG = {
             "code_generation",
             "code_review",
             "documentation",
-            "project_management"
+            "project_management",
         ],
-        "priority": 1
+        "priority": 1,
     },
     "code_analyzer": {
         "name": "Code Analyzer",
@@ -38,9 +38,9 @@ AGENT_CONFIG = {
             "static_analysis",
             "dependency_check",
             "security_audit",
-            "performance_analysis"
+            "performance_analysis",
         ],
-        "priority": 2
+        "priority": 2,
     },
     "doc_generator": {
         "name": "Doc Generator",
@@ -49,10 +49,10 @@ AGENT_CONFIG = {
             "documentation_generation",
             "api_documentation",
             "code_comments",
-            "readme_generation"
+            "readme_generation",
         ],
-        "priority": 3
-    }
+        "priority": 3,
+    },
 }
 
 # Configurações do Coordenador
@@ -60,7 +60,7 @@ COORDINATOR_CONFIG = {
     "max_concurrent_agents": 3,
     "timeout_per_agent": 15,
     "retry_attempts": 2,
-    "backoff_factor": 1.5
+    "backoff_factor": 1.5,
 }
 
 # Configurações de Monitoramento
@@ -68,9 +68,10 @@ MONITORING_CONFIG = {
     "enable_logging": True,
     "log_level": "INFO",
     "metrics_collection": True,
-    "performance_tracking": True
+    "performance_tracking": True,
 }
+
 
 def get_agent_config(agent_name: str) -> Dict[str, Any]:
     """Retorna a configuração específica de um agente."""
-    return AGENT_CONFIG.get(agent_name, {}) 
+    return AGENT_CONFIG.get(agent_name, {})

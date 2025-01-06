@@ -40,7 +40,9 @@ class LiteLLMProvider(InstrumentedProvider):
             completions.Completions.create = self.original_oai_create
             completions.AsyncCompletions.create = self.original_oai_create_async
 
-    def handle_response(self, response, kwargs, init_timestamp, session: Optional[Session] = None) -> dict:
+    def handle_response(
+        self, response, kwargs, init_timestamp, session: Optional[Session] = None
+    ) -> dict:
         """Handle responses for OpenAI versions >v1.0.0"""
         from openai import AsyncStream, Stream
         from openai.resources import AsyncCompletions

@@ -4,6 +4,7 @@ from supabase import create_client, Client
 from sentence_transformers import SentenceTransformer
 import numpy as np
 
+
 class VectorStore:
     def __init__(self):
         url = os.getenv("SUPABASE_URL")
@@ -17,47 +18,47 @@ class VectorStore:
         # Supabase já tem pgvector habilitado por padrão
         # Criar tabela se não existir
         self.supabase.rpc(
-            'create_embeddings_table',
+            "create_embeddings_table",
             {
-                'table_name': self.collection,
-                'embedding_dimension': 384  # Dimensão do modelo all-MiniLM-L6-v2
-            }
+                "table_name": self.collection,
+                "embedding_dimension": 384,  # Dimensão do modelo all-MiniLM-L6-v2
+            },
         ).execute()
 
     async def store_content(self, content: str, metadata: Dict[str, Any] = None) -> List[float]:
         # Gerar embedding
         embedding = self.model.encode(content)
-        
+
         # Armazenar no Supabase
-        self.supabase.table(self.collection).insert({
-            'content': content,
-            'embedding': embedding.tolist(),
-            'metadata': metadata or {}
-        }).execute()
-        
+        self.supabase.table(self.collection).insert(
+            {"content": content, "embedding": embedding.tolist(), "metadata": metadata or {}}
+        ).execute()
+
         return embedding.tolist()
 
     async def search_similar(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
         # Gerar embedding da query
         query_embedding = self.model.encode(query)
-        
+
         # Buscar conteúdo similar usando a função match_documents do Supabase
         response = self.supabase.rpc(
-            'match_documents',
+            "match_documents",
             {
-                'query_embedding': query_embedding.tolist(),
-                'match_threshold': 0.5,
-                'match_count': limit,
-                'table_name': self.collection
-            }
+                "query_embedding": query_embedding.tolist(),
+                "match_threshold": 0.5,
+                "match_count": limit,
+                "table_name": self.collection,
+            },
         ).execute()
-        
+
         results = []
         for item in response.data:
-            results.append({
-                'content': item['content'],
-                'metadata': item['metadata'],
-                'similarity': float(item['similarity'])
-            })
-        
-        return results 
+            results.append(
+                {
+                    "content": item["content"],
+                    "metadata": item["metadata"],
+                    "similarity": float(item["similarity"]),
+                }
+            )
+
+        return results

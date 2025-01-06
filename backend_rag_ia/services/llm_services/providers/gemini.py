@@ -6,52 +6,42 @@ from typing import Dict, Any, Optional
 import google.generativeai as genai
 from ..gemini_config import get_model_config, GENERATION_CONFIG
 
+
 class GeminiProvider:
     """Provider para interação com o modelo Gemini."""
-    
+
     def __init__(self, api_key: Optional[str] = None):
         """Inicializa o provider."""
         self.config = get_model_config()
         self.api_key = api_key
         self._setup()
-    
+
     def _setup(self) -> None:
         """Configura o cliente Gemini."""
         if self.api_key:
             genai.configure(api_key=self.api_key)
-        
+
         # Configura modelo
-        self.model = genai.GenerativeModel(
-            self.config["model"]["name"]
-        )
-    
-    async def generate_content(
-        self,
-        prompt: str,
-        context: Optional[Dict[str, Any]] = None
-    ) -> str:
+        self.model = genai.GenerativeModel(self.config["model"]["name"])
+
+    async def generate_content(self, prompt: str, context: Optional[Dict[str, Any]] = None) -> str:
         """Gera uma resposta usando o modelo."""
         try:
             # Prepara contexto
             generation_config = GENERATION_CONFIG.copy()
             if context and "generation_config" in context:
                 generation_config.update(context["generation_config"])
-            
+
             # Gera resposta
-            response = self.model.generate_content(
-                prompt,
-                generation_config=generation_config
-            )
-            
+            response = self.model.generate_content(prompt, generation_config=generation_config)
+
             return response.text
-            
+
         except Exception as e:
             raise RuntimeError(f"Erro na geração: {str(e)}")
-    
+
     async def analyze(
-        self,
-        content: str,
-        context: Optional[Dict[str, Any]] = None
+        self, content: str, context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Analisa conteúdo usando o modelo."""
         try:
@@ -66,22 +56,21 @@ class GeminiProvider:
             2. Sugestões de melhoria
             3. Possíveis problemas
             """
-            
+
             # Gera análise
             response = self.model.generate_content(
-                analysis_prompt,
-                generation_config=GENERATION_CONFIG
+                analysis_prompt, generation_config=GENERATION_CONFIG
             )
-            
+
             return {
                 "analysis": response.text,
                 "model": self.config["model"]["name"],
-                "status": "success"
+                "status": "success",
             }
-            
+
         except Exception as e:
             raise RuntimeError(f"Erro na análise: {str(e)}")
-    
+
     def get_config(self) -> Dict[str, Any]:
         """Retorna a configuração atual do provider."""
-        return self.config 
+        return self.config

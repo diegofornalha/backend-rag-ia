@@ -19,7 +19,12 @@ class LlamaStackClientProvider(InstrumentedProvider):
         self._provider_name = "LlamaStack"
 
     def handle_response(
-        self, response, kwargs, init_timestamp, session: Optional[Session] = None, metadata: Optional[Dict] = {}
+        self,
+        response,
+        kwargs,
+        init_timestamp,
+        session: Optional[Session] = None,
+        metadata: Optional[Dict] = {},
     ) -> dict:
         """Handle responses for LlamaStack"""
 
@@ -50,7 +55,8 @@ class LlamaStackClientProvider(InstrumentedProvider):
                         ):  # check if the last event in the stack is a step start event
                             llm_event = stack.pop().get("event")
                             llm_event.prompt = [
-                                {"content": message.content, "role": message.role} for message in kwargs["messages"]
+                                {"content": message.content, "role": message.role}
+                                for message in kwargs["messages"]
                             ]
                             llm_event.agent_id = check_call_stack_for_agent_id()
                             llm_event.model = kwargs["model_id"]
@@ -61,7 +67,9 @@ class LlamaStackClientProvider(InstrumentedProvider):
                             self._safe_record(session, llm_event)
 
                 except Exception as e:
-                    llm_event = LLMEvent(init_timestamp=init_timestamp, end_timestamp=get_ISO_time(), params=kwargs)
+                    llm_event = LLMEvent(
+                        init_timestamp=init_timestamp, end_timestamp=get_ISO_time(), params=kwargs
+                    )
                     self._safe_record(session, ErrorEvent(trigger_event=llm_event, exception=e))
 
                     kwargs_str = pprint.pformat(kwargs)
@@ -88,7 +96,9 @@ class LlamaStackClientProvider(InstrumentedProvider):
                     elif chunk.event.payload.event_type == "step_start":
                         logger.debug("step_start")
                         llm_event = LLMEvent(init_timestamp=get_ISO_time(), params=kwargs)
-                        stack.append({"event_type": chunk.event.payload.event_type, "event": llm_event})
+                        stack.append(
+                            {"event_type": chunk.event.payload.event_type, "event": llm_event}
+                        )
                     elif chunk.event.payload.event_type == "step_progress":
                         if (
                             chunk.event.payload.step_type == "inference"
@@ -101,7 +111,10 @@ class LlamaStackClientProvider(InstrumentedProvider):
                                 accum_delta += delta
                             else:
                                 accum_delta = delta
-                        elif chunk.event.payload.step_type == "inference" and chunk.event.payload.tool_call_delta:
+                        elif (
+                            chunk.event.payload.step_type == "inference"
+                            and chunk.event.payload.tool_call_delta
+                        ):
                             if chunk.event.payload.tool_call_delta.parse_status == "started":
                                 logger.debug("tool_started")
                                 tool_event = ToolEvent(init_timestamp=get_ISO_time(), params=kwargs)
@@ -134,7 +147,8 @@ class LlamaStackClientProvider(InstrumentedProvider):
                                     self._safe_record(
                                         session,
                                         ErrorEvent(
-                                            trigger_event=tool_event, exception=Exception("ToolExecution - failure")
+                                            trigger_event=tool_event,
+                                            exception=Exception("ToolExecution - failure"),
                                         ),
                                     )
 
@@ -151,14 +165,18 @@ class LlamaStackClientProvider(InstrumentedProvider):
                                     for message in kwargs["messages"]
                                 ]
                                 llm_event.agent_id = check_call_stack_for_agent_id()
-                                llm_event.model = metadata.get("model_id", "Unable to identify model")
+                                llm_event.model = metadata.get(
+                                    "model_id", "Unable to identify model"
+                                )
                                 llm_event.prompt_tokens = None
                                 llm_event.completion = accum_delta or kwargs["completion"]
                                 llm_event.completion_tokens = None
                                 llm_event.end_timestamp = get_ISO_time()
                                 self._safe_record(session, llm_event)
                             else:
-                                logger.warning("Unexpected event stack state for inference step complete")
+                                logger.warning(
+                                    "Unexpected event stack state for inference step complete"
+                                )
                         elif chunk.event.payload.step_type == "tool_execution":
                             if stack[-1]["event_type"] == "tool_started":
                                 logger.debug("tool_complete")
@@ -172,7 +190,9 @@ class LlamaStackClientProvider(InstrumentedProvider):
                         pass
 
                 except Exception as e:
-                    llm_event = LLMEvent(init_timestamp=init_timestamp, end_timestamp=get_ISO_time(), params=kwargs)
+                    llm_event = LLMEvent(
+                        init_timestamp=init_timestamp, end_timestamp=get_ISO_time(), params=kwargs
+                    )
 
                     self._safe_record(session, ErrorEvent(trigger_event=llm_event, exception=e))
 
@@ -217,7 +237,8 @@ class LlamaStackClientProvider(InstrumentedProvider):
                 llm_event.agent_id = check_call_stack_for_agent_id()
                 llm_event.model = kwargs["model_id"]
                 llm_event.prompt = [
-                    {"content": message.content, "role": message.role} for message in kwargs["messages"]
+                    {"content": message.content, "role": message.role}
+                    for message in kwargs["messages"]
                 ]
                 llm_event.prompt_tokens = None
                 llm_event.completion = response.completion_message.content

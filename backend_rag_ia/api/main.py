@@ -16,7 +16,7 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 app = FastAPI(
     title="Backend RAG IA",
     description="API com RAG e sistema multi-agente integrado",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Configurar CORS
@@ -31,6 +31,7 @@ app.add_middleware(
 # Configurar rotas
 configure_routes(app)
 
+
 # Rota raiz
 @app.get("/")
 async def root():
@@ -39,14 +40,17 @@ async def root():
         "version": "1.0.0",
         "docs": "/docs",
         "redoc": "/redoc",
-        "status": "online"
+        "status": "online",
     }
+
 
 # Health check
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"} 
+    return {"status": "healthy"}
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host=HOST, port=PORT) 
+
+    uvicorn.run(app, host=HOST, port=PORT)

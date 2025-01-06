@@ -5,18 +5,19 @@ Coordenador central do sistema multi-agente.
 from typing import Dict, Any, List
 from ..llm_services.providers.gemini import GeminiProvider
 
+
 class AgentCoordinator:
     """Coordenador dos agentes do sistema."""
-    
+
     def __init__(self, provider: GeminiProvider):
         """Inicializa o coordenador."""
         self.provider = provider
         self.agents = {}
-        
+
     def register_agent(self, name: str, agent: Any) -> None:
         """Registra um novo agente."""
         self.agents[name] = agent
-        
+
     async def process(self, context: Dict[str, Any]) -> Dict[str, Any]:
         """Processa uma tarefa usando os agentes registrados."""
         results = {}
@@ -26,4 +27,4 @@ class AgentCoordinator:
                 results[name] = result
             except Exception as e:
                 results[name] = {"error": str(e)}
-        return results 
+        return results

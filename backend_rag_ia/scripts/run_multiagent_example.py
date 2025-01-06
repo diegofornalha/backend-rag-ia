@@ -13,4 +13,4 @@ from backend_rag_ia.examples.multiagent_example import main
 
 if __name__ == "__main__":
     # Executa exemplo
-    asyncio.run(main()) 
+    asyncio.run(main())

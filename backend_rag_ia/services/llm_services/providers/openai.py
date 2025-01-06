@@ -22,7 +22,9 @@ class OpenAiProvider(InstrumentedProvider):
         super().__init__(client)
         self._provider_name = "OpenAI"
 
-    def handle_response(self, response, kwargs, init_timestamp, session: Optional[Session] = None) -> dict:
+    def handle_response(
+        self, response, kwargs, init_timestamp, session: Optional[Session] = None
+    ) -> dict:
         """Handle responses for OpenAI versions >v1.0.0"""
         from openai import AsyncStream, Stream
         from openai.resources import AsyncCompletions
@@ -236,7 +238,9 @@ class OpenAiProvider(InstrumentedProvider):
         from openai.resources import beta
         from openai.pagination import BasePage
 
-        def handle_response(response, kwargs, init_timestamp, session: Optional[Session] = None) -> dict:
+        def handle_response(
+            response, kwargs, init_timestamp, session: Optional[Session] = None
+        ) -> dict:
             """Handle response based on return type"""
             action_event = ActionEvent(init_timestamp=init_timestamp, params=kwargs)
             if session is not None:
@@ -249,7 +253,9 @@ class OpenAiProvider(InstrumentedProvider):
                     if isinstance(response, BasePage)
                     else response.__class__.__name__
                 )
-                action_event.returns = response.model_dump() if hasattr(response, "model_dump") else response
+                action_event.returns = (
+                    response.model_dump() if hasattr(response, "model_dump") else response
+                )
                 action_event.end_timestamp = get_ISO_time()
                 self._safe_record(session, action_event)
 
@@ -258,7 +264,9 @@ class OpenAiProvider(InstrumentedProvider):
 
                 if "id" in response_dict and response_dict.get("id").startswith("run"):
                     if response_dict["id"] not in self.assistants_run_steps:
-                        self.assistants_run_steps[response_dict.get("id")] = {"model": response_dict.get("model")}
+                        self.assistants_run_steps[response_dict.get("id")] = {
+                            "model": response_dict.get("model")
+                        }
 
                 if "usage" in response_dict and response_dict["usage"] is not None:
                     llm_event = LLMEvent(init_timestamp=init_timestamp, params=kwargs)
@@ -318,12 +326,21 @@ class OpenAiProvider(InstrumentedProvider):
             beta.Assistants: ["create", "retrieve", "update", "delete", "list"],
             beta.Threads: ["create", "retrieve", "update", "delete"],
             beta.threads.Messages: ["create", "retrieve", "update", "list"],
-            beta.threads.Runs: ["create", "retrieve", "update", "list", "submit_tool_outputs", "cancel"],
+            beta.threads.Runs: [
+                "create",
+                "retrieve",
+                "update",
+                "list",
+                "submit_tool_outputs",
+                "cancel",
+            ],
             beta.threads.runs.steps.Steps: ["retrieve", "list"],
         }
 
         self.original_assistant_methods = {
-            (cls, method): getattr(cls, method) for cls, methods in assistant_api_methods.items() for method in methods
+            (cls, method): getattr(cls, method)
+            for cls, methods in assistant_api_methods.items()
+            for method in methods
         }
 
         # Override methods and verify

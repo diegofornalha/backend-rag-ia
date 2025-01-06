@@ -99,7 +99,9 @@ class CohereProvider(InstrumentedProvider):
                                 citation_dict = citation.dict()
                                 # Replace document_ids with the actual documents
                                 citation_dict["documents"] = [
-                                    documents[doc_id] for doc_id in citation_dict["document_ids"] if doc_id in documents
+                                    documents[doc_id]
+                                    for doc_id in citation_dict["document_ids"]
+                                    if doc_id in documents
                                 ]
                                 del citation_dict["document_ids"]
 

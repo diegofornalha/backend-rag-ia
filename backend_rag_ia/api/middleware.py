@@ -10,11 +10,11 @@ from ..config.settings import get_settings
 
 # Configuração do logger
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
 
 async def environment_middleware(request: Request, call_next: Callable) -> Response:
     """Middleware para verificar e validar o ambiente de execução."""
@@ -26,32 +26,30 @@ async def environment_middleware(request: Request, call_next: Callable) -> Respo
         return response
     return await call_next(request)
 
+
 async def logging_middleware(request: Request, call_next: Callable) -> Response:
     """Middleware para logging de requisições e respostas."""
     start_time = time.time()
-    
+
     # Log da requisição
-    logger.info(
-        f"Request: {request.method} {request.url} "
-        f"Mode: {settings.OPERATION_MODE}"
-    )
-    
+    logger.info(f"Request: {request.method} {request.url} " f"Mode: {settings.OPERATION_MODE}")
+
     try:
         response = await call_next(request)
         process_time = time.time() - start_time
-        
+
         # Log da resposta
         logger.info(
             f"Response: status={response.status_code} "
             f"process_time={process_time:.3f}s "
             f"environment={'render' if settings.is_render_environment else 'local'}"
         )
-        
+
         # Adiciona headers de performance e ambiente
         response.headers["X-Process-Time"] = str(process_time)
         response.headers["X-Environment"] = settings.ENVIRONMENT
         return response
-        
+
     except Exception as e:
         # Log do erro
         logger.error(f"Error processing request: {e!s}")
@@ -61,9 +59,10 @@ async def logging_middleware(request: Request, call_next: Callable) -> Response:
                 "detail": "Internal server error",
                 "timestamp": datetime.utcnow().isoformat(),
                 "path": str(request.url),
-                "environment": settings.ENVIRONMENT
-            }
+                "environment": settings.ENVIRONMENT,
+            },
         )
+
 
 async def error_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handler global para tratamento de erros."""
@@ -75,6 +74,6 @@ async def error_handler(request: Request, exc: Exception) -> JSONResponse:
             "timestamp": datetime.utcnow().isoformat(),
             "path": str(request.url),
             "environment": settings.ENVIRONMENT,
-            "operation_mode": settings.OPERATION_MODE
-        }
-    ) 
+            "operation_mode": settings.OPERATION_MODE,
+        },
+    )
