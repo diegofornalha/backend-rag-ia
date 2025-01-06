@@ -88,9 +88,19 @@ jobs:
           pip install supabase rich numpy langchain langchain-google-genai
           pip install agentops google-cloud-aiplatform
 
-      - name: Create test directories
+      - name: Setup project structure
         run: |
+          # Criar diretórios necessários
           mkdir -p dados/embates dados/backup
+          mkdir -p backend_rag_ia/core
+
+          # Mover arquivos do 1_core para core
+          if [ -d "backend_rag_ia/1_core" ]; then
+            cp -r backend_rag_ia/1_core/* backend_rag_ia/core/
+          fi
+
+          # Criar __init__.py se não existir
+          touch backend_rag_ia/core/__init__.py
 
       - name: Create Ruff config
         run: |
@@ -157,14 +167,14 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          PYTHONPATH=${{ github.workspace }}/backend_rag_ia pytest backend_rag_ia/tests \
+          PYTHONPATH=${{ github.workspace }} pytest backend_rag_ia/tests \
             --cov=backend_rag_ia \
             --cov-report=xml \
             --cov-report=html \
             --no-cov-on-fail
         env:
           REDIS_URL: "redis://localhost:6379"
-          PYTHONPATH: "${{ github.workspace }}/backend_rag_ia"
+          PYTHONPATH: "${{ github.workspace }}"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
