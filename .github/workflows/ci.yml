@@ -11,6 +11,9 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://backend-rag-ia.onrender.com
     steps:
       - name: Checkout código
         uses: actions/checkout@v3
