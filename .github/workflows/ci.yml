@@ -40,11 +40,34 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
+      - name: Create pytest.ini
+        run: |
+          echo "[pytest]
+          asyncio_mode = strict
+          asyncio_default_fixture_loop_scope = function
+          testpaths = backend_rag_ia/tests
+          python_files = test_*.py
+          addopts = -v -ra -q
+          log_cli = true
+          log_cli_level = INFO" > pytest.ini
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          # Ferramentas de desenvolvimento
           pip install ruff pytest pytest-asyncio pytest-cov
+
+          # Dependências principais
           pip install fastapi uvicorn python-dotenv redis pydantic-settings
+
+          # Dependências para testes
+          pip install google-generativeai jsonschema prometheus-client pandas requests
+          pip install pytest-asyncio pytest-cov pytest-mock pytest-env
+
+          # Dependências específicas do projeto
+          pip install sentence-transformers torch transformers huggingface-hub
+          pip install supabase rich numpy langchain langchain-google-genai
+          pip install agentops google-cloud-aiplatform
 
       - name: Create Ruff config
         run: |
@@ -115,6 +138,10 @@ jobs:
         env:
           REDIS_URL: "redis://localhost:6379"
           PYTHONPATH: ${{ github.workspace }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
