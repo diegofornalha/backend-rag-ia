@@ -9,9 +9,6 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend_rag_ia
     steps:
       - uses: actions/checkout@v3
 
@@ -22,15 +19,22 @@ jobs:
           cache: "pip"
 
       - name: Install dependencies
+        working-directory: ./backend_rag_ia
         run: |
           python -m pip install --upgrade pip
           pip install ruff pytest pytest-asyncio pytest-cov
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install fastapi uvicorn python-dotenv redis pydantic-settings
+          fi
 
       - name: Run Ruff check
+        working-directory: ./backend_rag_ia
         run: ruff check .
 
       - name: Run tests with coverage
+        working-directory: ./backend_rag_ia
         run: |
           pytest --cov=backend_rag_ia --cov-report=xml
         env:
@@ -39,7 +43,7 @@ jobs:
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
-          file: ./coverage.xml
+          file: ./backend_rag_ia/coverage.xml
           fail_ci_if_error: true
 
   build:
@@ -94,7 +98,12 @@ jobs:
         working-directory: ./backend_rag_ia
         run: |
           pip install safety
-          safety check -r requirements.txt
+          if [ -f requirements.txt ]; then
+            safety check -r requirements.txt
+          else
+            pip freeze > temp-requirements.txt
+            safety check -r temp-requirements.txt
+          fi
 
   deploy-approval:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
