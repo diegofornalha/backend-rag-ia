@@ -150,16 +150,21 @@ jobs:
       - name: Run Ruff check
         run: ruff check backend_rag_ia --fix
 
+      - name: Setup core module
+        run: |
+          cd backend_rag_ia
+          ln -s 1_core core
+
       - name: Run tests with coverage
         run: |
-          PYTHONPATH=${{ github.workspace }}/backend_rag_ia:${{ github.workspace }}/backend_rag_ia/1_core pytest backend_rag_ia/tests \
+          PYTHONPATH=${{ github.workspace }}/backend_rag_ia pytest backend_rag_ia/tests \
             --cov=backend_rag_ia \
             --cov-report=xml \
             --cov-report=html \
             --no-cov-on-fail
         env:
           REDIS_URL: "redis://localhost:6379"
-          PYTHONPATH: "${{ github.workspace }}/backend_rag_ia:${{ github.workspace }}/backend_rag_ia/1_core"
+          PYTHONPATH: "${{ github.workspace }}/backend_rag_ia"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
