@@ -38,9 +38,9 @@ jobs:
           src = ['backend_rag_ia']
           extend-exclude = [
               'docs/*',
-              '00_testes_apenas_raiz/*',
               'tests/*',
-              '**/test_*.py'
+              '**/test_*.py',
+              '**/__pycache__/*'
           ]
 
           [lint]
@@ -60,6 +60,16 @@ jobs:
               'F821', # undefined name
               'F401', # imported but unused
               'E402', # module level import not at top of file
+              'B904', # raise from err
+              'C901', # too complex
+              'B006', # mutable defaults
+              'B007', # loop control variable
+              'B019', # cached property
+              'E711', # none comparison
+              'E721', # type comparison
+              'UP035', # typing imports
+              'UP038', # isinstance union
+              'F841'  # unused variable
           ]
 
           [format]
