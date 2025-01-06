@@ -1,8 +1,8 @@
-from typing import Dict, List, Optional, Set
-import os
 import json
 import logging
+import os
 from pathlib import Path
+from typing import Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class ReferenceValidator:
         self.embates_dir = Path(embates_dir)
         self._cache = {}  # Cache de embates carregados
 
-    def _load_embate(self, embate_id: str) -> Optional[Dict]:
+    def _load_embate(self, embate_id: str) -> dict | None:
         """
         Carrega um embate do disco
 
@@ -44,7 +44,7 @@ class ReferenceValidator:
             # Procura arquivo
             for file in self.embates_dir.glob("**/*.json"):
                 try:
-                    with open(file, "r") as f:
+                    with open(file) as f:
                         data = json.load(f)
                         if data.get("id") == embate_id:
                             self._cache[embate_id] = data
@@ -58,7 +58,7 @@ class ReferenceValidator:
             logger.error(f"Erro ao carregar embate {embate_id}: {str(e)}")
             return None
 
-    def _extract_references(self, content: str) -> Set[str]:
+    def _extract_references(self, content: str) -> set[str]:
         """
         Extrai IDs de embates referenciados em um texto
 
@@ -76,7 +76,7 @@ class ReferenceValidator:
         matches = re.finditer(pattern, content, re.IGNORECASE)
         return {match.group(1) for match in matches}
 
-    def get_references(self, embate: Dict) -> Set[str]:
+    def get_references(self, embate: dict) -> set[str]:
         """
         Obtém todas as referências em um embate
 
@@ -99,7 +99,7 @@ class ReferenceValidator:
 
         return references
 
-    def get_reverse_references(self, embate_id: str) -> List[Dict]:
+    def get_reverse_references(self, embate_id: str) -> list[dict]:
         """
         Obtém embates que referenciam um determinado embate
 
@@ -115,7 +115,7 @@ class ReferenceValidator:
             # Procura em todos os arquivos
             for file in self.embates_dir.glob("**/*.json"):
                 try:
-                    with open(file, "r") as f:
+                    with open(file) as f:
                         data = json.load(f)
                         if data.get("id") != embate_id:  # Ignora auto-referência
                             refs = self.get_references(data)
@@ -130,7 +130,7 @@ class ReferenceValidator:
             logger.error(f"Erro ao buscar referências reversas para {embate_id}: {str(e)}")
             return []
 
-    def validate_references(self, embate: Dict) -> List[str]:
+    def validate_references(self, embate: dict) -> list[str]:
         """
         Valida referências em um embate
 
@@ -169,7 +169,7 @@ class ReferenceValidator:
             logger.error(f"Erro ao validar referências: {str(e)}")
             return [f"Erro ao validar referências: {str(e)}"]
 
-    def check_orphaned_references(self) -> List[Dict]:
+    def check_orphaned_references(self) -> list[dict]:
         """
         Verifica referências órfãs no sistema
 
@@ -183,7 +183,7 @@ class ReferenceValidator:
             embates = {}
             for file in self.embates_dir.glob("**/*.json"):
                 try:
-                    with open(file, "r") as f:
+                    with open(file) as f:
                         data = json.load(f)
                         if "id" in data:
                             embates[data["id"]] = data
@@ -229,7 +229,7 @@ class ReferenceValidator:
             logger.error(f"Erro ao verificar referências órfãs: {str(e)}")
             return [{"tipo": "erro", "mensagem": f"Erro ao verificar referências órfãs: {str(e)}"}]
 
-    def get_reference_graph(self, embate_id: str) -> Dict:
+    def get_reference_graph(self, embate_id: str) -> dict:
         """
         Gera grafo de referências para um embate
 

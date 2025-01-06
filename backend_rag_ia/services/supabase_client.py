@@ -1,6 +1,7 @@
 """Cliente Supabase para operações no banco de dados."""
 
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
+
 from supabase import Client, create_client
 
 
@@ -31,7 +32,7 @@ class SupabaseClient:
             table = f"rag.{table}"
         return table
 
-    async def insert(self, table: str, data: Dict) -> Dict:
+    async def insert(self, table: str, data: dict) -> dict:
         """
         Insere dados em uma tabela.
 
@@ -46,7 +47,7 @@ class SupabaseClient:
         result = await self.client.table(table).insert(data).execute()
         return result.data[0]
 
-    async def update(self, table: str, id_: str, data: Dict) -> Dict:
+    async def update(self, table: str, id_: str, data: dict) -> dict:
         """
         Atualiza dados em uma tabela.
 
@@ -73,7 +74,7 @@ class SupabaseClient:
         table = self._ensure_schema(table)
         result = await self.client.table(table).delete().eq("id", id_).execute()
 
-    async def get(self, table: str, id_: str) -> Optional[Dict]:
+    async def get(self, table: str, id_: str) -> dict | None:
         """
         Busca dados em uma tabela.
 
@@ -88,7 +89,7 @@ class SupabaseClient:
         result = await self.client.table(table).select("*").eq("id", id_).execute()
         return result.data[0] if result.data else None
 
-    async def list(self, table: str, skip: int = 0, limit: int = 100) -> List[Dict]:
+    async def list(self, table: str, skip: int = 0, limit: int = 100) -> list[dict]:
         """
         Lista dados de uma tabela.
 

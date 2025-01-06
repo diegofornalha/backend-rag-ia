@@ -10,7 +10,8 @@ Este módulo contém as rotas para:
 """
 
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, UploadFile, File, Query
+
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 
 router = APIRouter(
@@ -37,7 +38,7 @@ class Document(BaseModel):
     id: str
     title: str
     content: str
-    metadata: Optional[dict] = None
+    metadata: dict | None = None
 
 
 @router.post(
@@ -80,7 +81,7 @@ async def upload_document(
 
 @router.get(
     "/",
-    response_model=List[Document],
+    response_model=list[Document],
     summary="Lista documentos",
     description="""
     Retorna a lista de documentos armazenados no sistema.
@@ -107,8 +108,8 @@ async def upload_document(
 async def list_documents(
     limit: int = Query(10, description="Número máximo de documentos a retornar"),
     offset: int = Query(0, description="Número de documentos a pular"),
-    search: Optional[str] = Query(None, description="Termo para busca no título/conteúdo"),
-) -> List[Document]:
+    search: str | None = Query(None, description="Termo para busca no título/conteúdo"),
+) -> list[Document]:
     """Lista documentos."""
     try:
         # Implementação da listagem

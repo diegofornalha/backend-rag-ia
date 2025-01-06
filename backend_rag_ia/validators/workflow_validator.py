@@ -1,6 +1,6 @@
-from typing import Dict, List, Optional
 import logging
 from datetime import datetime
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class WorkflowValidator:
     }
 
     @staticmethod
-    def validate_sequence(embate: Dict) -> List[str]:
+    def validate_sequence(embate: dict) -> list[str]:
         """Valida sequência de argumentos"""
         errors = []
 
@@ -50,7 +50,7 @@ class WorkflowValidator:
         return errors
 
     @staticmethod
-    def validate_state_transition(old_state: str, new_state: str) -> Optional[str]:
+    def validate_state_transition(old_state: str, new_state: str) -> str | None:
         """Valida transição de estado"""
         if old_state not in WorkflowValidator.VALID_TRANSITIONS:
             return f"Estado atual inválido: {old_state}"
@@ -64,7 +64,7 @@ class WorkflowValidator:
         return None
 
     @staticmethod
-    def validate_metadata(embate: Dict) -> List[str]:
+    def validate_metadata(embate: dict) -> list[str]:
         """Valida metadata do embate"""
         errors = []
         metadata = embate.get("metadata", {})
@@ -96,7 +96,7 @@ class WorkflowValidator:
         return errors
 
     @staticmethod
-    def validate_dates(embate: Dict) -> List[str]:
+    def validate_dates(embate: dict) -> list[str]:
         """Valida datas do embate"""
         errors = []
 
@@ -118,7 +118,7 @@ class WorkflowValidator:
         return errors
 
     @staticmethod
-    def validate_embate(embate: Dict) -> Dict[str, List[str]]:
+    def validate_embate(embate: dict) -> dict[str, list[str]]:
         """Valida embate completo"""
         return {
             "sequence": WorkflowValidator.validate_sequence(embate),

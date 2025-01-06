@@ -2,12 +2,12 @@
 Implementação do serviço de sugestões do Cursor AI.
 """
 
-from typing import Dict, Any, List
 import logging
+from typing import Any, Dict, List
 
-from ..interfaces import SuggestionInterface
-from ..agent_services.embate_agent import EmbateSystem
 from ...config.multiagent_config import GEMINI_CONFIG
+from ..agent_services.embate_agent import EmbateSystem
+from ..interfaces import SuggestionInterface
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class CursorAI(SuggestionInterface):
             "project_management",
         ]
 
-    async def process(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def process(self, context: dict[str, Any]) -> dict[str, Any]:
         """Processa o contexto usando o sistema de embates."""
         try:
             # Extrai tarefa do contexto
@@ -62,6 +62,6 @@ class CursorAI(SuggestionInterface):
             logger.error(f"Erro na geração: {e}")
             return f"Erro ao gerar sugestão: {e}"
 
-    def get_capabilities(self) -> List[str]:
+    def get_capabilities(self) -> list[str]:
         """Retorna as capacidades do serviço."""
         return self._capabilities.copy()

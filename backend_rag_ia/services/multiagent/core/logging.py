@@ -4,10 +4,11 @@ Configuração de logging para o sistema multiagente.
 
 import logging
 from typing import Optional
+
 from ....utils.logging_config import setup_logger
 
 
-def get_multiagent_logger(name: str, level: Optional[str] = None) -> logging.Logger:
+def get_multiagent_logger(name: str, level: str | None = None) -> logging.Logger:
     """
     Retorna um logger configurado para o sistema multiagente.
 

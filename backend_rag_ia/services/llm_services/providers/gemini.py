@@ -2,15 +2,17 @@
 Provider específico para o modelo Gemini.
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 import google.generativeai as genai
-from ..gemini_config import get_model_config, GENERATION_CONFIG
+
+from ..gemini_config import GENERATION_CONFIG, get_model_config
 
 
 class GeminiProvider:
     """Provider para interação com o modelo Gemini."""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         """Inicializa o provider."""
         self.config = get_model_config()
         self.api_key = api_key
@@ -24,7 +26,7 @@ class GeminiProvider:
         # Configura modelo
         self.model = genai.GenerativeModel(self.config["model"]["name"])
 
-    async def generate_content(self, prompt: str, context: Optional[Dict[str, Any]] = None) -> str:
+    async def generate_content(self, prompt: str, context: dict[str, Any] | None = None) -> str:
         """Gera uma resposta usando o modelo."""
         try:
             # Prepara contexto
@@ -41,8 +43,8 @@ class GeminiProvider:
             raise RuntimeError(f"Erro na geração: {str(e)}")
 
     async def analyze(
-        self, content: str, context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, content: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Analisa conteúdo usando o modelo."""
         try:
             # Prepara prompt de análise
@@ -71,6 +73,6 @@ class GeminiProvider:
         except Exception as e:
             raise RuntimeError(f"Erro na análise: {str(e)}")
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         """Retorna a configuração atual do provider."""
         return self.config

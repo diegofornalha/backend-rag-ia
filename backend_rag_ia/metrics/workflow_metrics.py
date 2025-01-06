@@ -1,7 +1,7 @@
-from typing import Dict, List, Optional
-from datetime import datetime, timedelta
-from collections import defaultdict
 import logging
+from collections import defaultdict
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class WorkflowMetrics:
 
         logger.info(f"Operação {operation} registrada para embate {embate_id} " f"em {timestamp}")
 
-    def get_cycle_time(self, embate_id: str) -> Optional[timedelta]:
+    def get_cycle_time(self, embate_id: str) -> timedelta | None:
         """Calcula tempo de ciclo de um embate"""
         if embate_id not in self.state_changes:
             return None
@@ -72,7 +72,7 @@ class WorkflowMetrics:
 
         return total_duration
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Retorna estatísticas gerais"""
         stats = {
             "total_embates": len(self.timestamps),
@@ -85,7 +85,7 @@ class WorkflowMetrics:
         logger.info(f"Estatísticas geradas: {stats}")
         return stats
 
-    def _calculate_avg_cycle_time(self) -> Optional[float]:
+    def _calculate_avg_cycle_time(self) -> float | None:
         """Calcula tempo médio de ciclo"""
         cycle_times = [self.get_cycle_time(embate_id) for embate_id in self.state_changes.keys()]
 
@@ -96,7 +96,7 @@ class WorkflowMetrics:
         total_seconds = sum(ct.total_seconds() for ct in valid_times)
         return total_seconds / len(valid_times)
 
-    def _calculate_state_distribution(self) -> Dict[str, int]:
+    def _calculate_state_distribution(self) -> dict[str, int]:
         """Calcula distribuição de estados"""
         distribution = defaultdict(int)
 

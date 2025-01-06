@@ -5,12 +5,13 @@ Exemplo de uso do sistema multiagente.
 import asyncio
 import os
 from typing import List
+
 from ..services.multiagent.core.coordinator import AgentCoordinator
-from ..services.multiagent.core.providers import GeminiProvider
 from ..services.multiagent.core.interfaces import AgentResponse
+from ..services.multiagent.core.providers import GeminiProvider
 
 
-async def process_research_task(coordinator: AgentCoordinator, task: str) -> List[AgentResponse]:
+async def process_research_task(coordinator: AgentCoordinator, task: str) -> list[AgentResponse]:
     """
     Processa uma tarefa de pesquisa usando o sistema multiagente.
 

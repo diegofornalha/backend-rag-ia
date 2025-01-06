@@ -3,11 +3,12 @@ Gerenciador de modelos de linguagem com suporte a multiagentes.
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 import google.generativeai as genai
-from MultiAgente_gemini.engine.llms.tracker import LlmTracker
 from MultiAgente_gemini.analysis.suggestions.interfaces import CursorAI
 from MultiAgente_gemini.engine.coordinator.base import AgentCoordinator
+from MultiAgente_gemini.engine.llms.tracker import LlmTracker
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,7 @@ class LLMManager:
             self.handle_error(err, "geração de resposta")
             return {"status": "error", "response": str(err)}
 
-    def get_agent_status(self) -> Dict[str, Any]:
+    def get_agent_status(self) -> dict[str, Any]:
         """Retorna o status atual do sistema multiagente."""
         return {
             "cursor_ai": self.cursor_ai.name,

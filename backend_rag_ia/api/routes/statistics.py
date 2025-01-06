@@ -8,8 +8,9 @@ Este módulo contém as rotas para:
 - Histórico de operações
 """
 
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
@@ -53,7 +54,7 @@ class UsageMetrics(BaseModel):
     daily_searches: int
     daily_uploads: int
     active_users: int
-    popular_queries: List[str]
+    popular_queries: list[str]
 
 
 class PerformanceMetrics(BaseModel):
@@ -69,7 +70,7 @@ class PerformanceMetrics(BaseModel):
 
     cpu_usage: float
     memory_usage: float
-    response_times: List[float]
+    response_times: list[float]
     error_rate: float
 
 

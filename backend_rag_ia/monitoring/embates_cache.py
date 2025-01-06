@@ -1,20 +1,20 @@
-from typing import Dict, Optional
 import hashlib
 import json
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
 from functools import lru_cache
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class EmbatesCache:
     def __init__(self, cache_ttl_minutes: int = 30):
-        self._cache: Dict[str, Dict] = {}
-        self._timestamps: Dict[str, datetime] = {}
+        self._cache: dict[str, dict] = {}
+        self._timestamps: dict[str, datetime] = {}
         self._ttl = timedelta(minutes=cache_ttl_minutes)
 
-    def _generate_hash(self, embate_data: Dict) -> str:
+    def _generate_hash(self, embate_data: dict) -> str:
         """Gera hash único para o embate"""
         # Ordena as chaves para garantir consistência
         serialized = json.dumps(embate_data, sort_keys=True)
@@ -29,7 +29,7 @@ class EmbatesCache:
         return age <= self._ttl
 
     @lru_cache(maxsize=100)
-    def get_validation_result(self, embate_data: Dict) -> Optional[Dict]:
+    def get_validation_result(self, embate_data: dict) -> dict | None:
         """Recupera resultado de validação do cache"""
         hash_key = self._generate_hash(embate_data)
 
@@ -40,14 +40,14 @@ class EmbatesCache:
         logger.info(f"Cache miss para embate hash: {hash_key}")
         return None
 
-    def store_validation(self, embate_data: Dict, result: Dict) -> None:
+    def store_validation(self, embate_data: dict, result: dict) -> None:
         """Armazena resultado de validação no cache"""
         hash_key = self._generate_hash(embate_data)
         self._cache[hash_key] = result
         self._timestamps[hash_key] = datetime.now()
         logger.info(f"Resultado armazenado em cache para hash: {hash_key}")
 
-    def invalidate(self, embate_data: Dict) -> None:
+    def invalidate(self, embate_data: dict) -> None:
         """Invalida cache para um embate específico"""
         hash_key = self._generate_hash(embate_data)
         if hash_key in self._cache:
@@ -61,7 +61,7 @@ class EmbatesCache:
         self._timestamps.clear()
         logger.info("Cache completamente limpo")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Retorna estatísticas do cache"""
         total = len(self._cache)
         valid = sum(1 for k in self._cache.keys() if self._is_valid(k))

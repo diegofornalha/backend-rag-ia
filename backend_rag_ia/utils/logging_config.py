@@ -8,7 +8,7 @@ from typing import Optional
 
 
 def setup_logger(
-    name: str, level: Optional[str] = None, format_str: Optional[str] = None
+    name: str, level: str | None = None, format_str: str | None = None
 ) -> logging.Logger:
     """
     Configura um logger com formatação padrão.

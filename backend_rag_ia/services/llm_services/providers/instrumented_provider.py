@@ -11,8 +11,8 @@ class ChatCall(TypedDict):
     """Registro de chamada do método chat."""
 
     type: str
-    messages: List[Dict[str, Any]]
-    kwargs: Dict[str, Any]
+    messages: list[dict[str, Any]]
+    kwargs: dict[str, Any]
 
 
 class GenerateCall(TypedDict):
@@ -20,7 +20,7 @@ class GenerateCall(TypedDict):
 
     type: str
     prompt: str
-    kwargs: Dict[str, Any]
+    kwargs: dict[str, Any]
 
 
 Call = ChatCall | GenerateCall
@@ -37,9 +37,9 @@ class InstrumentedProvider(BaseProvider):
             provider: O provider base a ser instrumentado
         """
         self.provider = provider
-        self.calls: List[Call] = []
+        self.calls: list[Call] = []
 
-    def chat(self, messages: List[Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
+    def chat(self, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
         """
         Processa uma conversa com o modelo.
 
@@ -53,7 +53,7 @@ class InstrumentedProvider(BaseProvider):
         self.calls.append({"type": "chat", "messages": messages, "kwargs": kwargs})
         return self.provider.chat(messages, **kwargs)
 
-    def generate(self, prompt: str, **kwargs: Any) -> Dict[str, Any]:
+    def generate(self, prompt: str, **kwargs: Any) -> dict[str, Any]:
         """
         Gera texto a partir de um prompt.
 
@@ -67,6 +67,6 @@ class InstrumentedProvider(BaseProvider):
         self.calls.append({"type": "generate", "prompt": prompt, "kwargs": kwargs})
         return self.provider.generate(prompt, **kwargs)
 
-    def get_calls(self) -> List[Call]:
+    def get_calls(self) -> list[Call]:
         """Retorna a lista de chamadas registradas."""
         return self.calls

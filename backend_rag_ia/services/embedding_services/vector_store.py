@@ -1,8 +1,9 @@
 import os
-from typing import List, Dict, Any
-from supabase import create_client, Client
-from sentence_transformers import SentenceTransformer
+from typing import Any, Dict, List
+
 import numpy as np
+from sentence_transformers import SentenceTransformer
+from supabase import Client, create_client
 
 
 class VectorStore:
@@ -25,7 +26,7 @@ class VectorStore:
             },
         ).execute()
 
-    async def store_content(self, content: str, metadata: Dict[str, Any] = None) -> List[float]:
+    async def store_content(self, content: str, metadata: dict[str, Any] = None) -> list[float]:
         # Gerar embedding
         embedding = self.model.encode(content)
 
@@ -36,7 +37,7 @@ class VectorStore:
 
         return embedding.tolist()
 
-    async def search_similar(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+    async def search_similar(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
         # Gerar embedding da query
         query_embedding = self.model.encode(query)
 

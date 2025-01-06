@@ -1,12 +1,13 @@
-import click
 import json
 import os
 from datetime import datetime
 from typing import Dict, Optional
 
+import click
+
+from ..metrics.workflow_metrics import WorkflowMetrics
 from ..templates.embate_templates import EmbateTemplates
 from ..validators.workflow_validator import WorkflowValidator
-from ..metrics.workflow_metrics import WorkflowMetrics
 
 
 @click.group()
@@ -31,8 +32,8 @@ def criar(
     contexto: str,
     autor: str,
     severidade: str,
-    area: Optional[str],
-    componente: Optional[str],
+    area: str | None,
+    componente: str | None,
 ):
     """Cria novo embate"""
     templates = EmbateTemplates()
@@ -82,7 +83,7 @@ def adicionar_argumento(embate_id: str, autor: str, tipo: str, conteudo: str):
     """Adiciona novo argumento a um embate existente"""
     # Carrega embate
     try:
-        with open(f"dados/embates/{embate_id}.json", "r") as f:
+        with open(f"dados/embates/{embate_id}.json") as f:
             embate = json.load(f)
     except FileNotFoundError:
         click.echo(f"Embate não encontrado: {embate_id}")
@@ -119,7 +120,7 @@ def alterar_estado(embate_id: str, novo_estado: str):
     """Altera estado de um embate"""
     # Carrega embate
     try:
-        with open(f"dados/embates/{embate_id}.json", "r") as f:
+        with open(f"dados/embates/{embate_id}.json") as f:
             embate = json.load(f)
     except FileNotFoundError:
         click.echo(f"Embate não encontrado: {embate_id}")

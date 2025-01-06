@@ -2,12 +2,13 @@ import inspect
 import pprint
 from typing import Optional
 
-from .instrumented_provider import InstrumentedProvider
 from agentops.event import ActionEvent, ErrorEvent, LLMEvent
-from agentops.session import Session
+from agentops.helpers import check_call_stack_for_agent_id, get_ISO_time
 from agentops.log_config import logger
-from agentops.helpers import get_ISO_time, check_call_stack_for_agent_id
+from agentops.session import Session
 from agentops.singleton import singleton
+
+from .instrumented_provider import InstrumentedProvider
 
 
 @singleton
@@ -36,7 +37,7 @@ class CohereProvider(InstrumentedProvider):
     def __init__(self, client):
         super().__init__(client)
 
-    def handle_response(self, response, kwargs, init_timestamp, session: Optional[Session] = None):
+    def handle_response(self, response, kwargs, init_timestamp, session: Session | None = None):
         """Handle responses for Cohere versions >v5.4.0"""
         from cohere.types.streamed_chat_response import (
             StreamedChatResponse_CitationGeneration,
@@ -56,7 +57,7 @@ class CohereProvider(InstrumentedProvider):
 
         self.action_events = {}
 
-        def handle_stream_chunk(chunk, session: Optional[Session] = None):
+        def handle_stream_chunk(chunk, session: Session | None = None):
             # We take the first chunk and accumulate the deltas from all subsequent chunks to build one full chat completion
             if isinstance(chunk, StreamedChatResponse_StreamStart):
                 llm_event.returns = chunk

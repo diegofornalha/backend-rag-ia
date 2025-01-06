@@ -2,10 +2,11 @@
 Agente responsável por sintetizar informações.
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 from ..core.interfaces import Agent, AgentResponse
-from ..core.providers import GeminiProvider
 from ..core.logging import get_multiagent_logger
+from ..core.providers import GeminiProvider
 
 logger = get_multiagent_logger(__name__)
 
@@ -24,7 +25,7 @@ class SynthesizerAgent(Agent):
         self.name = "synthesizer"
         self.description = "Agente que sintetiza e consolida informações"
 
-    async def process(self, task: str, context: Optional[Dict[str, Any]] = None) -> AgentResponse:
+    async def process(self, task: str, context: dict[str, Any] | None = None) -> AgentResponse:
         """
         Processa uma tarefa de síntese.
 

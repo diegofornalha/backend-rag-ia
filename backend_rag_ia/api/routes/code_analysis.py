@@ -2,9 +2,11 @@
 Rotas para análise de código usando o sistema multiagente.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+
 from backend_rag_ia.services.llm_manager import LLMManager
 
 router = APIRouter()
@@ -15,21 +17,21 @@ class CodeAnalysisRequest(BaseModel):
 
     code: str
     language: str
-    context: Dict[str, Any] = {}
+    context: dict[str, Any] = {}
 
 
 class CodeAnalysisResponse(BaseModel):
     """Modelo para resposta da análise de código."""
 
-    analysis: Dict[str, Any]
+    analysis: dict[str, Any]
     recommendations: list[str]
-    metrics: Dict[str, Any]
+    metrics: dict[str, Any]
 
 
 @router.post("/analyze", response_model=CodeAnalysisResponse)
 async def analyze_code(
     request: CodeAnalysisRequest, llm_manager: LLMManager = Depends()
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Analisa código usando o sistema multiagente.
 
@@ -75,7 +77,7 @@ async def analyze_code(
 @router.post("/improve")
 async def improve_code(
     request: CodeAnalysisRequest, llm_manager: LLMManager = Depends()
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Gera sugestões de melhorias para o código.
 

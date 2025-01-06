@@ -1,6 +1,6 @@
-from typing import Dict
 import logging
 from datetime import datetime
+from typing import Dict
 
 logger = logging.getLogger(__name__)
 
@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 class GlobalEmbatesCounter:
     def __init__(self):
         self._total_calls = 0
-        self._calls_by_embate: Dict[str, int] = {}
-        self._last_call_time: Dict[str, datetime] = {}
+        self._calls_by_embate: dict[str, int] = {}
+        self._last_call_time: dict[str, datetime] = {}
 
     def increment(self, embate_id: str) -> None:
         """Incrementa contadores e registra timestamp"""
@@ -36,7 +36,7 @@ class GlobalEmbatesCounter:
         """Retorna timestamp da última chamada do embate"""
         return self._last_call_time.get(embate_id)
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Retorna estatísticas gerais do sistema"""
         return {
             "total_calls": self._total_calls,

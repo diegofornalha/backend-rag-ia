@@ -2,14 +2,13 @@ import json
 import pprint
 from typing import Optional
 
-from agentops.llms.providers.instrumented_provider import InstrumentedProvider
-from agentops.time_travel import fetch_completion_override_from_time_travel_cache
-
 from agentops.event import ErrorEvent, LLMEvent, ToolEvent
 from agentops.helpers import check_call_stack_for_agent_id, get_ISO_time
+from agentops.llms.providers.instrumented_provider import InstrumentedProvider
 from agentops.log_config import logger
 from agentops.session import Session
 from agentops.singleton import singleton
+from agentops.time_travel import fetch_completion_override_from_time_travel_cache
 
 
 @singleton
@@ -23,7 +22,7 @@ class AnthropicProvider(InstrumentedProvider):
         self.tool_event = {}
         self.tool_id = ""
 
-    def handle_response(self, response, kwargs, init_timestamp, session: Optional[Session] = None):
+    def handle_response(self, response, kwargs, init_timestamp, session: Session | None = None):
         """Handle responses for Anthropic"""
         import anthropic.resources.beta.messages.messages as beta_messages
         from anthropic import AsyncStream, Stream

@@ -2,9 +2,9 @@
 Script para executar o exemplo do sistema multiagente.
 """
 
+import asyncio
 import os
 import sys
-import asyncio
 
 # Adiciona diretório raiz ao path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))

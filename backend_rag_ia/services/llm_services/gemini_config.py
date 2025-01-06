@@ -2,7 +2,7 @@
 Configurações específicas para o modelo Gemini.
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Configurações do modelo
 MODEL_CONFIG = {
@@ -48,7 +48,7 @@ Por favor, forneça respostas claras e objetivas.""",
 }
 
 
-def get_model_config() -> Dict[str, Any]:
+def get_model_config() -> dict[str, Any]:
     """Retorna a configuração completa do modelo."""
     return {
         "model": MODEL_CONFIG,
@@ -58,11 +58,11 @@ def get_model_config() -> Dict[str, Any]:
     }
 
 
-def get_generation_config() -> Dict[str, Any]:
+def get_generation_config() -> dict[str, Any]:
     """Retorna apenas as configurações de geração."""
     return GENERATION_CONFIG
 
 
-def get_safety_settings() -> Dict[str, str]:
+def get_safety_settings() -> dict[str, str]:
     """Retorna as configurações de segurança."""
     return MODEL_CONFIG["safety_settings"]

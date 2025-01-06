@@ -1,10 +1,10 @@
 import json
+import logging
 import os
 import shutil
+import uuid
 from datetime import datetime
 from typing import Dict, List, Optional
-import uuid
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class EmbatesStorage:
         logger.info(f"Storage inicializado em: {self.storage_dir}")
         logger.info(f"Backup configurado em: {self.backup_dir}")
 
-    def save_embate(self, embate: Dict) -> str:
+    def save_embate(self, embate: dict) -> str:
         """
         Salva um embate no armazenamento
 
@@ -50,7 +50,7 @@ class EmbatesStorage:
         logger.info(f"Embate salvo: {embate_id}")
         return embate_id
 
-    def load_embate(self, embate_id: str) -> Optional[Dict]:
+    def load_embate(self, embate_id: str) -> dict | None:
         """
         Carrega um embate do armazenamento
 
@@ -63,14 +63,14 @@ class EmbatesStorage:
         path = os.path.join(self.storage_dir, f"{embate_id}.json")
 
         try:
-            with open(path, "r") as f:
+            with open(path) as f:
                 embate = json.load(f)
             return embate
         except FileNotFoundError:
             logger.warning(f"Embate não encontrado: {embate_id}")
             return None
 
-    def list_embates(self) -> List[str]:
+    def list_embates(self) -> list[str]:
         """
         Lista todos os IDs de embates armazenados
 

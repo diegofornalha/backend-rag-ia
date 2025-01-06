@@ -9,8 +9,8 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
-from ..cli.embates.models import Embate
 from ..cli.embates.manager import EmbateManager
+from ..cli.embates.models import Embate
 
 
 class ChamadaSequencial(BaseModel):
@@ -18,7 +18,7 @@ class ChamadaSequencial(BaseModel):
 
     timestamp: datetime
     tipo: str
-    contexto: Optional[str] = None
+    contexto: str | None = None
 
 
 class ChamadasSequenciaisManager:
@@ -46,10 +46,10 @@ class ChamadasSequenciaisManager:
         self.arquivo_estado = Path(arquivo_estado)
         self.embate_manager = EmbateManager()
 
-        self.chamadas: List[ChamadaSequencial] = []
+        self.chamadas: list[ChamadaSequencial] = []
         self._carregar_estado()
 
-    async def registrar_chamada(self, tipo: str, contexto: Optional[str] = None) -> Dict:
+    async def registrar_chamada(self, tipo: str, contexto: str | None = None) -> dict:
         """
         Registra uma nova chamada.
 
@@ -106,7 +106,7 @@ class ChamadasSequenciaisManager:
 
         await self.embate_manager.create_embate(embate)
 
-    def _get_tipos_chamada(self) -> Dict[str, int]:
+    def _get_tipos_chamada(self) -> dict[str, int]:
         """Retorna contagem de tipos de chamada."""
         tipos = {}
         for c in self.chamadas:

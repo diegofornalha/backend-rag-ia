@@ -2,10 +2,10 @@
 Sistema de tracking para LLMs.
 """
 
-from typing import Dict, Any, List
-import time
 import logging
+import time
 from collections import defaultdict
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -15,11 +15,11 @@ class LlmTracker:
 
     def __init__(self):
         """Inicializa o tracker."""
-        self.events: List[Dict[str, Any]] = []
+        self.events: list[dict[str, Any]] = []
         self.metrics = defaultdict(int)
         self.start_time = time.time()
 
-    def track_event(self, event_type: str, data: Dict[str, Any]) -> None:
+    def track_event(self, event_type: str, data: dict[str, Any]) -> None:
         """Registra um evento no sistema."""
         try:
             # Prepara evento
@@ -39,7 +39,7 @@ class LlmTracker:
         except Exception as e:
             logger.error(f"Erro ao registrar evento: {str(e)}")
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Retorna métricas do sistema."""
         try:
             # Calcula métricas
@@ -57,7 +57,7 @@ class LlmTracker:
             logger.error(f"Erro ao calcular métricas: {str(e)}")
             return {}
 
-    def get_recent_events(self, limit: int = 10, event_type: str = None) -> List[Dict[str, Any]]:
+    def get_recent_events(self, limit: int = 10, event_type: str = None) -> list[dict[str, Any]]:
         """Retorna eventos recentes do sistema."""
         try:
             # Filtra eventos
@@ -81,7 +81,7 @@ class LlmTracker:
         except Exception as e:
             logger.error(f"Erro ao limpar eventos: {str(e)}")
 
-    def get_event_types(self) -> List[str]:
+    def get_event_types(self) -> list[str]:
         """Retorna tipos de eventos registrados."""
         try:
             return list({e["type"] for e in self.events})

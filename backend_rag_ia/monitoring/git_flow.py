@@ -38,7 +38,7 @@ class Branch:
     """Modelo para branches."""
 
     nome: str
-    commits: List[Commit]
+    commits: list[Commit]
     ultima_atualizacao: datetime
 
 
@@ -56,7 +56,7 @@ class ChangelogGenerator:
             "chore": "Manutenção",
         }
 
-    def gerar_changelog(self, commits: List[Commit], versao: str) -> str:
+    def gerar_changelog(self, commits: list[Commit], versao: str) -> str:
         """
         Gera changelog para uma versão.
 
@@ -68,7 +68,7 @@ class ChangelogGenerator:
             Changelog formatado
         """
         # Agrupa commits por tipo
-        por_tipo: Dict[str, List[Commit]] = {}
+        por_tipo: dict[str, list[Commit]] = {}
         for commit in commits:
             tipo = self._extrair_tipo(commit.mensagem)
             if tipo not in por_tipo:
@@ -106,7 +106,7 @@ class BranchManager:
     """Gerencia branches do Git Flow."""
 
     def __init__(self):
-        self.branches: Dict[str, Branch] = {}
+        self.branches: dict[str, Branch] = {}
         self.protected_branches = ["main", "develop"]
 
     def criar_branch(self, nome: str, base: str) -> Branch:
@@ -164,7 +164,7 @@ class BranchManager:
             self.branches[target].commits.extend(self.branches[source].commits)
             self.branches[target].ultima_atualizacao = datetime.now()
 
-    def get_branch_status(self, nome: str) -> Dict:
+    def get_branch_status(self, nome: str) -> dict:
         """
         Retorna status de uma branch.
 
@@ -190,7 +190,7 @@ class GitFlowMonitor:
     """Monitor do Git Flow."""
 
     def __init__(self):
-        self.branches: Dict[str, Branch] = {}
+        self.branches: dict[str, Branch] = {}
         self.padrao_commit = re.compile(r"^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+")
         self.branch_manager = BranchManager()
         self.changelog_generator = ChangelogGenerator()
@@ -210,7 +210,7 @@ class GitFlowMonitor:
         branch.commits.append(commit)
         branch.ultima_atualizacao = max(branch.ultima_atualizacao, commit.data)
 
-    def verificar_commit(self, commit: Commit) -> List[str]:
+    def verificar_commit(self, commit: Commit) -> list[str]:
         """Verifica se um commit segue as convenções."""
         avisos = []
 
@@ -222,7 +222,7 @@ class GitFlowMonitor:
 
         return avisos
 
-    def get_metricas(self) -> Dict:
+    def get_metricas(self) -> dict:
         """Retorna métricas do Git Flow."""
         total_commits = sum(len(b.commits) for b in self.branches.values())
 
@@ -241,7 +241,7 @@ class GitFlowMonitor:
 
         return metricas
 
-    def _contar_commits_por_tipo(self) -> Dict[str, int]:
+    def _contar_commits_por_tipo(self) -> dict[str, int]:
         """Conta commits por tipo."""
         contagem = {}
 

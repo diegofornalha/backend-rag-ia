@@ -1,11 +1,12 @@
-from typing import Dict, Optional
 import logging
 import uuid
 from datetime import datetime
-from .embates_validator import EmbatesValidator
-from .embates_counter import GlobalEmbatesCounter
+from typing import Dict, Optional
+
 from .embates_cache import EmbatesCache
-from .embates_metrics import EmbatesMetrics, EmbateMetric
+from .embates_counter import GlobalEmbatesCounter
+from .embates_metrics import EmbateMetric, EmbatesMetrics
+from .embates_validator import EmbatesValidator
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class EmbatesProtection:
         self.validator = EmbatesValidator()
         self.protection_active = True
 
-    def protect_embate(self, embate_data: Dict) -> Dict:
+    def protect_embate(self, embate_data: dict) -> dict:
         """Aplica proteções e correções automáticas quando possível"""
         if not self.protection_active:
             return embate_data
@@ -57,7 +58,7 @@ class EmbatesProtectionManager:
         self.cache = EmbatesCache()
         self.metrics = EmbatesMetrics()
 
-    def process_embate(self, embate_data: Dict) -> Dict:
+    def process_embate(self, embate_data: dict) -> dict:
         """Processa um embate aplicando proteções e validações"""
         start_time = datetime.now()
         embate_id = embate_data.get("id", str(uuid.uuid4()))
@@ -136,7 +137,7 @@ class EmbatesProtectionManager:
             logger.error(f"Erro no processamento do embate: {str(e)}")
             raise
 
-    def validate_only(self, embate_data: Dict) -> Dict[str, list]:
+    def validate_only(self, embate_data: dict) -> dict[str, list]:
         """Apenas valida o embate sem aplicar proteções"""
         start_time = datetime.now()
         embate_id = embate_data.get("id", str(uuid.uuid4()))
@@ -175,12 +176,12 @@ class EmbatesProtectionManager:
             )
             raise
 
-    def is_valid(self, embate_data: Dict) -> bool:
+    def is_valid(self, embate_data: dict) -> bool:
         """Verifica se um embate é válido (sem erros críticos)"""
         validation_results = self.validate_only(embate_data)
         return len(validation_results["errors"]) == 0
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Retorna estatísticas completas do sistema"""
         return {
             "counter": self.counter.get_statistics(),

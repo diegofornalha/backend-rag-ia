@@ -3,10 +3,11 @@ import pprint
 import sys
 from typing import Optional
 
-from agentops.event import LLMEvent, ErrorEvent
-from agentops.session import Session
+from agentops.event import ErrorEvent, LLMEvent
+from agentops.helpers import check_call_stack_for_agent_id, get_ISO_time
 from agentops.log_config import logger
-from agentops.helpers import get_ISO_time, check_call_stack_for_agent_id
+from agentops.session import Session
+
 from .instrumented_provider import InstrumentedProvider
 
 
@@ -21,7 +22,7 @@ class MistralProvider(InstrumentedProvider):
         self._provider_name = "Mistral"
 
     def handle_response(
-        self, response, kwargs, init_timestamp, session: Optional[Session] = None
+        self, response, kwargs, init_timestamp, session: Session | None = None
     ) -> dict:
         """Handle responses for Mistral"""
         from mistralai import Chat

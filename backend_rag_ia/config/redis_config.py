@@ -1,6 +1,6 @@
-from typing import Optional
-import os
 import logging
+import os
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 

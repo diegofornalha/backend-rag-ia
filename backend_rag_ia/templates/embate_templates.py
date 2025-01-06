@@ -1,10 +1,10 @@
-from typing import Dict, List
 from datetime import datetime
+from typing import Dict, List
 
 
 class EmbateTemplates:
     @staticmethod
-    def create_feature_embate(titulo: str, contexto: str, autor: str) -> Dict:
+    def create_feature_embate(titulo: str, contexto: str, autor: str) -> dict:
         """Cria template para embate de nova funcionalidade"""
         return {
             "titulo": titulo,
@@ -26,7 +26,7 @@ class EmbateTemplates:
     @staticmethod
     def create_bug_embate(
         titulo: str, descricao: str, autor: str, severidade: str = "média"
-    ) -> Dict:
+    ) -> dict:
         """Cria template para embate de bug"""
         return {
             "titulo": titulo,
@@ -50,7 +50,7 @@ class EmbateTemplates:
         }
 
     @staticmethod
-    def create_process_embate(titulo: str, contexto: str, autor: str, area: str) -> Dict:
+    def create_process_embate(titulo: str, contexto: str, autor: str, area: str) -> dict:
         """Cria template para embate de processo"""
         return {
             "titulo": titulo,
@@ -70,7 +70,7 @@ class EmbateTemplates:
         }
 
     @staticmethod
-    def create_tech_debt_embate(titulo: str, descricao: str, autor: str, componente: str) -> Dict:
+    def create_tech_debt_embate(titulo: str, descricao: str, autor: str, componente: str) -> dict:
         """Cria template para embate de dívida técnica"""
         return {
             "titulo": titulo,
@@ -94,7 +94,7 @@ class EmbateTemplates:
         }
 
     @staticmethod
-    def add_argument(embate: Dict, autor: str, tipo: str, conteudo: str) -> Dict:
+    def add_argument(embate: dict, autor: str, tipo: str, conteudo: str) -> dict:
         """Adiciona novo argumento a um embate existente"""
         if "argumentos" not in embate:
             embate["argumentos"] = []

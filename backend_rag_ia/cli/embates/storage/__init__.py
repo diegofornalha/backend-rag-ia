@@ -23,7 +23,7 @@ class SupabaseStorage:
         """
         self.client = create_client(url, key)
 
-    async def save(self, embate: Embate) -> Dict:
+    async def save(self, embate: Embate) -> dict:
         """
         Salva um embate.
 
@@ -40,7 +40,7 @@ class SupabaseStorage:
         response = await self.client.table("rag.embates").insert(data).execute()
         return response.data[0]
 
-    async def get(self, id: str) -> Optional[Embate]:
+    async def get(self, id: str) -> Embate | None:
         """
         Busca um embate por ID.
 
@@ -61,7 +61,7 @@ class SupabaseStorage:
 
         return Embate(**data)
 
-    async def list(self) -> List[Embate]:
+    async def list(self) -> list[Embate]:
         """
         Lista todos os embates.
 
@@ -81,8 +81,6 @@ class SupabaseStorage:
 
 """Storage para embates."""
 
-from typing import Dict, List, Optional
-from datetime import datetime
 
 from ..models import Embate
 
@@ -91,11 +89,11 @@ class MemoryStorage:
     """Storage em memória para testes."""
 
     def __init__(self):
-        self.embates: Dict[str, Embate] = {}
+        self.embates: dict[str, Embate] = {}
         self._call_count = 0
         self._last_call = None
 
-    def _check_embate_trigger(self) -> List[Embate]:
+    def _check_embate_trigger(self) -> list[Embate]:
         """Verifica se deve iniciar embates."""
         now = datetime.now()
 
@@ -1427,7 +1425,7 @@ class MemoryStorage:
 
         return embates
 
-    async def save(self, embate: Embate) -> Dict:
+    async def save(self, embate: Embate) -> dict:
         """Salva um embate."""
         if not embate.id:
             embate.id = f"local-{datetime.now().isoformat()}"
@@ -1453,11 +1451,11 @@ class MemoryStorage:
 
         return {"data": {"id": embate.id}}
 
-    async def get(self, id: str) -> Optional[Embate]:
+    async def get(self, id: str) -> Embate | None:
         """Busca um embate por ID."""
         return self.embates.get(id)
 
-    async def list(self) -> List[Embate]:
+    async def list(self) -> list[Embate]:
         """Lista todos os embates."""
         return list(self.embates.values())
 

@@ -2,20 +2,21 @@
 Gerenciador de embates.
 """
 
-from datetime import datetime
-from typing import Dict, List, Optional, Any
 import json
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from core.refactoring_limits_checker import RefactoringLimitsChecker
 
 from .models import Embate
 from .storage import SupabaseStorage
-from core.refactoring_limits_checker import RefactoringLimitsChecker
 
 
 class ConflictResolver:
     """Resolve conflitos entre embates."""
 
     def __init__(self):
-        self.conflitos: List[Dict] = []
+        self.conflitos: list[dict] = []
 
     def detectar_conflito(self, embate1: Embate, embate2: Embate) -> bool:
         """Detecta conflito entre dois embates."""
@@ -54,7 +55,7 @@ class ConflictResolver:
 class EmbateManager:
     """Gerencia embates."""
 
-    def __init__(self, storage: Optional[SupabaseStorage] = None):
+    def __init__(self, storage: SupabaseStorage | None = None):
         """
         Inicializa o gerenciador.
 
@@ -64,7 +65,7 @@ class EmbateManager:
         self.storage = storage
         self.resolver = ConflictResolver()
 
-    async def create_embate(self, embate: Embate) -> Dict:
+    async def create_embate(self, embate: Embate) -> dict:
         """
         Cria um novo embate.
 
@@ -92,7 +93,7 @@ class EmbateManager:
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
-    async def get_embate(self, id: str) -> Optional[Embate]:
+    async def get_embate(self, id: str) -> Embate | None:
         """
         Busca um embate por ID.
 
@@ -106,7 +107,7 @@ class EmbateManager:
             return await self.storage.get(id)
         return None
 
-    async def list_embates(self) -> List[Embate]:
+    async def list_embates(self) -> list[Embate]:
         """
         Lista todos os embates.
 
@@ -117,7 +118,7 @@ class EmbateManager:
             return await self.storage.list()
         return []
 
-    async def search_embates(self, query: str) -> List[Embate]:
+    async def search_embates(self, query: str) -> list[Embate]:
         """
         Busca embates por texto.
 
@@ -138,7 +139,7 @@ class EmbateManager:
             or any(query in arg.conteudo.lower() for arg in e.argumentos)
         ]
 
-    async def update_embate(self, id: str, updates: Dict) -> Dict:
+    async def update_embate(self, id: str, updates: dict) -> dict:
         """
         Atualiza um embate.
 
@@ -172,7 +173,7 @@ class EmbateManager:
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
-    async def export_embates(self, filters: Dict = None) -> List[Dict]:
+    async def export_embates(self, filters: dict = None) -> list[dict]:
         """
         Exporta embates com filtros.
 
@@ -213,7 +214,7 @@ class EmbateManager:
             for e in embates
         ]
 
-    async def detect_hallucination(self, embate: Embate) -> Dict[str, Any]:
+    async def detect_hallucination(self, embate: Embate) -> dict[str, Any]:
         """
         Detecta possíveis alucinações em um embate.
 
@@ -258,7 +259,7 @@ class EmbateManager:
                 # Verifica datas dos argumentos
                 if arg.data < embate.data_inicio:
                     hallucination_indicators["inconsistencias"].append(
-                        f"Argumento com data anterior ao início do embate"
+                        "Argumento com data anterior ao início do embate"
                     )
                     hallucination_indicators["score"] += 0.3
 
@@ -300,7 +301,7 @@ class EmbateManager:
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
-    async def create_implementation_embate(self) -> Dict:
+    async def create_implementation_embate(self) -> dict:
         """
         Cria um embate para decidir qual implementação priorizar.
 
@@ -415,7 +416,7 @@ class RefactoringManager:
     def __init__(self):
         self.limits_checker = RefactoringLimitsChecker()
 
-    async def analyze_directory(self, directory: str) -> Dict[str, Any]:
+    async def analyze_directory(self, directory: str) -> dict[str, Any]:
         """Analisa um diretório e retorna recomendações"""
 
         metrics = {

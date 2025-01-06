@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List, Optional
 class EmbateEvent:
     """Representa um evento do sistema de embates."""
 
-    def __init__(self, tipo: str, dados: Dict[str, Any], timestamp: Optional[datetime] = None):
+    def __init__(self, tipo: str, dados: dict[str, Any], timestamp: datetime | None = None):
         """
         Inicializa o evento.
 
@@ -22,7 +22,7 @@ class EmbateEvent:
         self.dados = dados
         self.timestamp = timestamp or datetime.now()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Converte o evento para dicionário."""
         return {"tipo": self.tipo, "dados": self.dados, "timestamp": self.timestamp.isoformat()}
 
@@ -32,8 +32,8 @@ class EmbateEventManager:
 
     def __init__(self):
         """Inicializa o gerenciador de eventos."""
-        self.handlers: Dict[str, List[Callable]] = {}
-        self.eventos: List[EmbateEvent] = []
+        self.handlers: dict[str, list[Callable]] = {}
+        self.eventos: list[EmbateEvent] = []
 
     def register_handler(self, tipo: str, handler: Callable) -> None:
         """
@@ -80,10 +80,10 @@ class EmbateEventManager:
 
     def get_eventos(
         self,
-        tipo: Optional[str] = None,
-        inicio: Optional[datetime] = None,
-        fim: Optional[datetime] = None,
-    ) -> List[EmbateEvent]:
+        tipo: str | None = None,
+        inicio: datetime | None = None,
+        fim: datetime | None = None,
+    ) -> list[EmbateEvent]:
         """
         Retorna eventos filtrados.
 
@@ -112,7 +112,7 @@ class EmbateEventManager:
         """Limpa lista de eventos."""
         self.eventos = []
 
-    def export_eventos(self) -> List[Dict[str, Any]]:
+    def export_eventos(self) -> list[dict[str, Any]]:
         """
         Exporta eventos como dicionários.
 
@@ -126,7 +126,7 @@ class HallucinationEvent(EmbateEvent):
     """Evento específico para detecção de alucinações."""
 
     def __init__(
-        self, embate_id: str, indicators: Dict[str, Any], timestamp: Optional[datetime] = None
+        self, embate_id: str, indicators: dict[str, Any], timestamp: datetime | None = None
     ):
         """
         Inicializa o evento de alucinação.

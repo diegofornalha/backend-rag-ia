@@ -2,10 +2,10 @@
 Métricas do sistema.
 """
 
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
-import time
 
 # Constantes
 MAX_TOOLS = 3  # Limite máximo de ferramentas
@@ -33,11 +33,11 @@ class Metrica:
     nome: str
     valor: float
     timestamp: datetime
-    tags: Dict[str, str] = None
+    tags: dict[str, str] = None
     tools_count: int = 0
     modo_contencao: bool = False
     embate_ativo: bool = True
-    tema_atual: Optional[str] = None
+    tema_atual: str | None = None
 
     def incrementar_tools(self) -> bool:
         """
@@ -101,7 +101,7 @@ class CacheMetric:
     hits: int = 0
     misses: int = 0
     tamanho: int = 0
-    ultima_limpeza: Optional[datetime] = None
+    ultima_limpeza: datetime | None = None
 
     @property
     def hit_rate(self) -> float:
@@ -114,7 +114,7 @@ class CacheMetric:
 class ResponseTimeMetric:
     """Métrica de tempo de resposta."""
 
-    tempos: List[float] = None
+    tempos: list[float] = None
 
     def __post_init__(self):
         if self.tempos is None:
@@ -125,7 +125,7 @@ class ResponseTimeMetric:
         tempo = (fim - inicio).total_seconds() * 1000  # em ms
         self.tempos.append(tempo)
 
-    async def get_stats(self) -> Dict:
+    async def get_stats(self) -> dict:
         """Calcula estatísticas dos tempos."""
         if not self.tempos:
             return {"avg_response_time": 0, "p95_response_time": 0, "p99_response_time": 0}
@@ -155,7 +155,7 @@ class SearchAccuracyMetric:
         """Registra resultado irrelevante."""
         self.irrelevantes += 1
 
-    async def get_stats(self) -> Dict:
+    async def get_stats(self) -> dict:
         """Calcula estatísticas de precisão."""
         total = self.relevantes + self.irrelevantes
         return {
@@ -171,8 +171,8 @@ class DependencyMetric:
     """Métrica de dependências."""
 
     conflicts: int = 0
-    outdated: List[str] = None
-    incompatible: List[str] = None
+    outdated: list[str] = None
+    incompatible: list[str] = None
 
     def __post_init__(self):
         if self.outdated is None:
@@ -185,7 +185,7 @@ class DependencyMetric:
         # Implementação simplificada por enquanto
         pass
 
-    async def get_stats(self) -> Dict:
+    async def get_stats(self) -> dict:
         """Retorna estatísticas de dependências."""
         return {
             "conflicts": self.conflicts,
@@ -205,13 +205,13 @@ class MetricsCollector:
             janela_retencao: Dias para manter métricas
         """
         self.janela_retencao = janela_retencao
-        self.metricas: List[Metrica] = []
+        self.metricas: list[Metrica] = []
         self.cache_metrics = CacheMetric()
         self.response_time = ResponseTimeMetric()
         self.search_accuracy = SearchAccuracyMetric()
         self.dependency = DependencyMetric()
 
-    def registrar(self, nome: str, valor: float, tags: Dict[str, str] = None) -> None:
+    def registrar(self, nome: str, valor: float, tags: dict[str, str] = None) -> None:
         """
         Registra uma nova métrica.
 
@@ -251,8 +251,8 @@ class MetricsCollector:
         self.cache_metrics.ultima_limpeza = datetime.now()
 
     def get_metricas(
-        self, nome: Optional[str] = None, tags: Dict[str, str] = None
-    ) -> List[Metrica]:
+        self, nome: str | None = None, tags: dict[str, str] = None
+    ) -> list[Metrica]:
         """
         Busca métricas com filtros.
 
@@ -273,7 +273,7 @@ class MetricsCollector:
 
         return metricas
 
-    def get_estatisticas(self, nome: str, periodo: timedelta = None) -> Dict:
+    def get_estatisticas(self, nome: str, periodo: timedelta = None) -> dict:
         """
         Calcula estatísticas de uma métrica.
 
@@ -301,7 +301,7 @@ class MetricsCollector:
             "max": max(valores),
         }
 
-    def get_cache_metrics(self) -> Dict:
+    def get_cache_metrics(self) -> dict:
         """
         Retorna métricas do cache.
 
@@ -320,7 +320,7 @@ class MetricsCollector:
         """Coleta todas as métricas."""
         await self.dependency.check_dependencies()
 
-    async def generate_report(self) -> Dict:
+    async def generate_report(self) -> dict:
         """Gera relatório com todas as métricas."""
         return {
             "response_time": await self.response_time.get_stats(),
@@ -329,7 +329,7 @@ class MetricsCollector:
             "dependencies": await self.dependency.get_stats(),
         }
 
-    async def check_alerts(self) -> List[str]:
+    async def check_alerts(self) -> list[str]:
         """Verifica alertas críticos."""
         alertas = []
 

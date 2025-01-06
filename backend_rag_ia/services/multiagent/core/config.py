@@ -2,8 +2,10 @@
 Configurações específicas do sistema multiagente.
 """
 
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 from pydantic import BaseModel
+
 from ....config.settings import get_settings
 
 
@@ -23,7 +25,7 @@ class LLMConfig(BaseModel):
     max_tokens: int = 1024
     top_p: float = 0.9
     top_k: int = 40
-    api_key: Optional[str] = None
+    api_key: str | None = None
 
 
 class MultiAgentConfig(BaseModel):
@@ -52,7 +54,7 @@ def get_multiagent_config() -> MultiAgentConfig:
     return MultiAgentConfig(**config_dict)
 
 
-def update_config(updates: Dict[str, Any]) -> None:
+def update_config(updates: dict[str, Any]) -> None:
     """
     Atualiza configurações em runtime.
     Útil para testes e ajustes dinâmicos.

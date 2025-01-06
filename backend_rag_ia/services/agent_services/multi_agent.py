@@ -2,12 +2,13 @@
 Sistema multiagente usando Gemini.
 """
 
-from typing import Dict, Any, Optional, List
 import asyncio
 import logging
+from typing import Any, Dict, List, Optional
+
 import google.generativeai as genai
 
-from ...engine.llms.gemini_config import get_model_config, GENERATION_CONFIG
+from ...engine.llms.gemini_config import GENERATION_CONFIG, get_model_config
 from ...engine.llms.tracker import LlmTracker
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ class GeminiAgent:
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel("gemini-pro")
 
-    async def run(self, task: str, **kwargs) -> Dict[str, Any]:
+    async def run(self, task: str, **kwargs) -> dict[str, Any]:
         """Executa uma tarefa usando Gemini."""
         try:
             response = self.model.generate_content(task)
@@ -34,7 +35,7 @@ class GeminiAgent:
 class MultiAgentSystem:
     """Sistema multiagente usando Gemini."""
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """Inicializa o sistema multiagente."""
         self.config = config or get_model_config()
         self.api_key = self.config.get("api_key")
@@ -44,7 +45,7 @@ class MultiAgentSystem:
         self.agents = self._setup_agents()
         self.tracker = LlmTracker()
 
-    def _setup_agents(self) -> Dict[str, GeminiAgent]:
+    def _setup_agents(self) -> dict[str, GeminiAgent]:
         """Configura os agentes do sistema."""
         return {
             "researcher": GeminiAgent("researcher", self.api_key),
@@ -54,8 +55,8 @@ class MultiAgentSystem:
         }
 
     async def process_task(
-        self, task: str, context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, task: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Processa uma tarefa usando o sistema multiagente."""
         try:
             # Pipeline de processamento
@@ -77,7 +78,7 @@ class MultiAgentSystem:
             logger.error(f"Erro no processamento: {e}")
             return {"error": str(e)}
 
-    async def generate_response(self, prompt: str) -> Dict[str, Any]:
+    async def generate_response(self, prompt: str) -> dict[str, Any]:
         """Gera uma resposta usando o agente sintetizador."""
         try:
             agent = self.agents["synthesizer"]
@@ -88,7 +89,7 @@ class MultiAgentSystem:
             logger.error(f"Erro na geração: {e}")
             return {"error": str(e)}
 
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """Retorna o status do sistema."""
         return {
             "agents": list(self.agents.keys()),

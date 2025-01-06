@@ -2,7 +2,8 @@
 Gerenciador de busca semântica.
 """
 
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
+
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -19,7 +20,7 @@ class SemanticSearchManager:
         """
         self.embedding_model = embedding_model
 
-    def search(self, query: str, documents: List[Dict], k: int = 5) -> List[Dict]:
+    def search(self, query: str, documents: list[dict], k: int = 5) -> list[dict]:
         """
         Realiza busca semântica.
 
@@ -51,7 +52,7 @@ class SemanticSearchManager:
         similarities = cosine_similarity([query_embedding], doc_embeddings)[0]
 
         # Ordena documentos por similaridade
-        doc_scores = list(zip(documents, similarities))
+        doc_scores = list(zip(documents, similarities, strict=False))
         doc_scores.sort(key=lambda x: x[1], reverse=True)
 
         return [doc for doc, _ in doc_scores[:k]]
@@ -73,8 +74,8 @@ class SemanticSearchManager:
         return np.random.rand(384)  # Dimensão padrão
 
     def batch_search(
-        self, queries: List[str], documents: List[Dict], k: int = 5
-    ) -> List[List[Dict]]:
+        self, queries: list[str], documents: list[dict], k: int = 5
+    ) -> list[list[dict]]:
         """
         Realiza múltiplas buscas em batch.
 
@@ -91,7 +92,7 @@ class SemanticSearchManager:
             results.append(self.search(query, documents, k))
         return results
 
-    def index_documents(self, documents: List[Dict]) -> List[Dict]:
+    def index_documents(self, documents: list[dict]) -> list[dict]:
         """
         Indexa documentos gerando embeddings.
 

@@ -2,10 +2,11 @@
 Comandos CLI para gerenciamento de embates.
 """
 
-import click
 from datetime import datetime
 
-from .models import Embate, Argumento
+import click
+
+from .models import Argumento, Embate
 from .storage import SupabaseStorage
 
 

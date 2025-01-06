@@ -1,15 +1,16 @@
-import click
+import json
+import os
 import subprocess
 from datetime import datetime
-import os
-import json
 from typing import Optional
 
-from ..templates.embate_templates import EmbateTemplates
-from ..storage.embates_storage import EmbatesStorage
-from ..notifications.notifier import EmbatesNotifier, LoggingHandler, FileHandler
-from ..reports.report_generator import ReportGenerator
+import click
+
 from ..metrics.workflow_metrics import WorkflowMetrics
+from ..notifications.notifier import EmbatesNotifier, FileHandler, LoggingHandler
+from ..reports.report_generator import ReportGenerator
+from ..storage.embates_storage import EmbatesStorage
+from ..templates.embate_templates import EmbateTemplates
 
 
 def run_git_command(command: str) -> tuple[int, str]:
@@ -39,8 +40,8 @@ def iniciar_fluxo(
     titulo: str,
     contexto: str,
     autor: str,
-    branch: Optional[str] = None,
-    commit_msg: Optional[str] = None,
+    branch: str | None = None,
+    commit_msg: str | None = None,
 ):
     """Inicia um novo fluxo de trabalho com embate"""
     # 1. Cria/muda para branch se especificada
@@ -124,7 +125,7 @@ def iniciar_fluxo(
     "--novo_estado", type=click.Choice(["em_andamento", "bloqueado", "fechado"]), required=True
 )
 @click.option("--commit-msg", help="Mensagem de commit personalizada")
-def atualizar_estado(embate_id: str, novo_estado: str, commit_msg: Optional[str] = None):
+def atualizar_estado(embate_id: str, novo_estado: str, commit_msg: str | None = None):
     """Atualiza estado do embate e faz commit + push"""
     # 1. Carrega embate
     storage = EmbatesStorage("dados/embates", "dados/backup")
@@ -177,7 +178,7 @@ def atualizar_estado(embate_id: str, novo_estado: str, commit_msg: Optional[str]
 
 @workflow.command()
 @click.option("--commit-msg", help="Mensagem de commit personalizada")
-def gerar_relatorios(commit_msg: Optional[str] = None):
+def gerar_relatorios(commit_msg: str | None = None):
     """Gera relatórios e faz commit + push"""
     # 1. Gera relatórios
     metrics = WorkflowMetrics()
@@ -192,7 +193,7 @@ def gerar_relatorios(commit_msg: Optional[str] = None):
         return
 
     # Faz commit
-    msg = commit_msg or f"docs: atualiza relatórios de embates"
+    msg = commit_msg or "docs: atualiza relatórios de embates"
     code, output = run_git_command(f'git commit -m "{msg}"')
     if code != 0:
         click.echo(f"Erro ao fazer commit: {output}")

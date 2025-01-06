@@ -12,10 +12,10 @@ class ResultadoBusca:
     """Modelo para resultados de busca."""
 
     query: str
-    resultados: List[str]
+    resultados: list[str]
     tempo_resposta: float
     timestamp: datetime
-    feedback: Optional[str] = None
+    feedback: str | None = None
 
 
 @dataclass
@@ -27,7 +27,7 @@ class LatencyMetric:
     p99: float = 0.0
     min: float = float("inf")
     max: float = 0.0
-    amostras: List[float] = None
+    amostras: list[float] = None
 
     def __post_init__(self):
         if self.amostras is None:
@@ -58,15 +58,15 @@ class SearchQualityMonitor:
     """Monitor de qualidade de busca."""
 
     def __init__(self):
-        self.buscas: List[ResultadoBusca] = []
+        self.buscas: list[ResultadoBusca] = []
         self.latency_metrics = LatencyMetric()
 
     def registrar_busca(
         self,
         query: str,
-        resultados: List[str],
+        resultados: list[str],
         tempo_resposta: float,
-        feedback: Optional[str] = None,
+        feedback: str | None = None,
     ) -> None:
         """
         Registra uma busca realizada.
@@ -87,7 +87,7 @@ class SearchQualityMonitor:
         self.buscas.append(busca)
         self.latency_metrics.adicionar_amostra(tempo_resposta)
 
-    def get_metricas(self) -> Dict:
+    def get_metricas(self) -> dict:
         """
         Calcula métricas de qualidade.
 
@@ -129,7 +129,7 @@ class SearchQualityMonitor:
             },
         }
 
-    def get_queries_problematicas(self) -> List[str]:
+    def get_queries_problematicas(self) -> list[str]:
         """
         Identifica queries problemáticas.
 

@@ -1,13 +1,13 @@
 import pprint
 from typing import Optional
 
-from agentops.log_config import logger
-from agentops.event import LLMEvent, ErrorEvent
-from agentops.session import Session
-from agentops.helpers import get_ISO_time, check_call_stack_for_agent_id
+from agentops.event import ErrorEvent, LLMEvent
+from agentops.helpers import check_call_stack_for_agent_id, get_ISO_time
 from agentops.llms.providers.instrumented_provider import InstrumentedProvider
-from agentops.time_travel import fetch_completion_override_from_time_travel_cache
+from agentops.log_config import logger
+from agentops.session import Session
 from agentops.singleton import singleton
+from agentops.time_travel import fetch_completion_override_from_time_travel_cache
 
 
 @singleton
@@ -41,13 +41,13 @@ class LiteLLMProvider(InstrumentedProvider):
             completions.AsyncCompletions.create = self.original_oai_create_async
 
     def handle_response(
-        self, response, kwargs, init_timestamp, session: Optional[Session] = None
+        self, response, kwargs, init_timestamp, session: Session | None = None
     ) -> dict:
         """Handle responses for OpenAI versions >v1.0.0"""
+        from litellm.utils import CustomStreamWrapper
         from openai import AsyncStream, Stream
         from openai.resources import AsyncCompletions
         from openai.types.chat import ChatCompletionChunk
-        from litellm.utils import CustomStreamWrapper
 
         llm_event = LLMEvent(init_timestamp=init_timestamp, params=kwargs)
         if session is not None:
@@ -169,10 +169,10 @@ class LiteLLMProvider(InstrumentedProvider):
 
     def _override_completion(self):
         import litellm
+        from openai.resources.chat import completions
         from openai.types.chat import (
             ChatCompletion,
         )  # Note: litellm calls all LLM APIs using the OpenAI format
-        from openai.resources.chat import completions
 
         self.original_create = litellm.completion
         self.original_oai_create = completions.Completions.create
@@ -201,10 +201,10 @@ class LiteLLMProvider(InstrumentedProvider):
 
     def _override_async_completion(self):
         import litellm
+        from openai.resources.chat import completions
         from openai.types.chat import (
             ChatCompletion,
         )  # Note: litellm calls all LLM APIs using the OpenAI format
-        from openai.resources.chat import completions
 
         self.original_create_async = litellm.acompletion
         self.original_oai_create_async = completions.AsyncCompletions.create

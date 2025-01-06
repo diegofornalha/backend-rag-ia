@@ -2,8 +2,9 @@
 Provedores de modelos de linguagem.
 """
 
+from typing import Any, Dict, Optional
+
 import google.generativeai as genai
-from typing import Dict, Any, Optional
 
 from .logging import get_multiagent_logger
 
@@ -66,7 +67,7 @@ class GeminiProvider:
             logger.error(f"Erro ao analisar conteúdo: {e}")
             raise
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         """
         Retorna configuração do provedor.
 

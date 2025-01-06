@@ -12,7 +12,7 @@ from .models import Embate
 class EmbateHooks:
     """Hooks para o sistema de embates."""
 
-    def __init__(self, manager: Optional[EmbateManager] = None):
+    def __init__(self, manager: EmbateManager | None = None):
         """
         Inicializa os hooks.
 
@@ -48,14 +48,14 @@ class EmbateHooks:
         result = await self.manager.detect_hallucination(embate)
         if result["status"] == "success" and result["is_hallucination"]:
             raise ValueError(
-                f"Possível alucinação detectada:\n"
+                "Possível alucinação detectada:\n"
                 + "\n".join(
                     [f"- {i}" for i in result["indicators"]["inconsistencias"]]
                     + [f"- {d}" for d in result["indicators"]["duplicidades"]]
                 )
             )
 
-    async def post_create(self, embate: Dict[str, Any]) -> None:
+    async def post_create(self, embate: dict[str, Any]) -> None:
         """
         Hook executado após a criação de um embate.
 
@@ -65,7 +65,7 @@ class EmbateHooks:
         # Notifica criação
         print(f"Embate criado: {embate['titulo']}")
 
-    async def pre_update(self, embate_id: str, updates: Dict[str, Any]) -> None:
+    async def pre_update(self, embate_id: str, updates: dict[str, Any]) -> None:
         """
         Hook executado antes da atualização de um embate.
 
@@ -89,7 +89,7 @@ class EmbateHooks:
             updates["metadata"] = {}
         updates["metadata"]["atualizado_em"] = datetime.now().isoformat()
 
-    async def post_update(self, embate: Dict[str, Any]) -> None:
+    async def post_update(self, embate: dict[str, Any]) -> None:
         """
         Hook executado após a atualização de um embate.
 
@@ -116,7 +116,7 @@ class EmbateHooks:
         # Normaliza query
         return query.lower().strip()
 
-    async def post_search(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def post_search(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Hook executado após a busca de embates.
 
@@ -129,7 +129,7 @@ class EmbateHooks:
         # Ordena por data
         return sorted(results, key=lambda x: x.get("data_inicio", ""), reverse=True)
 
-    async def pre_export(self, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def pre_export(self, filters: dict[str, Any] | None = None) -> dict[str, Any]:
         """
         Hook executado antes da exportação de embates.
 
@@ -149,7 +149,7 @@ class EmbateHooks:
 
         return filters or {}
 
-    async def post_export(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def post_export(self, results: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Hook executado após a exportação de embates.
 

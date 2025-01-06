@@ -17,9 +17,9 @@ class Pipeline(BaseModel):
     nome: str
     status: str
     inicio: datetime
-    fim: Optional[datetime] = None
-    etapas: List[str] = []
-    metricas: Dict = {}
+    fim: datetime | None = None
+    etapas: list[str] = []
+    metricas: dict = {}
     tools_count: int = 0
 
     def incrementar_tools(self) -> bool:
@@ -43,7 +43,7 @@ class PipelineValidator:
             "status_validos": ["em_andamento", "sucesso", "falha"],
         }
 
-    def validar_pipeline(self, pipeline: Pipeline) -> List[str]:
+    def validar_pipeline(self, pipeline: Pipeline) -> list[str]:
         """
         Valida um pipeline.
 
@@ -75,7 +75,7 @@ class PipelineValidator:
 
         return erros
 
-    def validar_metricas(self, pipeline: Pipeline) -> List[str]:
+    def validar_metricas(self, pipeline: Pipeline) -> list[str]:
         """
         Valida métricas de um pipeline.
 
@@ -106,7 +106,7 @@ class DependencyResolver:
     """Resolve dependências entre pipelines."""
 
     def __init__(self):
-        self.dependencias: Dict[str, List[str]] = {}
+        self.dependencias: dict[str, list[str]] = {}
 
     def adicionar_dependencia(self, pipeline: str, depende_de: str) -> None:
         """
@@ -120,7 +120,7 @@ class DependencyResolver:
             self.dependencias[pipeline] = []
         self.dependencias[pipeline].append(depende_de)
 
-    def get_dependencias(self, pipeline: str) -> List[str]:
+    def get_dependencias(self, pipeline: str) -> list[str]:
         """
         Retorna dependências de um pipeline.
 
@@ -166,11 +166,11 @@ class CICDMonitor:
     """Monitor de pipelines de CI/CD."""
 
     def __init__(self):
-        self.pipelines: List[Pipeline] = []
+        self.pipelines: list[Pipeline] = []
         self.resolver = DependencyResolver()
         self.validator = PipelineValidator()
 
-    def iniciar_pipeline(self, nome: str, depende_de: Optional[List[str]] = None) -> Pipeline:
+    def iniciar_pipeline(self, nome: str, depende_de: list[str] | None = None) -> Pipeline:
         """
         Inicia um novo pipeline.
 
@@ -227,7 +227,7 @@ class CICDMonitor:
         """
         pipeline.metricas[nome] = valor
 
-    def get_metricas(self) -> Dict:
+    def get_metricas(self) -> dict:
         """
         Retorna métricas agregadas dos pipelines.
 

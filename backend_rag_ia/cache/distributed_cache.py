@@ -1,8 +1,10 @@
-from typing import Any, Dict, Optional, List
 import json
 import logging
-import redis
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import redis
+
 from ..config.redis_config import RedisConfig
 from ..monitoring.metrics import MetricsCollector
 
@@ -59,7 +61,7 @@ class DistributedCache:
             logger.error(f"Erro ao deserializar valor: {str(e)}")
             raise
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """
         Obtém valor do cache
 
@@ -82,7 +84,7 @@ class DistributedCache:
             logger.error(f"Erro ao obter valor do cache: {str(e)}")
             return None
 
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> bool:
         """
         Armazena valor no cache
 
@@ -139,7 +141,7 @@ class DistributedCache:
             logger.error(f"Erro ao limpar cache: {str(e)}")
             return False
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """
         Obtém estatísticas do cache
 

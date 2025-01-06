@@ -1,16 +1,17 @@
-from typing import Dict, Optional
 import logging
 from datetime import datetime
-from .embates_metrics import EmbatesMetrics, EmbateMetric
+from typing import Dict, Optional
+
+from ..config.embates_config import EmbatesConfig
 from .embates_cache import EmbatesCache
 from .embates_counter import GlobalEmbatesCounter
-from ..config.embates_config import EmbatesConfig
+from .embates_metrics import EmbateMetric, EmbatesMetrics
 
 logger = logging.getLogger(__name__)
 
 
 class UnifiedMonitor:
-    def __init__(self, config: Optional[EmbatesConfig] = None):
+    def __init__(self, config: EmbatesConfig | None = None):
         self.config = config or EmbatesConfig.get_default()
 
         # Configuração de logging
@@ -27,8 +28,8 @@ class UnifiedMonitor:
         operation: str,
         duration_ms: float,
         success: bool,
-        error_type: Optional[str] = None,
-        details: Optional[Dict] = None,
+        error_type: str | None = None,
+        details: dict | None = None,
     ) -> None:
         """Registra uma operação no sistema"""
         # Incrementa contador
@@ -46,15 +47,15 @@ class UnifiedMonitor:
         )
         self.metrics.record_operation(metric)
 
-    def check_cache(self, embate_data: Dict) -> Optional[Dict]:
+    def check_cache(self, embate_data: dict) -> dict | None:
         """Verifica cache para um embate"""
         return self.cache.get_validation_result(embate_data)
 
-    def store_in_cache(self, embate_data: Dict, result: Dict) -> None:
+    def store_in_cache(self, embate_data: dict, result: dict) -> None:
         """Armazena resultado no cache"""
         self.cache.store_validation(embate_data, result)
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Retorna estatísticas completas do sistema"""
         return {
             "counter": self.counter.get_statistics(),

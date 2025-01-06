@@ -1,9 +1,9 @@
-from functools import lru_cache
-from typing import Literal, Dict, Any
 import os
+from functools import lru_cache
+from typing import Any, Dict, Literal
 
-from pydantic_settings import BaseSettings
 from pydantic import ConfigDict
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     LOCAL_URL: str = "http://localhost:10000"
 
     # Configurações do Sistema MultiAgente
-    MULTIAGENT_CONFIG: Dict[str, Any] = {
+    MULTIAGENT_CONFIG: dict[str, Any] = {
         "gemini_api_key": os.getenv("GEMINI_API_KEY"),
         "max_retries": 3,
         "timeout": 30,
@@ -44,14 +44,14 @@ class Settings(BaseSettings):
     }
 
     # Configurações dos Agentes
-    AGENT_CONFIG: Dict[str, Any] = {
+    AGENT_CONFIG: dict[str, Any] = {
         "max_concurrent_tasks": 5,
         "task_timeout": 60,
         "retry_delay": 1.0,
     }
 
     # Configurações do LLM
-    LLM_CONFIG: Dict[str, Any] = {"model": "gemini-pro", "temperature": 0.7, "max_tokens": 1024}
+    LLM_CONFIG: dict[str, Any] = {"model": "gemini-pro", "temperature": 0.7, "max_tokens": 1024}
 
     model_config = ConfigDict(env_file=".env", case_sensitive=True, extra="allow")
 

@@ -10,7 +10,7 @@ class BaseProvider(ABC):
     """Classe base para providers de LLMs."""
 
     @abstractmethod
-    def chat(self, messages: List[Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
+    def chat(self, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
         """
         Processa uma conversa com o modelo.
 
@@ -24,7 +24,7 @@ class BaseProvider(ABC):
         pass
 
     @abstractmethod
-    def generate(self, prompt: str, **kwargs: Any) -> Dict[str, Any]:
+    def generate(self, prompt: str, **kwargs: Any) -> dict[str, Any]:
         """
         Gera texto a partir de um prompt.
 

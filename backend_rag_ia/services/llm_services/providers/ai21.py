@@ -2,14 +2,13 @@ import inspect
 import pprint
 from typing import Optional
 
-from agentops.llms.providers.instrumented_provider import InstrumentedProvider
-from agentops.time_travel import fetch_completion_override_from_time_travel_cache
-
-from agentops.event import ErrorEvent, LLMEvent, ActionEvent, ToolEvent
-from agentops.session import Session
-from agentops.log_config import logger
+from agentops.event import ActionEvent, ErrorEvent, LLMEvent, ToolEvent
 from agentops.helpers import check_call_stack_for_agent_id, get_ISO_time
+from agentops.llms.providers.instrumented_provider import InstrumentedProvider
+from agentops.log_config import logger
+from agentops.session import Session
 from agentops.singleton import singleton
+from agentops.time_travel import fetch_completion_override_from_time_travel_cache
 
 
 @singleton
@@ -23,13 +22,13 @@ class AI21Provider(InstrumentedProvider):
         super().__init__(client)
         self._provider_name = "AI21"
 
-    def handle_response(self, response, kwargs, init_timestamp, session: Optional[Session] = None):
+    def handle_response(self, response, kwargs, init_timestamp, session: Session | None = None):
         """Handle responses for AI21"""
-        from ai21.stream.stream import Stream
-        from ai21.stream.async_stream import AsyncStream
         from ai21.models.chat.chat_completion_chunk import ChatCompletionChunk
         from ai21.models.chat.chat_completion_response import ChatCompletionResponse
         from ai21.models.responses.answer_response import AnswerResponse
+        from ai21.stream.async_stream import AsyncStream
+        from ai21.stream.stream import Stream
 
         llm_event = LLMEvent(init_timestamp=init_timestamp, params=kwargs)
         action_event = ActionEvent(init_timestamp=init_timestamp, params=kwargs)
@@ -228,12 +227,12 @@ class AI21Provider(InstrumentedProvider):
             and self.original_answer_async is not None
         ):
             from ai21.clients.studio.resources.chat import (
-                ChatCompletions,
                 AsyncChatCompletions,
+                ChatCompletions,
             )
             from ai21.clients.studio.resources.studio_answer import (
-                StudioAnswer,
                 AsyncStudioAnswer,
+                StudioAnswer,
             )
 
             ChatCompletions.create = self.original_create

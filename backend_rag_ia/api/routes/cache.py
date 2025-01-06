@@ -1,9 +1,10 @@
 """Rotas para gerenciamento do cache distribuído."""
 
+import os
+from datetime import datetime
+
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field
-from datetime import datetime
-import os
 
 router = APIRouter(prefix="/cache", tags=["Cache"])
 

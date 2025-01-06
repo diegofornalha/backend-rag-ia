@@ -3,7 +3,7 @@ Configurações do sistema multiagente.
 """
 
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Configurações do Gemini
 GEMINI_CONFIG = {
@@ -72,6 +72,6 @@ MONITORING_CONFIG = {
 }
 
 
-def get_agent_config(agent_name: str) -> Dict[str, Any]:
+def get_agent_config(agent_name: str) -> dict[str, Any]:
     """Retorna a configuração específica de um agente."""
     return AGENT_CONFIG.get(agent_name, {})

@@ -2,15 +2,15 @@
 Interfaces base para os serviços do sistema.
 """
 
-from typing import Dict, Any, List, Optional
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
 
 
 class SuggestionInterface(ABC):
     """Interface base para serviços de sugestão."""
 
     @abstractmethod
-    async def process(self, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def process(self, context: dict[str, Any]) -> dict[str, Any]:
         """
         Processa o contexto e gera sugestões.
 
@@ -37,7 +37,7 @@ class SuggestionInterface(ABC):
         pass
 
     @abstractmethod
-    def get_capabilities(self) -> List[str]:
+    def get_capabilities(self) -> list[str]:
         """
         Retorna lista de capacidades do serviço.
 

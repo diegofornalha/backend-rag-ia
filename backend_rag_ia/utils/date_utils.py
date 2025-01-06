@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
-from typing import Optional, Union
 import re
+from datetime import UTC, datetime, timezone
+from typing import Optional, Union
 
 
 class DateUtils:
@@ -21,7 +21,7 @@ class DateUtils:
     ]
 
     @staticmethod
-    def parse_date(date_str: str) -> Optional[datetime]:
+    def parse_date(date_str: str) -> datetime | None:
         """
         Tenta converter uma string em data usando vários formatos
 
@@ -51,7 +51,7 @@ class DateUtils:
         return None
 
     @staticmethod
-    def format_iso8601(date: Union[datetime, str]) -> Optional[str]:
+    def format_iso8601(date: datetime | str) -> str | None:
         """
         Formata uma data no padrão ISO8601
 
@@ -71,7 +71,7 @@ class DateUtils:
 
             # Garante que tem timezone
             if date.tzinfo is None:
-                date = date.replace(tzinfo=timezone.utc)
+                date = date.replace(tzinfo=UTC)
 
             return date.isoformat()
 
@@ -100,10 +100,10 @@ class DateUtils:
         Returns:
             String no formato ISO8601
         """
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()
 
     @staticmethod
-    def validate_date_range(start: Union[datetime, str], end: Union[datetime, str]) -> bool:
+    def validate_date_range(start: datetime | str, end: datetime | str) -> bool:
         """
         Valida se um intervalo de datas é válido (início <= fim)
 
@@ -128,9 +128,9 @@ class DateUtils:
 
             # Garante que tem timezone
             if start.tzinfo is None:
-                start = start.replace(tzinfo=timezone.utc)
+                start = start.replace(tzinfo=UTC)
             if end.tzinfo is None:
-                end = end.replace(tzinfo=timezone.utc)
+                end = end.replace(tzinfo=UTC)
 
             return start <= end
 
@@ -138,7 +138,7 @@ class DateUtils:
             return False
 
     @staticmethod
-    def format_relative_time(date: Union[datetime, str]) -> str:
+    def format_relative_time(date: datetime | str) -> str:
         """
         Formata uma data em tempo relativo (ex: "há 2 dias")
 
@@ -158,9 +158,9 @@ class DateUtils:
 
             # Garante que tem timezone
             if date.tzinfo is None:
-                date = date.replace(tzinfo=timezone.utc)
+                date = date.replace(tzinfo=UTC)
 
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             diff = now - date
 
             # Formatação

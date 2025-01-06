@@ -1,19 +1,21 @@
 import os
 import sys
-import yaml
-import requests
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
-from dataclasses import dataclass
+
+import requests
+import yaml
+
 from ..config.settings import Settings, get_settings
 
 
 @dataclass
 class RenderValidationResult:
     is_valid: bool
-    errors: List[str]
-    warnings: List[str]
-    suggestions: List[str]
+    errors: list[str]
+    warnings: list[str]
+    suggestions: list[str]
 
 
 class RenderPRValidator:
@@ -22,9 +24,9 @@ class RenderPRValidator:
     def __init__(self):
         self.settings = get_settings()
         self.root_dir = Path(__file__).parent.parent.parent
-        self.errors: List[str] = []
-        self.warnings: List[str] = []
-        self.suggestions: List[str] = []
+        self.errors: list[str] = []
+        self.warnings: list[str] = []
+        self.suggestions: list[str] = []
 
     def validate_render_yaml(self) -> bool:
         """Valida o arquivo render.yaml"""

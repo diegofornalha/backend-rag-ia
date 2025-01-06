@@ -8,6 +8,7 @@ Este módulo contém as rotas para:
 """
 
 from typing import List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
@@ -32,12 +33,12 @@ class SearchResult(BaseModel):
     title: str
     content: str
     score: float = Field(..., ge=0, le=1)
-    highlights: List[str]
+    highlights: list[str]
 
 
 @router.get(
     "/",
-    response_model=List[SearchResult],
+    response_model=list[SearchResult],
     summary="Busca semântica",
     description="""
     Realiza busca semântica nos documentos.
@@ -89,8 +90,8 @@ async def search_documents(
     query: str = Query(..., description="Texto para busca"),
     limit: int = Query(10, ge=1, le=100, description="Número máximo de resultados"),
     min_score: float = Query(0.5, ge=0, le=1, description="Pontuação mínima de relevância"),
-    filters: Optional[str] = Query(None, description="Filtros em formato JSON"),
-) -> List[SearchResult]:
+    filters: str | None = Query(None, description="Filtros em formato JSON"),
+) -> list[SearchResult]:
     """Realiza busca semântica."""
     try:
         # Implementação da busca
@@ -101,7 +102,7 @@ async def search_documents(
 
 @router.get(
     "/similar/{document_id}",
-    response_model=List[SearchResult],
+    response_model=list[SearchResult],
     summary="Busca documentos similares",
     description="""
     Encontra documentos similares a um documento específico.
@@ -135,7 +136,7 @@ async def find_similar(
     document_id: str,
     limit: int = Query(10, ge=1, le=100, description="Número máximo de resultados"),
     min_score: float = Query(0.5, ge=0, le=1, description="Pontuação mínima de similaridade"),
-) -> List[SearchResult]:
+) -> list[SearchResult]:
     """Encontra documentos similares."""
     try:
         # Implementação da busca por similaridade

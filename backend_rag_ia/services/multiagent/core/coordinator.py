@@ -2,11 +2,12 @@
 Coordenador do sistema multiagente.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+from ..agents import AnalystAgent, ImproverAgent, ResearcherAgent, SynthesizerAgent
 from .interfaces import Agent, AgentResponse
-from .providers import GeminiProvider
 from .logging import get_multiagent_logger
-from ..agents import ResearcherAgent, AnalystAgent, ImproverAgent, SynthesizerAgent
+from .providers import GeminiProvider
 
 logger = get_multiagent_logger(__name__)
 
@@ -34,7 +35,7 @@ class AgentCoordinator:
         logger.info("Coordenador inicializado com %d agentes", len(self.agents))
 
     async def process_task(
-        self, task: str, agent_name: str, context: Optional[Dict[str, Any]] = None
+        self, task: str, agent_name: str, context: dict[str, Any] | None = None
     ) -> AgentResponse:
         """
         Processa uma tarefa usando um agente específico.
@@ -65,8 +66,8 @@ class AgentCoordinator:
             return AgentResponse(agent=agent_name, status="error", error=str(e))
 
     async def process_pipeline(
-        self, task: str, pipeline: List[str], context: Optional[Dict[str, Any]] = None
-    ) -> List[AgentResponse]:
+        self, task: str, pipeline: list[str], context: dict[str, Any] | None = None
+    ) -> list[AgentResponse]:
         """
         Processa uma tarefa usando uma pipeline de agentes.
 
@@ -102,7 +103,7 @@ class AgentCoordinator:
 
         return results
 
-    def get_agent_info(self, agent_name: str) -> Optional[Dict[str, Any]]:
+    def get_agent_info(self, agent_name: str) -> dict[str, Any] | None:
         """
         Retorna informações sobre um agente.
 
@@ -118,7 +119,7 @@ class AgentCoordinator:
         agent = self.agents[agent_name]
         return {"name": agent_name, "description": agent.description}
 
-    def list_agents(self) -> List[Dict[str, Any]]:
+    def list_agents(self) -> list[dict[str, Any]]:
         """
         Lista todos os agentes disponíveis.
 

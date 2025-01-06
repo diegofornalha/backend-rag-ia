@@ -4,7 +4,7 @@ Proteção unificada do sistema.
 
 import os
 import uuid
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 
 class UnifiedProtection:
@@ -16,7 +16,7 @@ class UnifiedProtection:
         self.enabled = True
         self.rules = {}
 
-    def add_rule(self, rule_id: str, rule: Dict[str, Any]) -> None:
+    def add_rule(self, rule_id: str, rule: dict[str, Any]) -> None:
         """Adiciona uma regra de proteção."""
         self.rules[rule_id] = rule
 
@@ -25,7 +25,7 @@ class UnifiedProtection:
         if rule_id in self.rules:
             del self.rules[rule_id]
 
-    def check_protection(self, context: Dict[str, Any]) -> bool:
+    def check_protection(self, context: dict[str, Any]) -> bool:
         """Verifica se o contexto está protegido."""
         if not self.enabled:
             return True
@@ -36,7 +36,7 @@ class UnifiedProtection:
 
         return True
 
-    def _check_rule(self, rule: Dict[str, Any], context: Dict[str, Any]) -> bool:
+    def _check_rule(self, rule: dict[str, Any], context: dict[str, Any]) -> bool:
         """Verifica uma regra específica."""
         try:
             condition = rule.get("condition")
@@ -51,7 +51,7 @@ class UnifiedProtection:
         except Exception as e:
             return False
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Retorna o status da proteção."""
         return {"id": self.protection_id, "enabled": self.enabled, "rules": len(self.rules)}
 

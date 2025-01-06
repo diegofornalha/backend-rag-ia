@@ -1,8 +1,9 @@
-from typing import Dict, List, Any, Optional
-from datetime import datetime
 import json
 import logging
-from jsonschema import validate, ValidationError, Draft7Validator
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from jsonschema import Draft7Validator, ValidationError, validate
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +96,7 @@ class SchemaValidator:
             return False
 
     @staticmethod
-    def validate_embate(embate: Dict) -> List[str]:
+    def validate_embate(embate: dict) -> list[str]:
         """
         Valida um embate completo
 
@@ -136,7 +137,7 @@ class SchemaValidator:
         return errors
 
     @staticmethod
-    def validate_json_file(file_path: str) -> List[str]:
+    def validate_json_file(file_path: str) -> list[str]:
         """
         Valida um arquivo JSON
 
@@ -149,7 +150,7 @@ class SchemaValidator:
         errors = []
 
         try:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 data = json.load(f)
                 errors.extend(SchemaValidator.validate_embate(data))
         except json.JSONDecodeError as e:
@@ -173,7 +174,7 @@ class SchemaValidator:
         return date.isoformat()
 
     @staticmethod
-    def sanitize_embate(embate: Dict) -> Dict:
+    def sanitize_embate(embate: dict) -> dict:
         """
         Sanitiza um embate, corrigindo formatos quando possível
 

@@ -1,8 +1,8 @@
-import logging
-from typing import Dict, List, Optional, Callable
-from datetime import datetime, timedelta
 import json
+import logging
 import os
+from datetime import datetime, timedelta
+from typing import Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class FileHandler(NotificationHandler):
         self.notifications_dir = notifications_dir
         os.makedirs(notifications_dir, exist_ok=True)
 
-    def _save_notification(self, notification: Dict) -> None:
+    def _save_notification(self, notification: dict) -> None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"notification_{timestamp}.json"
         path = os.path.join(self.notifications_dir, filename)
@@ -89,9 +89,9 @@ class CallbackHandler(NotificationHandler):
     """Handler que executa callbacks para notificações"""
 
     def __init__(self):
-        self.state_change_callbacks: List[Callable] = []
-        self.deadline_callbacks: List[Callable] = []
-        self.inactivity_callbacks: List[Callable] = []
+        self.state_change_callbacks: list[Callable] = []
+        self.deadline_callbacks: list[Callable] = []
+        self.inactivity_callbacks: list[Callable] = []
 
     def add_state_change_callback(self, callback: Callable) -> None:
         self.state_change_callbacks.append(callback)
@@ -128,9 +128,9 @@ class EmbatesNotifier:
     """Sistema central de notificações"""
 
     def __init__(self):
-        self.handlers: List[NotificationHandler] = []
-        self.deadlines: Dict[str, datetime] = {}
-        self.last_updates: Dict[str, datetime] = {}
+        self.handlers: list[NotificationHandler] = []
+        self.deadlines: dict[str, datetime] = {}
+        self.last_updates: dict[str, datetime] = {}
 
     def add_handler(self, handler: NotificationHandler) -> None:
         """Adiciona um handler de notificação"""

@@ -61,7 +61,7 @@ class ComplexityChecker:
 
         return metricas
 
-    def verificar_limites(self, metricas: ComplexityMetrics) -> List[str]:
+    def verificar_limites(self, metricas: ComplexityMetrics) -> list[str]:
         """
         Verifica se as métricas excedem os limites.
 

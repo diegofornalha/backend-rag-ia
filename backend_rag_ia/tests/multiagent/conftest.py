@@ -2,10 +2,11 @@
 Configurações do pytest para testes do sistema multiagente.
 """
 
-import pytest
 import os
 import sys
 from typing import Generator
+
+import pytest
 
 # Adiciona o diretório raiz ao PYTHONPATH
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))

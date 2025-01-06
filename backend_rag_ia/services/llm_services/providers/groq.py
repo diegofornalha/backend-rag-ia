@@ -1,12 +1,13 @@
 import pprint
 from typing import Optional
 
-from .instrumented_provider import InstrumentedProvider
 from agentops.event import ErrorEvent, LLMEvent
-from agentops.session import Session
+from agentops.helpers import check_call_stack_for_agent_id, get_ISO_time
 from agentops.log_config import logger
-from agentops.helpers import get_ISO_time, check_call_stack_for_agent_id
+from agentops.session import Session
 from agentops.singleton import singleton
+
+from .instrumented_provider import InstrumentedProvider
 
 
 @singleton
@@ -29,7 +30,7 @@ class GroqProvider(InstrumentedProvider):
             completions.Completions.create = self.original_create
             completions.AsyncCompletions.create = self.original_create
 
-    def handle_response(self, response, kwargs, init_timestamp, session: Optional[Session] = None):
+    def handle_response(self, response, kwargs, init_timestamp, session: Session | None = None):
         """Handle responses for OpenAI versions >v1.0.0"""
         from groq import AsyncStream, Stream
         from groq.resources.chat import AsyncCompletions

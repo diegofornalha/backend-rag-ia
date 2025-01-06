@@ -3,17 +3,18 @@ Gerenciador de chamadas sequenciais.
 Monitora e controla o número de chamadas sequenciais para evitar limites do Cursor.
 """
 
-from datetime import datetime
-from typing import Dict, List, Optional
 import json
+import logging
 import os
 import shutil
-import logging
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Dict, List, Optional
+
 from prometheus_client import Counter, Gauge
 
 from ..cli.embates.manager import EmbateManager
-from ..cli.embates.models import Embate, Argumento
+from ..cli.embates.models import Argumento, Embate
 
 
 @dataclass
@@ -24,7 +25,7 @@ class SequentialCallsConfig:
     LIMITE_MAXIMO: int = 25
     TEMPO_RESET: int = 300  # 5 min
     STORAGE_PATH: str = "~/.rag_sequential_calls"
-    NIVEIS_ALERTA: List[int] = [10, 15, 20, 23]
+    NIVEIS_ALERTA: list[int] = [10, 15, 20, 23]
     BACKUP_ENABLED: bool = True
     MAX_BACKUP_FILES: int = 5
     VERSION: str = "2.0.0"
@@ -39,7 +40,7 @@ class ChamadasSequenciaisManager:
     ALERTAS_COUNTER = Counter("rag_chamadas_sequenciais_alertas", "Total de alertas gerados")
 
     def __init__(
-        self, config: Optional[SequentialCallsConfig] = None, storage_path: Optional[str] = None
+        self, config: SequentialCallsConfig | None = None, storage_path: str | None = None
     ):
         """
         Inicializa o gerenciador.
@@ -63,7 +64,7 @@ class ChamadasSequenciaisManager:
 
         self.logger.info(f"ChamadasSequenciaisManager v{self.config.VERSION} iniciado")
 
-    def registrar_chamada(self) -> Optional[Dict]:
+    def registrar_chamada(self) -> dict | None:
         """
         Registra uma nova chamada e verifica limites.
 
@@ -104,7 +105,7 @@ class ChamadasSequenciaisManager:
         self._salvar_estado()
         self.CONTADOR_ATUAL.set(0)
 
-    async def _verificar_alertas(self) -> Optional[Dict]:
+    async def _verificar_alertas(self) -> dict | None:
         """Verifica se deve gerar alertas baseado nos níveis configurados."""
         for nivel in reversed(self.config.NIVEIS_ALERTA):
             if self.contador >= nivel:
@@ -113,7 +114,7 @@ class ChamadasSequenciaisManager:
                 return await self._criar_alerta(nivel)
         return None
 
-    async def _criar_alerta(self, nivel: int) -> Dict:
+    async def _criar_alerta(self, nivel: int) -> dict:
         """Cria alerta para um nível específico."""
         # Determina severidade baseado no nível
         if nivel >= self.config.LIMITE_AVISO:
@@ -251,7 +252,7 @@ class ChamadasSequenciaisManager:
             self.contador = 0
             self.ultima_chamada = None
 
-    def _migrar_estado(self, estado_antigo: Dict) -> None:
+    def _migrar_estado(self, estado_antigo: dict) -> None:
         """Migra estado de versão antiga para atual."""
         self.logger.info(
             f"Migrando estado da versão {estado_antigo.get('version', '1.0.0')} para {self.config.VERSION}"

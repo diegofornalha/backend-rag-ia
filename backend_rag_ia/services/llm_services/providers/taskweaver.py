@@ -1,12 +1,12 @@
+import json
 import pprint
 from typing import Optional
-import json
 
-from agentops.event import ErrorEvent, LLMEvent, ActionEvent
-from agentops.session import Session
-from agentops.log_config import logger
-from agentops.helpers import get_ISO_time, check_call_stack_for_agent_id
+from agentops.event import ActionEvent, ErrorEvent, LLMEvent
+from agentops.helpers import check_call_stack_for_agent_id, get_ISO_time
 from agentops.llms.providers.instrumented_provider import InstrumentedProvider
+from agentops.log_config import logger
+from agentops.session import Session
 from agentops.singleton import singleton
 
 
@@ -20,7 +20,7 @@ class TaskWeaverProvider(InstrumentedProvider):
         self.client.add_default_tags(["taskweaver"])
 
     def handle_response(
-        self, response, kwargs, init_timestamp, session: Optional[Session] = None
+        self, response, kwargs, init_timestamp, session: Session | None = None
     ) -> dict:
         """Handle responses for TaskWeaver"""
         llm_event = LLMEvent(init_timestamp=init_timestamp, params=kwargs)

@@ -1,6 +1,6 @@
-from typing import Dict, List, Optional, Set
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class StateValidator:
         return new_state in StateValidator.VALID_TRANSITIONS[current_state]
 
     @staticmethod
-    def get_valid_transitions(current_state: str) -> Set[str]:
+    def get_valid_transitions(current_state: str) -> set[str]:
         """
         Retorna os estados válidos para transição
 
@@ -82,7 +82,7 @@ class StateValidator:
         return StateValidator.VALID_TRANSITIONS[current_state]
 
     @staticmethod
-    def validate_requirements(new_state: str, arguments: List[Dict]) -> List[str]:
+    def validate_requirements(new_state: str, arguments: list[dict]) -> list[str]:
         """
         Valida requisitos para transição de estado
 
@@ -121,8 +121,8 @@ class StateValidator:
 
     @staticmethod
     def validate_state_change(
-        embate: Dict, new_state: str, allow_requirements_override: bool = False
-    ) -> List[str]:
+        embate: dict, new_state: str, allow_requirements_override: bool = False
+    ) -> list[str]:
         """
         Valida uma mudança de estado completa
 
@@ -168,7 +168,7 @@ class StateValidator:
         return errors
 
     @staticmethod
-    def get_state_history(embate: Dict) -> List[Dict]:
+    def get_state_history(embate: dict) -> list[dict]:
         """
         Retorna histórico de mudanças de estado
 
@@ -200,7 +200,7 @@ class StateValidator:
         return history
 
     @staticmethod
-    def get_cycle_time(embate: Dict) -> Optional[float]:
+    def get_cycle_time(embate: dict) -> float | None:
         """
         Calcula o tempo de ciclo do embate (em dias)
 

@@ -3,12 +3,12 @@ Configurações do modelo Gemini.
 """
 
 import os
-from typing import Dict, Any
+from typing import Any, Dict
 
 GENERATION_CONFIG = {"temperature": 0.7, "top_p": 0.95, "top_k": 40, "max_output_tokens": 2048}
 
 
-def get_model_config() -> Dict[str, Any]:
+def get_model_config() -> dict[str, Any]:
     """Retorna a configuração do modelo."""
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:

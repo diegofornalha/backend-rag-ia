@@ -1,7 +1,7 @@
-from typing import Dict, List, Optional, Any
+import logging
 from dataclasses import dataclass
 from datetime import datetime
-import logging
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class EmbateValidationRule:
 
 class EmbatesValidator:
     def __init__(self):
-        self.validation_rules: List[EmbateValidationRule] = []
+        self.validation_rules: list[EmbateValidationRule] = []
         self._setup_default_rules()
 
     def _setup_default_rules(self):
@@ -68,7 +68,7 @@ class EmbatesValidator:
         )
         self.validation_rules.append(rule)
 
-    def _check_preventive_warning(self, embate_data: Dict) -> bool:
+    def _check_preventive_warning(self, embate_data: dict) -> bool:
         """Verifica se os avisos preventivos estão configurados corretamente"""
         tools_count = embate_data.get("tools_count", 0)
         has_warning = embate_data.get("warnings", [])
@@ -77,7 +77,7 @@ class EmbatesValidator:
             return False
         return True
 
-    def _validate_dates(self, embate_data: Dict) -> bool:
+    def _validate_dates(self, embate_data: dict) -> bool:
         """Valida consistência das datas"""
         data_inicio = embate_data.get("data_inicio")
         data_fim = embate_data.get("data_fim")
@@ -96,13 +96,13 @@ class EmbatesValidator:
 
         return True
 
-    def _check_required_fields(self, embate_data: Dict) -> bool:
+    def _check_required_fields(self, embate_data: dict) -> bool:
         """Verifica campos obrigatórios"""
         required_fields = {"titulo", "tipo", "contexto", "status", "data_inicio", "argumentos"}
 
         return all(field in embate_data for field in required_fields)
 
-    def _validate_metadata(self, embate_data: Dict) -> bool:
+    def _validate_metadata(self, embate_data: dict) -> bool:
         """Valida metadata do embate"""
         metadata = embate_data.get("metadata", {})
         required_metadata = {"impacto", "prioridade", "tags"}
@@ -119,7 +119,7 @@ class EmbatesValidator:
             and isinstance(metadata["tags"], list)
         )
 
-    def validate_embate(self, embate_data: Dict) -> List[Dict[str, Any]]:
+    def validate_embate(self, embate_data: dict) -> list[dict[str, Any]]:
         """Executa todas as validações em um embate"""
         validation_results = []
 

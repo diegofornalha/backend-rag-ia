@@ -29,10 +29,10 @@ class EmbatesConfig:
         return cls()
 
     @classmethod
-    def from_dict(cls, config_dict: Dict) -> "EmbatesConfig":
+    def from_dict(cls, config_dict: dict) -> "EmbatesConfig":
         """Cria configuração a partir de um dicionário"""
         return cls(**{k: v for k, v in config_dict.items() if k in cls.__annotations__})
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Converte configuração para dicionário"""
         return {k: getattr(self, k) for k in self.__annotations__}

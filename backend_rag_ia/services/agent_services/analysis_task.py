@@ -3,8 +3,8 @@ Tarefa de análise da estrutura de diretórios.
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Set
 from pathlib import Path
+from typing import Dict, List, Set
 
 
 @dataclass
@@ -12,10 +12,10 @@ class DirectoryAnalysis:
     """Resultado da análise de um diretório."""
 
     path: str
-    redundant_dirs: List[str]
-    misplaced_dirs: List[str]
-    empty_dirs: List[str]
-    reasons: Dict[str, str]
+    redundant_dirs: list[str]
+    misplaced_dirs: list[str]
+    empty_dirs: list[str]
+    reasons: dict[str, str]
 
 
 class StructureAnalyzer:
@@ -79,14 +79,14 @@ class StructureAnalyzer:
             reasons=reasons,
         )
 
-    def analyze_all(self) -> Dict[str, DirectoryAnalysis]:
+    def analyze_all(self) -> dict[str, DirectoryAnalysis]:
         """Analisa todos os clusters."""
         results = {}
         for cluster in self.valid_clusters:
             results[cluster] = self.analyze_cluster(cluster)
         return results
 
-    def get_cleanup_commands(self, results: Dict[str, DirectoryAnalysis]) -> List[str]:
+    def get_cleanup_commands(self, results: dict[str, DirectoryAnalysis]) -> list[str]:
         """Gera comandos para limpeza."""
         commands = []
 

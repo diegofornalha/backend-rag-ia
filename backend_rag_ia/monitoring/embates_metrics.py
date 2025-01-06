@@ -1,8 +1,8 @@
-from typing import Dict, List, Optional
-from dataclasses import dataclass
-from datetime import datetime
 import logging
 from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -14,13 +14,13 @@ class EmbateMetric:
     operation: str
     duration_ms: float
     success: bool
-    error_type: Optional[str] = None
-    details: Optional[Dict] = None
+    error_type: str | None = None
+    details: dict | None = None
 
 
 class EmbatesMetrics:
     def __init__(self, max_history: int = 1000):
-        self.metrics: List[EmbateMetric] = []
+        self.metrics: list[EmbateMetric] = []
         self.max_history = max_history
 
     def record_operation(self, metric: EmbateMetric) -> None:
@@ -60,7 +60,7 @@ class EmbatesMetrics:
         total_duration = sum(m.duration_ms for m in self.metrics)
         return total_duration / len(self.metrics)
 
-    def _get_error_distribution(self) -> Dict[str, int]:
+    def _get_error_distribution(self) -> dict[str, int]:
         """Calcula distribuição de erros"""
         errors = defaultdict(int)
         for metric in self.metrics:
@@ -68,14 +68,14 @@ class EmbatesMetrics:
                 errors[metric.error_type] += 1
         return dict(errors)
 
-    def _get_operation_distribution(self) -> Dict[str, int]:
+    def _get_operation_distribution(self) -> dict[str, int]:
         """Calcula distribuição de operações"""
         operations = defaultdict(int)
         for metric in self.metrics:
             operations[metric.operation] += 1
         return dict(operations)
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Retorna estatísticas completas"""
         return {
             "total_operations": len(self.metrics),
@@ -88,7 +88,7 @@ class EmbatesMetrics:
             "max_history": self.max_history,
         }
 
-    def get_metrics_by_embate(self, embate_id: str) -> List[EmbateMetric]:
+    def get_metrics_by_embate(self, embate_id: str) -> list[EmbateMetric]:
         """Retorna métricas de um embate específico"""
         return [m for m in self.metrics if m.embate_id == embate_id]
 

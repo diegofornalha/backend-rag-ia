@@ -3,8 +3,10 @@ Aplicação principal da API.
 """
 
 import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from .config_routes import configure_routes
 
 # Configurações do ambiente

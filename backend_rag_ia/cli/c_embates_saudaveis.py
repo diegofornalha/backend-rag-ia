@@ -2,11 +2,12 @@
 Módulo para gerenciamento de embates saudáveis.
 """
 
-import numpy as np
 from typing import Dict, List, Optional
 
-from .embates.models import Argumento, Embate
+import numpy as np
+
 from .embates.manager import EmbateManager
+from .embates.models import Argumento, Embate
 
 
 def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
@@ -17,7 +18,7 @@ def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
     return dot / (norm1 * norm2)
 
 
-async def iniciar(tipo: str, titulo: str, contexto: str) -> Dict:
+async def iniciar(tipo: str, titulo: str, contexto: str) -> dict:
     """
     Inicia um novo embate.
 
@@ -37,7 +38,7 @@ async def iniciar(tipo: str, titulo: str, contexto: str) -> Dict:
     return result
 
 
-async def edit_embate(embate_id: str, updates: Dict) -> Dict:
+async def edit_embate(embate_id: str, updates: dict) -> dict:
     """
     Edita um embate existente.
 
@@ -61,7 +62,7 @@ async def edit_embate(embate_id: str, updates: Dict) -> Dict:
     return result
 
 
-async def adicionar_argumento(embate_id: str, argumento: Argumento) -> Dict:
+async def adicionar_argumento(embate_id: str, argumento: Argumento) -> dict:
     """
     Adiciona um argumento a um embate.
 
@@ -83,7 +84,7 @@ async def adicionar_argumento(embate_id: str, argumento: Argumento) -> Dict:
     return result
 
 
-async def export_embates(filtros: Optional[Dict] = None) -> List[Dict]:
+async def export_embates(filtros: dict | None = None) -> list[dict]:
     """
     Exporta embates.
 
@@ -111,10 +112,10 @@ async def export_embates(filtros: Optional[Dict] = None) -> List[Dict]:
 class CondensadorEmbates:
     """Condensa embates similares."""
 
-    def __init__(self, manager: Optional[EmbateManager] = None):
+    def __init__(self, manager: EmbateManager | None = None):
         self.manager = manager or EmbateManager()
 
-    async def condensar(self, embates: List[Embate]) -> List[Embate]:
+    async def condensar(self, embates: list[Embate]) -> list[Embate]:
         """
         Condensa embates similares.
 
@@ -128,7 +129,7 @@ class CondensadorEmbates:
             return []
 
         # Agrupa por tipo
-        por_tipo: Dict[str, List[Embate]] = {}
+        por_tipo: dict[str, list[Embate]] = {}
         for e in embates:
             if e.tipo not in por_tipo:
                 por_tipo[e.tipo] = []
@@ -141,7 +142,7 @@ class CondensadorEmbates:
 
         return condensados
 
-    def _condensar_grupo(self, grupo: List[Embate]) -> List[Embate]:
+    def _condensar_grupo(self, grupo: list[Embate]) -> list[Embate]:
         """Condensa um grupo de embates do mesmo tipo."""
         if len(grupo) <= 1:
             return grupo

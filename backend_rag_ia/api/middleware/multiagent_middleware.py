@@ -3,11 +3,13 @@ Middleware para integração com o sistema multiagente.
 """
 
 from typing import Callable
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from ...config.settings import get_settings
 from ...services.multiagent.core.coordinator import AgentCoordinator
 from ...services.multiagent.core.providers import GeminiProvider
-from ...config.settings import get_settings
 
 
 class MultiAgentMiddleware(BaseHTTPMiddleware):

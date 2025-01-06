@@ -1,7 +1,7 @@
-from typing import Any, Callable, Dict, List, Optional, Type, Union
-from functools import wraps
 import inspect
 import logging
+from functools import wraps
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ class TypeValidator:
     """Middleware para validação de tipos"""
 
     @staticmethod
-    def validate_type(value: Any, expected_type: Type) -> bool:
+    def validate_type(value: Any, expected_type: type) -> bool:
         """
         Valida se um valor corresponde ao tipo esperado
 

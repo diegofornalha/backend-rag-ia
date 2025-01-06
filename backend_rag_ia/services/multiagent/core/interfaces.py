@@ -3,8 +3,8 @@ Interfaces base para os agentes do sistema.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -12,8 +12,8 @@ class AgentContext:
     """Contexto de execução do agente."""
 
     task: str
-    data: Dict[str, Any]
-    metadata: Dict[str, Any]
+    data: dict[str, Any]
+    metadata: dict[str, Any]
 
 
 @dataclass
@@ -22,8 +22,8 @@ class AgentResponse:
 
     agent: str
     status: str
-    result: Optional[str] = None
-    error: Optional[str] = None
+    result: str | None = None
+    error: str | None = None
 
 
 @dataclass
@@ -31,17 +31,17 @@ class AgentResult:
     """Resultado da execução do agente."""
 
     success: bool
-    findings: Dict[str, Any]
-    metadata: Dict[str, Any]
-    recommendations: Optional[List[str]] = None
-    errors: Optional[List[str]] = None
+    findings: dict[str, Any]
+    metadata: dict[str, Any]
+    recommendations: list[str] | None = None
+    errors: list[str] | None = None
 
 
 class Agent(ABC):
     """Interface base para todos os agentes."""
 
     @abstractmethod
-    async def process(self, task: str, context: Optional[Dict[str, Any]] = None) -> AgentResponse:
+    async def process(self, task: str, context: dict[str, Any] | None = None) -> AgentResponse:
         """
         Processa uma tarefa.
 
@@ -72,7 +72,7 @@ class BaseAgent(ABC):
         pass
 
     @abstractmethod
-    def get_capabilities(self) -> List[str]:
+    def get_capabilities(self) -> list[str]:
         """
         Retorna as capacidades do agente.
 
@@ -82,7 +82,7 @@ class BaseAgent(ABC):
         pass
 
     @abstractmethod
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """
         Retorna o status atual do agente.
 
@@ -133,7 +133,7 @@ class TaskAgent(BaseAgent):
         """
         pass
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Retorna o status do agente."""
         return {
             "tasks_processed": self.tasks_processed,

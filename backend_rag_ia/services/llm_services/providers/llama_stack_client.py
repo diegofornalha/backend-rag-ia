@@ -1,13 +1,13 @@
 import inspect
-import pprint
-from typing import Any, AsyncGenerator, Dict, Optional, List, Union
 import logging
+import pprint
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
-from agentops.event import LLMEvent, ErrorEvent, ToolEvent
-from agentops.session import Session
-from agentops.log_config import logger
-from agentops.helpers import get_ISO_time, check_call_stack_for_agent_id
+from agentops.event import ErrorEvent, LLMEvent, ToolEvent
+from agentops.helpers import check_call_stack_for_agent_id, get_ISO_time
 from agentops.llms.providers.instrumented_provider import InstrumentedProvider
+from agentops.log_config import logger
+from agentops.session import Session
 
 
 class LlamaStackClientProvider(InstrumentedProvider):
@@ -23,8 +23,8 @@ class LlamaStackClientProvider(InstrumentedProvider):
         response,
         kwargs,
         init_timestamp,
-        session: Optional[Session] = None,
-        metadata: Optional[Dict] = {},
+        session: Session | None = None,
+        metadata: dict | None = {},
     ) -> dict:
         """Handle responses for LlamaStack"""
 

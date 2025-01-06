@@ -1,10 +1,12 @@
-import pandas as pd
-import matplotlib.pyplot as plt
-from typing import Dict, List, Optional
-from datetime import datetime, timedelta
 import json
-import os
 import logging
+import os
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
 from ..metrics.workflow_metrics import WorkflowMetrics
 
 logger = logging.getLogger(__name__)
@@ -171,7 +173,7 @@ class ReportGenerator:
         logger.info(f"Relatório de duração de estados gerado: {csv_path}")
         return avg_duration
 
-    def generate_summary_report(self) -> Dict:
+    def generate_summary_report(self) -> dict:
         """
         Gera relatório resumido com principais métricas
 

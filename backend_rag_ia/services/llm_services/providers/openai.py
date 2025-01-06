@@ -1,14 +1,13 @@
 import pprint
 from typing import Optional
 
-from agentops.llms.providers.instrumented_provider import InstrumentedProvider
-from agentops.time_travel import fetch_completion_override_from_time_travel_cache
-
 from agentops.event import ActionEvent, ErrorEvent, LLMEvent
-from agentops.session import Session
-from agentops.log_config import logger
 from agentops.helpers import check_call_stack_for_agent_id, get_ISO_time
+from agentops.llms.providers.instrumented_provider import InstrumentedProvider
+from agentops.log_config import logger
+from agentops.session import Session
 from agentops.singleton import singleton
+from agentops.time_travel import fetch_completion_override_from_time_travel_cache
 
 
 @singleton
@@ -23,7 +22,7 @@ class OpenAiProvider(InstrumentedProvider):
         self._provider_name = "OpenAI"
 
     def handle_response(
-        self, response, kwargs, init_timestamp, session: Optional[Session] = None
+        self, response, kwargs, init_timestamp, session: Session | None = None
     ) -> dict:
         """Handle responses for OpenAI versions >v1.0.0"""
         from openai import AsyncStream, Stream
@@ -235,11 +234,11 @@ class OpenAiProvider(InstrumentedProvider):
     def _override_openai_assistants_beta(self):
         """Override OpenAI Assistants API methods"""
         from openai._legacy_response import LegacyAPIResponse
-        from openai.resources import beta
         from openai.pagination import BasePage
+        from openai.resources import beta
 
         def handle_response(
-            response, kwargs, init_timestamp, session: Optional[Session] = None
+            response, kwargs, init_timestamp, session: Session | None = None
         ) -> dict:
             """Handle response based on return type"""
             action_event = ActionEvent(init_timestamp=init_timestamp, params=kwargs)

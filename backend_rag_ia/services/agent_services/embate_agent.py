@@ -2,10 +2,10 @@
 Sistema de embates integrado ao multiagente.
 """
 
-from typing import Dict, Any, Optional
-from datetime import datetime
 import logging
 import re
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 from ...monitoring.metrics import Metrica
 from .multi_agent import GeminiAgent, MultiAgentSystem
@@ -42,7 +42,7 @@ class EmbateAgent(GeminiAgent):
         prompt_lower = prompt.lower()
         return any(palavra in prompt_lower for palavra in cls.PALAVRAS_CHAVE_EMBATE)
 
-    async def run(self, task: str, **kwargs) -> Dict[str, Any]:
+    async def run(self, task: str, **kwargs) -> dict[str, Any]:
         """Executa uma tarefa usando o sistema de embates."""
         try:
             # Verifica se precisa ativar embate
@@ -79,7 +79,7 @@ class EmbateAgent(GeminiAgent):
             self.metrica.interromper_embate()
             return {"error": str(e)}
 
-    def _validar_parametros(self, dados: Dict[str, Any]) -> bool:
+    def _validar_parametros(self, dados: dict[str, Any]) -> bool:
         """Valida os parâmetros do embate."""
         try:
             assert dados["tema"] is not None, "Tema não pode ser nulo"
@@ -97,7 +97,7 @@ class EmbateAgent(GeminiAgent):
 class EmbateSystem(MultiAgentSystem):
     """Sistema multiagente com suporte a embates."""
 
-    def _setup_agents(self) -> Dict[str, EmbateAgent]:
+    def _setup_agents(self) -> dict[str, EmbateAgent]:
         """Configura os agentes com suporte a embates."""
         return {
             "researcher": EmbateAgent("researcher", self.api_key),
@@ -107,8 +107,8 @@ class EmbateSystem(MultiAgentSystem):
         }
 
     async def process_task(
-        self, task: str, context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, task: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Processa uma tarefa, ativando embate se necessário."""
         # Verifica se o prompt requer embate
         requires_embate = any(agent.requer_embate(task) for agent in self.agents.values())
@@ -125,7 +125,7 @@ class EmbateSystem(MultiAgentSystem):
         for agent in self.agents.values():
             agent.metrica.interromper_embate()
 
-    def get_status_embates(self) -> Dict[str, Any]:
+    def get_status_embates(self) -> dict[str, Any]:
         """Retorna o status de todos os embates."""
         return {
             name: {

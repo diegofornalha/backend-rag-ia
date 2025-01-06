@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from typing import Dict, Any
+from typing import Any, Dict
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+
+from ..services.agent_services.coordinator import AgentCoordinator
+from ..services.embedding_services.vector_store import VectorStore
 
 # Importações diretas dos serviços
 from ..services.llm_services.providers.gemini import GeminiProvider
-from ..services.agent_services.coordinator import AgentCoordinator
-from ..services.embedding_services.vector_store import VectorStore
 
 router = APIRouter()
 
@@ -68,7 +70,7 @@ async def remove_documento(doc_id: str):
 
 
 @router.put("/documentos/{doc_id}", tags=["Documentos"])
-async def atualiza_documento(doc_id: str, data: Dict[str, Any]):
+async def atualiza_documento(doc_id: str, data: dict[str, Any]):
     """Atualiza documento"""
     try:
         # TODO: Implementar lógica de atualização
@@ -127,7 +129,7 @@ async def limpa_cache():
 # Rota de Análise
 @router.post("/analyze", tags=["Análise"])
 async def analyze_content(
-    content: Dict[str, Any], coordinator: AgentCoordinator = Depends(get_agent_coordinator)
+    content: dict[str, Any], coordinator: AgentCoordinator = Depends(get_agent_coordinator)
 ):
     try:
         vector_store = get_vector_store()

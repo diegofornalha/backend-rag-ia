@@ -2,8 +2,9 @@
 Comandos CLI para o sistema de embates.
 """
 
-import click
 from typing import Optional
+
+import click
 
 from ..manager import EmbateManager
 from ..models import Embate

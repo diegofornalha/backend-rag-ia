@@ -2,21 +2,21 @@
 Base para os agentes do sistema.
 """
 
-from typing import Dict, Any, Optional
 import asyncio
+from typing import Any, Dict, Optional
 
-from ..llm_services.tracker import LlmTracker
 from ...analysis.suggestions.interfaces import CursorAI
+from ..llm_services.tracker import LlmTracker
 
 
 class BaseAgent:
     """Classe base para agentes."""
 
-    def __init__(self, tracker: Optional[LlmTracker] = None):
+    def __init__(self, tracker: LlmTracker | None = None):
         """Inicializa o agente."""
         self.tracker = tracker or LlmTracker()
 
-    async def process_with_timeout(self, task: str, timeout: int = 30) -> Dict[str, Any]:
+    async def process_with_timeout(self, task: str, timeout: int = 30) -> dict[str, Any]:
         """
         Processa uma tarefa com timeout.
 
@@ -29,13 +29,13 @@ class BaseAgent:
         """
         try:
             return await asyncio.wait_for(self.process(task), timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self.tracker.track_event("timeout", {"task": task})
             raise TimeoutError(f"Timeout ao processar tarefa: {task}")
 
     async def process_with_retry(
         self, task: str, max_retries: int = 3, delay: int = 1
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Processa uma tarefa com retry.
 
@@ -58,7 +58,7 @@ class BaseAgent:
                     raise
                 await asyncio.sleep(delay * (attempt + 1))
 
-    async def process(self, task: str) -> Dict[str, Any]:
+    async def process(self, task: str) -> dict[str, Any]:
         """
         Processa uma tarefa.
 
