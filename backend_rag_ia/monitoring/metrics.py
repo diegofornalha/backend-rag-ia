@@ -250,9 +250,7 @@ class MetricsCollector:
         """Registra limpeza do cache."""
         self.cache_metrics.ultima_limpeza = datetime.now()
 
-    def get_metricas(
-        self, nome: str | None = None, tags: dict[str, str] = None
-    ) -> list[Metrica]:
+    def get_metricas(self, nome: str | None = None, tags: dict[str, str] = None) -> list[Metrica]:
         """
         Busca métricas com filtros.
 

@@ -42,9 +42,7 @@ class GeminiProvider:
         except Exception as e:
             raise RuntimeError(f"Erro na geração: {str(e)}")
 
-    async def analyze(
-        self, content: str, context: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
+    async def analyze(self, content: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """Analisa conteúdo usando o modelo."""
         try:
             # Prepara prompt de análise
