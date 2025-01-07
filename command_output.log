@@ -1,0 +1,16 @@
+
+Command: shopt -s histappend
+Output:
+
+Exit Code: 0
+----
+Command: pwd
+Output:
+/Users/flow/Desktop/Desktop/backend
+Exit Code: 0
+----
+Command: hello
+Output:
+bash: hello: command not found
+Exit Code: 127
+----

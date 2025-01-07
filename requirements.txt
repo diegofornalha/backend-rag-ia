@@ -61,6 +61,7 @@ opentelemetry-api==1.21.0
 opentelemetry-sdk==1.21.0
 opentelemetry-instrumentation-fastapi==0.42b0
 opentelemetry-exporter-otlp==1.21.0
+psutil>=5.9.7  # Para monitoramento do sistema
 
 # Adicionar dependências para Gemini e LangChain
 google-generativeai==0.3.1

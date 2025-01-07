@@ -54,7 +54,7 @@ services:
       python -c "import sys; sys.exit(0 if all(p.exists() for p in ['requirements.txt', 'gunicorn.conf.py']) else 1)"
       python -m pytest tests/health/ # Testes de saúde específicos
     startCommand: gunicorn -c gunicorn.conf.py backend_rag_ia.main:app
-    healthCheckPath: /health
+    healthCheckPath: /api/v1/health
     healthCheckTimeout: 60
     healthCheckInterval: 10
     healthCheckGracePeriod: 300
