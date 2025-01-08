@@ -2,7 +2,8 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
 
-from ..strategies import EmbateContext, MultiagentStrategy
+from ..strategies import EmbateContext
+from ..strategies.strategy_factory import StrategyFactory
 
 @dataclass
 class EmbateConfig:
@@ -23,7 +24,8 @@ class EmbateController:
             raise ValueError(f"Embate {embate_id} já existe")
             
         # Configura estratégia baseada no tipo de embate
-        strategy = self._get_strategy(context.get("type", "multiagent"))
+        strategy_type = context.get("type", "multiagent")
+        strategy = StrategyFactory.create_strategy(strategy_type)
         await self._context.set_strategy(strategy)
         
         embate_data = {
@@ -31,7 +33,8 @@ class EmbateController:
             "status": "active",
             "context": context,
             "created_at": datetime.utcnow(),
-            "config": self.config.__dict__
+            "config": self.config.__dict__,
+            "strategy_type": strategy_type
         }
         
         # Executa estratégia
@@ -39,7 +42,8 @@ class EmbateController:
             result = await self._context.execute_strategy({
                 "embate_id": embate_id,
                 "task": context.get("task"),
-                "config": self.config.__dict__
+                "config": self.config.__dict__,
+                "items": context.get("items", [])  # Para estratégia comparativa
             })
             embate_data["result"] = result
         except Exception as e:
@@ -61,7 +65,6 @@ class EmbateController:
         self._active_embates[embate_id]["status"] = status
         return self._active_embates[embate_id]
         
-    def _get_strategy(self, strategy_type: str) -> MultiagentStrategy:
-        """Retorna a estratégia apropriada baseada no tipo"""
-        # TODO: Implementar factory para diferentes tipos de estratégia
-        return MultiagentStrategy() 
+    def get_available_strategies(self) -> List[str]:
+        """Retorna lista de estratégias disponíveis"""
+        return StrategyFactory.get_available_strategies() 
