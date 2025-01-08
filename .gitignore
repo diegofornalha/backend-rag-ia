@@ -43,3 +43,5 @@ env/
 .DS_Store
 Thumbs.db 
 .codegpt
+/node_modules
+/node_modules
