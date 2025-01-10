@@ -1,19 +1,17 @@
 # Imagem base Python
 FROM python:3.11-slim
 
+# Argumentos de build
+ARG ENVIRONMENT=development
+
 # Variáveis de ambiente
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PATH="/home/app/.local/bin:$PATH" \
     PORT=10000 \
-    OPERATION_MODE=render \
-    IS_RENDER=true \
-    PYTHONPATH=/app
-
-# Cria usuário não-root
-RUN groupadd -r app && useradd -r -g app app
+    PYTHONPATH=/app \
+    ENVIRONMENT=${ENVIRONMENT}
 
 # Diretório de trabalho
 WORKDIR /app
@@ -27,15 +25,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copia os arquivos de requisitos
 COPY requirements.txt .
 
-# Define permissões e instala dependências
-RUN pip install --no-cache-dir -r requirements.txt && \
-    chown -R app:app /app
+# Instala dependências Python
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia o código da aplicação
 COPY . .
 
-# Muda para o usuário não-root
-USER app
+# Copia o arquivo .env apropriado
+COPY .env.dev /app/.env
 
 # Expõe a porta
 EXPOSE $PORT
