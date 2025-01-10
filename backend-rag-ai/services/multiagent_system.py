@@ -1,8 +1,4 @@
-"""
-Sistema MultiAgente integrado ao backend-rag-ai.
-
-Este módulo implementa a integração do sistema multiagente com o backend principal.
-"""
+"""Sistema MultiAgente integrado ao backend_rag_ai_py."""
 
 import os
 from typing import Any, Dict, Optional

@@ -11,8 +11,8 @@ ENVIRONMENT=${ENVIRONMENT:-"development"}
 # Inicia a aplicação baseado no ambiente
 if [ "$ENVIRONMENT" = "production" ]; then
     echo "Iniciando em modo produção..."
-    exec gunicorn -c gunicorn.conf.py backend_rag_ai.main:app
+    exec gunicorn -c gunicorn.conf.py backend_rag_ai_py.main:app
 else
     echo "Iniciando em modo desenvolvimento..."
-    exec uvicorn backend_rag_ai.main:app --host $HOST --port $PORT --reload
+    exec uvicorn backend_rag_ai_py.main:app --host $HOST --port $PORT --reload
 fi 

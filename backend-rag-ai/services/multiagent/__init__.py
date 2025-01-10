@@ -1,5 +1,5 @@
 """
-Sistema MultiAgente integrado ao backend-rag-ai.
+Sistema MultiAgente integrado ao backend_rag_ai_py.
 
 Este módulo implementa um sistema multiagente usando o modelo Gemini.
 """
