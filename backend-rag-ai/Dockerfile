@@ -24,6 +24,7 @@ WORKDIR /app
 
 # Copiar apenas os pacotes Python necessários
 COPY --from=builder /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
 
 # Copiar o código da aplicação
 COPY backend_rag_ai_py /app/backend_rag_ai_py/
@@ -35,4 +36,4 @@ USER appuser
 EXPOSE 10000
 
 # Comando para executar a aplicação
-CMD ["uvicorn", "backend_rag_ai_py.main:app", "--host", "0.0.0.0", "--port", "10000"] 
+CMD ["python", "-m", "uvicorn", "backend_rag_ai_py.main:app", "--host", "0.0.0.0", "--port", "10000"] 
