@@ -1,6 +1,7 @@
 services:
   - type: web
     name: backend-rag-ai
+    rootDir: backend-rag-ai
     branch: render
     env: docker
     dockerfilePath: Dockerfile
@@ -15,7 +16,7 @@ services:
       targetCPUPercent: 80
     buildFilter:
       paths:
-        - "**/*"
+        - backend-rag-ai/**
     envVars:
       - key: PYTHONPATH
         value: /app
