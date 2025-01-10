@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PATH="$PATH:/home/app/.local/bin" \
+    PATH="/home/app/.local/bin:$PATH" \
     PORT=10000 \
     OPERATION_MODE=render \
     IS_RENDER=true
@@ -27,8 +27,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 
 # Define permissões e instala dependências
-RUN chown -R app:app /app && \
-    pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    chown -R app:app /app
 
 # Copia o código da aplicação
 COPY --chown=app:app . .
@@ -44,4 +44,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:$PORT/health || exit 1
 
 # Comando para iniciar a aplicação
-CMD ["uvicorn", "backend_rag_ia.main:app", "--host", "0.0.0.0", "--port", "10000"]
+CMD ["/usr/local/bin/python", "-m", "uvicorn", "backend_rag_ia.main:app", "--host", "0.0.0.0", "--port", "10000"]
