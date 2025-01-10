@@ -1,1 +1,1 @@
-"""Módulo de configuração do Backend RAG IA.""" 
+"""Módulo de configuração do Backend RAG IA."""

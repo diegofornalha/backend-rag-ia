@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: backend-rag-ia
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: ENVIRONMENT
+        value: production
+    autoDeploy: true
+    healthCheckPath: /
+    plan: starter

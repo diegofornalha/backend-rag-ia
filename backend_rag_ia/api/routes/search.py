@@ -8,21 +8,19 @@ Este módulo contém as rotas para:
 """
 
 from typing import List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 router = APIRouter(
-    prefix="/search",
-    tags=["Busca"],
-    responses={
-        500: {"description": "Erro interno do servidor"}
-    }
+    prefix="/search", tags=["Busca"], responses={500: {"description": "Erro interno do servidor"}}
 )
+
 
 class SearchResult(BaseModel):
     """
     Resultado de busca.
-    
+
     Attributes:
         document_id: ID do documento encontrado
         title: Título do documento
@@ -30,15 +28,17 @@ class SearchResult(BaseModel):
         score: Pontuação de relevância (0-1)
         highlights: Trechos destacados que correspondem à busca
     """
+
     document_id: str
     title: str
     content: str
     score: float = Field(..., ge=0, le=1)
-    highlights: List[str]
+    highlights: list[str]
+
 
 @router.get(
     "/",
-    response_model=List[SearchResult],
+    response_model=list[SearchResult],
     summary="Busca semântica",
     description="""
     Realiza busca semântica nos documentos.
@@ -84,14 +84,14 @@ class SearchResult(BaseModel):
             print(f"- {highlight}")
         print()
     ```
-    """
+    """,
 )
 async def search_documents(
     query: str = Query(..., description="Texto para busca"),
     limit: int = Query(10, ge=1, le=100, description="Número máximo de resultados"),
     min_score: float = Query(0.5, ge=0, le=1, description="Pontuação mínima de relevância"),
-    filters: Optional[str] = Query(None, description="Filtros em formato JSON")
-) -> List[SearchResult]:
+    filters: str | None = Query(None, description="Filtros em formato JSON"),
+) -> list[SearchResult]:
     """Realiza busca semântica."""
     try:
         # Implementação da busca
@@ -99,9 +99,10 @@ async def search_documents(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get(
     "/similar/{document_id}",
-    response_model=List[SearchResult],
+    response_model=list[SearchResult],
     summary="Busca documentos similares",
     description="""
     Encontra documentos similares a um documento específico.
@@ -129,13 +130,13 @@ async def search_documents(
     elif response.status_code == 404:
         print("Documento não encontrado")
     ```
-    """
+    """,
 )
 async def find_similar(
     document_id: str,
     limit: int = Query(10, ge=1, le=100, description="Número máximo de resultados"),
-    min_score: float = Query(0.5, ge=0, le=1, description="Pontuação mínima de similaridade")
-) -> List[SearchResult]:
+    min_score: float = Query(0.5, ge=0, le=1, description="Pontuação mínima de similaridade"),
+) -> list[SearchResult]:
     """Encontra documentos similares."""
     try:
         # Implementação da busca por similaridade

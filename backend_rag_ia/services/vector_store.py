@@ -1,6 +1,7 @@
 """
 Serviço para interagir com o Supabase Vector Store.
 """
+
 import logging
 import os
 from typing import Any
@@ -26,7 +27,9 @@ class VectorStore:
 
         self.supabase_client: Client = create_client(supabase_url, supabase_key)
 
-    def insert_document(self, titulo: str, conteudo: dict[str, Any], document_hash: str, version_key: str) -> str:
+    def insert_document(
+        self, titulo: str, conteudo: dict[str, Any], document_hash: str, version_key: str
+    ) -> str:
         """
         Insere um documento no Supabase.
 
@@ -40,17 +43,23 @@ class VectorStore:
             ID do documento inserido
         """
         try:
-            response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').insert({
-                'titulo': titulo,
-                'conteudo': conteudo,
-                'document_hash': document_hash,
-                'version_key': version_key
-            }).execute()
+            response = (
+                self.supabase_client.table("rag.01_base_conhecimento_regras_geral")
+                .insert(
+                    {
+                        "titulo": titulo,
+                        "conteudo": conteudo,
+                        "document_hash": document_hash,
+                        "version_key": version_key,
+                    }
+                )
+                .execute()
+            )
 
             if not response.data:
                 raise ValueError("Erro ao inserir documento: resposta vazia")
 
-            return response.data[0]['id']
+            return response.data[0]["id"]
 
         except Exception as e:
             logger.error("Erro ao inserir documento", extra={"error": str(e)})
@@ -67,14 +76,26 @@ class VectorStore:
             Documento ou None se não encontrado
         """
         try:
-            response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').select('*').eq('id', document_id).execute()
+            response = (
+                self.supabase_client.table("rag.01_base_conhecimento_regras_geral")
+                .select("*")
+                .eq("id", document_id)
+                .execute()
+            )
             return response.data[0] if response.data else None
 
         except Exception as e:
             logger.error("Erro ao obter documento", extra={"error": str(e)})
             raise
 
-    def update_document(self, document_id: str, titulo: str, conteudo: dict[str, Any], document_hash: str, version_key: str) -> None:
+    def update_document(
+        self,
+        document_id: str,
+        titulo: str,
+        conteudo: dict[str, Any],
+        document_hash: str,
+        version_key: str,
+    ) -> None:
         """
         Atualiza um documento no Supabase.
 
@@ -86,12 +107,19 @@ class VectorStore:
             version_key: Chave de versão
         """
         try:
-            response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').update({
-                'titulo': titulo,
-                'conteudo': conteudo,
-                'document_hash': document_hash,
-                'version_key': version_key
-            }).eq('id', document_id).execute()
+            response = (
+                self.supabase_client.table("rag.01_base_conhecimento_regras_geral")
+                .update(
+                    {
+                        "titulo": titulo,
+                        "conteudo": conteudo,
+                        "document_hash": document_hash,
+                        "version_key": version_key,
+                    }
+                )
+                .eq("id", document_id)
+                .execute()
+            )
 
             if not response.data:
                 raise ValueError("Erro ao atualizar documento: resposta vazia")
@@ -108,7 +136,12 @@ class VectorStore:
             document_id: ID do documento
         """
         try:
-            response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').delete().eq('id', document_id).execute()
+            response = (
+                self.supabase_client.table("rag.01_base_conhecimento_regras_geral")
+                .delete()
+                .eq("id", document_id)
+                .execute()
+            )
             if not response.data:
                 raise ValueError("Erro ao deletar documento: resposta vazia")
 
@@ -124,14 +157,20 @@ class VectorStore:
             Lista de documentos
         """
         try:
-            response = self.supabase_client.table('rag.01_base_conhecimento_regras_geral').select('*').execute()
+            response = (
+                self.supabase_client.table("rag.01_base_conhecimento_regras_geral")
+                .select("*")
+                .execute()
+            )
             return response.data if response.data else []
 
         except Exception as e:
             logger.error("Erro ao listar documentos", extra={"error": str(e)})
             raise
 
-    def search_similar_documents(self, query_embedding: list[float], match_count: int = 5) -> list[tuple[dict[str, Any], float]]:
+    def search_similar_documents(
+        self, query_embedding: list[float], match_count: int = 5
+    ) -> list[tuple[dict[str, Any], float]]:
         """
         Busca documentos similares usando o embedding da query.
 
@@ -144,11 +183,7 @@ class VectorStore:
         """
         try:
             response = self.supabase_client.rpc(
-                'match_documents',
-                {
-                    'query_embedding': query_embedding,
-                    'match_count': match_count
-                }
+                "match_documents", {"query_embedding": query_embedding, "match_count": match_count}
             ).execute()
 
             if not response.data:
@@ -156,8 +191,8 @@ class VectorStore:
 
             results = []
             for item in response.data:
-                doc = item.get('document', {})
-                similarity = item.get('similarity', 0.0)
+                doc = item.get("document", {})
+                similarity = item.get("similarity", 0.0)
                 results.append((doc, similarity))
 
             return results
