@@ -1,11 +1,22 @@
 services:
   - type: web
     name: backend-rag-ai
-    rootDir: .
+    rootDir: backend-rag-ai
+    branch: render
     env: docker
     dockerfilePath: Dockerfile
     dockerBuildContext: .
     healthCheckPath: /health
+    autoDeploy: true
+    numInstances: 1
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetMemoryPercent: 80
+      targetCPUPercent: 80
+    buildFilter:
+      paths:
+        - backend-rag-ai/**
     envVars:
       - key: PYTHONPATH
         value: /app
@@ -23,6 +34,7 @@ services:
     name: cache-distribuido
     ipAllowList: []
     plan: starter
+    maxmemoryPolicy: noeviction
 
 previews:
   generation: manual
