@@ -1,12 +1,14 @@
 services:
   - type: web
-    name: backend-rag-ia
-    rootDir: backend_rag_ia
+    name: backend-rag-ai
+    rootDir: backend-rag-ai
     env: docker
     dockerfilePath: Dockerfile
     dockerBuildContext: .
     healthCheckPath: /health
     envVars:
+      - key: PYTHONPATH
+        value: /app
       - key: ENVIRONMENT
         value: production
       - key: REDIS_URL
