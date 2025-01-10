@@ -17,7 +17,7 @@ RUN apt-get update \
 
 # Cria diretório da aplicação e copia todo o código
 WORKDIR /app/backend-rag-ai
-COPY backend-rag-ai/ .
+COPY . .
 
 # Instala dependências do projeto
 RUN pip install --no-cache-dir -r requirements.txt
@@ -44,7 +44,7 @@ RUN apt-get update \
 # Copia dependências e código
 WORKDIR /app/backend-rag-ai
 COPY --from=builder /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
-COPY --chown=appuser:appuser backend-rag-ai/ .
+COPY --chown=appuser:appuser . .
 
 # Configuração de usuário e portas
 USER appuser
