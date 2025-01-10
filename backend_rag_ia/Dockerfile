@@ -9,7 +9,8 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/home/app/.local/bin:$PATH" \
     PORT=10000 \
     OPERATION_MODE=render \
-    IS_RENDER=true
+    IS_RENDER=true \
+    PYTHONPATH=/app
 
 # Cria usuário não-root
 RUN groupadd -r app && useradd -r -g app app
@@ -31,7 +32,7 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     chown -R app:app /app
 
 # Copia o código da aplicação
-COPY --chown=app:app . .
+COPY . .
 
 # Muda para o usuário não-root
 USER app
@@ -44,4 +45,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:$PORT/health || exit 1
 
 # Comando para iniciar a aplicação
-CMD ["uvicorn", "backend_rag_ia.main:app", "--host", "0.0.0.0", "--port", "10000"]
+CMD ["python", "-m", "uvicorn", "backend_rag_ia.main:app", "--host", "0.0.0.0", "--port", "10000"]

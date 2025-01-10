@@ -34,5 +34,5 @@ async def root():
     }
 
 # Importar e configurar rotas após a criação do app
-from api.config_routes import configure_routes
+from backend_rag_ia.api.config_routes import configure_routes
 configure_routes(app) 
