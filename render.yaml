@@ -1,10 +1,27 @@
 services:
   - type: web
-    name: seu-servico
+    name: backend-rag-ia
     rootDir: backend_rag_ia
     env: docker
     dockerfilePath: Dockerfile
-    dockerCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    dockerBuildContext: .
+    healthCheckPath: /health
     envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: cache-distribuido
+          property: connectionString
       - key: PORT
         value: 10000
+
+  - type: redis
+    name: cache-distribuido
+    ipAllowList: []
+    plan: starter
+
+previews:
+  generation: manual
+  expireAfterDays: 3

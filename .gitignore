@@ -28,4 +28,4 @@ logs/
 dist/
 build/
 *.egg-info/
-/backend_rag_ia
+# /backend_rag_ia  # Comentado para não ignorar arquivos importantes do projeto
