@@ -3,7 +3,7 @@ Testes para o sistema de tracking do multiagente.
 """
 
 import pytest
-from backend_rag_ia.services.multiagent.core.tracker import EventTracker
+from backend_rag_ai_py.services.multiagent.core.tracker import EventTracker
 
 def test_event_tracking():
     """Testa o registro básico de eventos."""

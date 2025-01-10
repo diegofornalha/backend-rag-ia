@@ -24,7 +24,7 @@ REQUIRED_FILES = [
 
 def test_directory_structure():
     """Verifica se a estrutura de diretórios está correta."""
-    root = Path("backend_rag_ia")
+    root = Path("backend-rag-ai")
     
     # Verifica se o diretório raiz existe
     assert root.exists(), f"Diretório raiz {root} não encontrado"
@@ -43,7 +43,7 @@ def test_directory_structure():
 
 def test_required_files():
     """Verifica se todos os arquivos obrigatórios existem."""
-    root = Path("backend_rag_ia")
+    root = Path("backend-rag-ai")
     
     for file_path in REQUIRED_FILES:
         full_path = root / file_path
@@ -55,7 +55,7 @@ def test_required_files():
 
 def test_no_stray_files():
     """Verifica se não há arquivos soltos na raiz dos diretórios principais."""
-    root = Path("backend_rag_ia")
+    root = Path("backend-rag-ai")
     
     for main_dir in EXPECTED_STRUCTURE.keys():
         main_path = root / main_dir
@@ -68,7 +68,7 @@ def test_no_stray_files():
 
 def test_file_permissions():
     """Verifica as permissões dos arquivos."""
-    root = Path("backend_rag_ia")
+    root = Path("backend-rag-ai")
     
     # Verifica permissões do script de deploy
     deploy_script = root / "3_deployment/scripts/deploy.sh"
@@ -80,7 +80,7 @@ def test_file_permissions():
 
 def test_docker_configuration():
     """Verifica a configuração do Docker."""
-    root = Path("backend_rag_ia")
+    root = Path("backend-rag-ai")
     dockerfile = root / "3_deployment/docker/Dockerfile"
     
     assert dockerfile.exists(), "Dockerfile não encontrado"
@@ -95,7 +95,7 @@ def test_docker_configuration():
 
 def test_database_schema():
     """Verifica o schema do banco de dados."""
-    root = Path("backend_rag_ia")
+    root = Path("backend-rag-ai")
     schema_file = root / "2_database/schemas/initial_schema.sql"
     
     assert schema_file.exists(), "Arquivo de schema não encontrado"

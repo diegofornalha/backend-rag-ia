@@ -3,7 +3,7 @@ Testes para as configurações do sistema multiagente.
 """
 
 import pytest
-from backend_rag_ia.services.multiagent.core.config import (
+from backend_rag_ai_py.services.multiagent.core.config import (
     get_multiagent_config,
     update_config,
     MultiAgentConfig

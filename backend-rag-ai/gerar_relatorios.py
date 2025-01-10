@@ -1,5 +1,5 @@
-from backend_rag_ia.reports.report_generator import ReportGenerator
-from backend_rag_ia.metrics.workflow_metrics import WorkflowMetrics
+from backend_rag_ai_py.reports.report_generator import ReportGenerator
+from backend_rag_ai_py.metrics.workflow_metrics import WorkflowMetrics
 from datetime import datetime, timedelta
 
 # Simula alguns dados para demonstração

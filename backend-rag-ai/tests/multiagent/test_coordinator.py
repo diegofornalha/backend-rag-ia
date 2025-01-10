@@ -5,8 +5,8 @@ Testes para o coordenador do sistema multiagente.
 import pytest
 from unittest.mock import MagicMock, patch
 
-from backend_rag_ia.services.multiagent.core.coordinator import AgentCoordinator
-from backend_rag_ia.services.multiagent.core.providers import GeminiProvider
+from backend_rag_ai_py.services.multiagent.core.coordinator import AgentCoordinator
+from backend_rag_ai_py.services.multiagent.core.providers import GeminiProvider
 
 @pytest.fixture
 def mock_provider():

@@ -7,7 +7,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from backend_rag_ia.services.llm_manager import LLMManager
+from backend_rag_ai_py.services.llm_manager import LLMManager
 
 router = APIRouter()
 

@@ -91,7 +91,7 @@ def iniciar_fluxo(
 
     # 7. Commit e push
     # Adiciona arquivos
-    files_to_add = ["dados/embates/", "dados/notificacoes/", "dados/relatorios/", "backend_rag_ia/"]
+    files_to_add = ["dados/embates/", "dados/notificacoes/", "dados/relatorios/", "backend-rag-ai/"]
 
     for file_path in files_to_add:
         if os.path.exists(file_path):

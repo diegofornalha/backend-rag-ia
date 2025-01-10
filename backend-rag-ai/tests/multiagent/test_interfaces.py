@@ -3,7 +3,7 @@ Testes para as interfaces dos agentes.
 """
 
 import pytest
-from backend_rag_ia.services.multiagent.core.interfaces import (
+from backend_rag_ai_py.services.multiagent.core.interfaces import (
     AgentContext,
     AgentResult,
     TaskAgent

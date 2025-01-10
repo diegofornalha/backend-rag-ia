@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from backend_rag_ia.monitoring.embates_protection_manager import EmbatesProtectionManager
+from backend_rag_ai_py.monitoring.embates_protection_manager import EmbatesProtectionManager
 
 @pytest.fixture
 def protection_manager():

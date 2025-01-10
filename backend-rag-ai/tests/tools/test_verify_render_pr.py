@@ -1,11 +1,11 @@
 import pytest
 from unittest.mock import Mock, patch, mock_open
 from pathlib import Path
-from backend_rag_ia.tools.verify_render_pr import RenderPRValidator, RenderValidationResult
+from backend_rag_ai_py.tools.verify_render_pr import RenderPRValidator, RenderValidationResult
 
 @pytest.fixture
 def validator():
-    with patch('backend_rag_ia.tools.verify_render_pr.get_settings') as mock_settings:
+    with patch('backend_rag_ai_py.tools.verify_render_pr.get_settings') as mock_settings:
         # Mock das configurações
         mock_settings.return_value = Mock(
             is_preview_environment=True,

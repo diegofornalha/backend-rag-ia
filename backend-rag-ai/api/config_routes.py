@@ -1,12 +1,12 @@
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, FastAPI
 
-from backend_rag_ia.services.agent_services.coordinator import AgentCoordinator
-from backend_rag_ia.services.embedding_services.vector_store import VectorStore
+from backend_rag_ai_py.services.agent_services.coordinator import AgentCoordinator
+from backend_rag_ai_py.services.embedding_services.vector_store import VectorStore
 
 # Importações diretas dos serviços
-from backend_rag_ia.services.llm_services.providers.gemini import GeminiProvider
+from backend_rag_ai_py.services.llm_services.providers.gemini import GeminiProvider
 
 router = APIRouter()
 

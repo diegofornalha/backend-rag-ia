@@ -9,7 +9,7 @@ import sys
 # Adiciona diretório raiz ao path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from backend_rag_ia.examples.multiagent_example import main
+from backend_rag_ai_py.examples.multiagent_example import main
 
 if __name__ == "__main__":
     # Executa exemplo

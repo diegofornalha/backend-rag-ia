@@ -1,9 +1,9 @@
 import pytest
 from datetime import datetime, timedelta
-from backend_rag_ia.monitoring.embates_counter import GlobalEmbatesCounter
-from backend_rag_ia.monitoring.embates_cache import EmbatesCache
-from backend_rag_ia.monitoring.embates_metrics import EmbatesMetrics, EmbateMetric
-from backend_rag_ia.monitoring.embates_protection_manager import EmbatesProtectionManager
+from backend_rag_ai_py.monitoring.embates_counter import GlobalEmbatesCounter
+from backend_rag_ai_py.monitoring.embates_cache import EmbatesCache
+from backend_rag_ai_py.monitoring.embates_metrics import EmbatesMetrics, EmbateMetric
+from backend_rag_ai_py.monitoring.embates_protection_manager import EmbatesProtectionManager
 
 @pytest.fixture
 def counter():

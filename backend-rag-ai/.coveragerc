@@ -1,5 +1,5 @@
 [run]
-source = backend_rag_ia
+source = backend_rag_ai_py
 omit =
     */tests/*
     */examples/*

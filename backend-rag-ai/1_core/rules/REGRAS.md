@@ -5,7 +5,7 @@
 ### 1.1 Organização de Pastas
 
 ```
-backend_rag_ia/
+backend-rag-ai/
 ├── 1_core/              # Núcleo do projeto
 │   ├── config/          # Configurações
 │   └── rules/           # Regras e documentação

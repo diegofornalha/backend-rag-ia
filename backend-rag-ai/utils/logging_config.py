@@ -43,4 +43,4 @@ def setup_logger(
 
 
 # Criar instância global do logger
-logger = setup_logger("backend_rag_ia")
+logger = setup_logger("backend_rag_ai_py")

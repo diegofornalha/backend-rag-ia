@@ -62,7 +62,7 @@ fi
 # Build da imagem
 log "Iniciando build da imagem..." $YELLOW
 docker build -t "${DOCKER_REGISTRY}/${APP_NAME}:${IMAGE_TAG}" \
-    -f backend_rag_ia/3_deployment/docker/Dockerfile . || \
+    -f backend-rag-ai/3_deployment/docker/Dockerfile . || \
     error "Falha no build da imagem"
 
 # Push da imagem

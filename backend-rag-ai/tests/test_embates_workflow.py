@@ -1,6 +1,6 @@
-from backend_rag_ia.templates.embate_templates import EmbateTemplates
-from backend_rag_ia.storage.embates_storage import EmbatesStorage
-from backend_rag_ia.metrics.workflow_metrics import WorkflowMetrics
+from backend_rag_ai_py.templates.embate_templates import EmbateTemplates
+from backend_rag_ai_py.storage.embates_storage import EmbatesStorage
+from backend_rag_ai_py.metrics.workflow_metrics import WorkflowMetrics
 import subprocess
 import os
 import json
@@ -51,7 +51,7 @@ files_to_add = [
     'dados/embates/',
     'dados/backup/',
     'dados/relatorios/',
-    'backend_rag_ia/',
+    'backend-rag-ai/',
     'test_workflow.py'
 ]
 
