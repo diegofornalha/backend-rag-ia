@@ -1,7 +1,7 @@
 services:
   - type: web
     name: backend-rag-ai
-    rootDir: backend-rag-ai
+    rootDir: .
     env: docker
     dockerfilePath: Dockerfile
     dockerBuildContext: .
