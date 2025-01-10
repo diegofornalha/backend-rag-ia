@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PORT=10000 \
-    PYTHONPATH=/app:$PYTHONPATH \
+    PYTHONPATH=/app/backend_rag_ai:/app:$PYTHONPATH \
     ENVIRONMENT=${ENVIRONMENT}
 
 # Diretório de trabalho
