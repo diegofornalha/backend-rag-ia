@@ -6,16 +6,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_DEFAULT_TIMEOUT=100 \
-    POETRY_VERSION=1.4.2 \
-    POETRY_HOME="/opt/poetry" \
-    POETRY_VIRTUALENVS_IN_PROJECT=true \
-    POETRY_NO_INTERACTION=1 \
-    PYSETUP_PATH="/opt/pysetup" \
-    VENV_PATH="/opt/pysetup/.venv"
-
-# Adiciona poetry ao PATH
-ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+    PIP_DEFAULT_TIMEOUT=100
 
 # Instala dependências do sistema
 RUN apt-get update \
@@ -24,15 +15,14 @@ RUN apt-get update \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# Cria diretório da aplicação
+WORKDIR /app
 
 # Copia arquivos de dependência
-WORKDIR $PYSETUP_PATH
-COPY poetry.lock pyproject.toml ./
+COPY backend-rag-ai/requirements.txt .
 
 # Instala dependências do projeto
-RUN poetry install --no-dev --no-root
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime
 FROM python:3.11-slim as runtime
@@ -40,9 +30,7 @@ FROM python:3.11-slim as runtime
 # Configuração do ambiente de runtime
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYSETUP_PATH="/opt/pysetup" \
-    VENV_PATH="/opt/pysetup/.venv" \
-    PATH="/opt/pysetup/.venv/bin:$PATH"
+    PORT=10000
 
 # Cria usuário não-root
 RUN useradd --create-home appuser \
@@ -52,24 +40,21 @@ RUN useradd --create-home appuser \
 # Instala dependências do sistema
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    libpq5 \
-    redis-tools \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia ambiente virtual do builder
-COPY --from=builder --chown=appuser:appuser $VENV_PATH $VENV_PATH
-
-# Copia código da aplicação
+# Copia dependências e código
 WORKDIR /app
-COPY --chown=appuser:appuser . .
+COPY --from=builder /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
+COPY --chown=appuser:appuser backend-rag-ai/ .
 
 # Configuração de usuário e portas
 USER appuser
-EXPOSE 8000
+EXPOSE 10000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+    CMD curl -f http://localhost:10000/health || exit 1
 
 # Comando de inicialização
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "backend_rag_ai_py.main:app"] 
+CMD uvicorn backend_rag_ai_py.main:app --host 0.0.0.0 --port $PORT 

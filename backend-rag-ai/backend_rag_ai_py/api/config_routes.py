@@ -7,6 +7,7 @@ from backend_rag_ai_py.services.embedding_services.vector_store import VectorSto
 
 # Importações diretas dos serviços
 from backend_rag_ai_py.services.llm_services.providers.gemini import GeminiProvider
+from backend_rag_ai_py.api.routes import multiagent
 
 router = APIRouter()
 
@@ -165,3 +166,4 @@ async def get_suggestions(
 def configure_routes(app):
     """Configura todas as rotas da API"""
     app.include_router(router, prefix="/api/v1", tags=["content"])
+    app.include_router(multiagent.router, prefix="/api/v1/multiagent", tags=["multiagent"])
