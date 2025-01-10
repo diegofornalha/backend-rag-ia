@@ -31,9 +31,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia o código da aplicação
 COPY . .
 
-# Copia o arquivo .env apropriado
-COPY .env.dev /app/.env
-
 # Expõe a porta
 EXPOSE $PORT
 
