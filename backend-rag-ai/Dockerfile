@@ -15,11 +15,9 @@ RUN apt-get update \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Cria diretório da aplicação
-WORKDIR /app
-
-# Copia arquivos de dependência
-COPY backend-rag-ai/requirements.txt .
+# Cria diretório da aplicação e copia todo o código
+WORKDIR /app/backend-rag-ai
+COPY backend-rag-ai/ .
 
 # Instala dependências do projeto
 RUN pip install --no-cache-dir -r requirements.txt
@@ -34,7 +32,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Cria usuário não-root
 RUN useradd --create-home appuser \
-    && mkdir -p /app \
+    && mkdir -p /app/backend-rag-ai \
     && chown -R appuser:appuser /app
 
 # Instala dependências do sistema
@@ -44,7 +42,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Copia dependências e código
-WORKDIR /app
+WORKDIR /app/backend-rag-ai
 COPY --from=builder /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
 COPY --chown=appuser:appuser backend-rag-ai/ .
 
