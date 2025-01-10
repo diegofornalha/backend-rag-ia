@@ -28,7 +28,8 @@ FROM python:3.11-slim as runtime
 # Configuração do ambiente de runtime
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PORT=10000
+    PORT=10000 \
+    PATH="/usr/local/bin:$PATH"
 
 # Cria usuário não-root
 RUN useradd --create-home appuser \
@@ -44,6 +45,7 @@ RUN apt-get update \
 # Copia dependências e código
 WORKDIR /app/backend-rag-ai
 COPY --from=builder /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
 COPY --chown=appuser:appuser . .
 
 # Configuração de usuário e portas
@@ -55,4 +57,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:10000/health || exit 1
 
 # Comando de inicialização
-CMD uvicorn backend_rag_ai_py.main:app --host 0.0.0.0 --port $PORT 
+CMD ["uvicorn", "backend_rag_ai_py.main:app", "--host", "0.0.0.0", "--port", "$PORT"] 
