@@ -1,5 +1,5 @@
 """
-Backend RAG IA - Sistema de busca semântica e processamento de documentos
+Backend RAG IA package.
 """
 
 __version__ = "1.0.0"

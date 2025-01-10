@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Backend RAG IA",
-    description="Backend para o sistema RAG IA",
+    description="API com RAG e sistema multi-agente integrado",
     version="1.0.0"
 )
 
@@ -27,5 +27,12 @@ async def health_check():
 async def root():
     return {
         "message": "Backend RAG IA API",
-        "docs": "/docs"
-    } 
+        "version": "1.0.0",
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "status": "online"
+    }
+
+# Importar e configurar rotas após a criação do app
+from api.config_routes import configure_routes
+configure_routes(app) 
