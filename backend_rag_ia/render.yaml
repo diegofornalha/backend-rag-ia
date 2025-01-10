@@ -1,14 +1,27 @@
 services:
   - type: web
     name: backend-rag-ia
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    rootDirectory: backend_rag_ia
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerBuildContext: .
+    healthCheckPath: /health
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.0
       - key: ENVIRONMENT
         value: production
-    autoDeploy: true
-    healthCheckPath: /
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: cache-distribuido
+          property: connectionString
+      - key: PORT
+        value: 10000
+
+  - type: redis
+    name: cache-distribuido
+    ipAllowList: []
     plan: starter
+
+previews:
+  generation: manual
+  expireAfterDays: 3

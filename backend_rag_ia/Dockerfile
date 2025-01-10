@@ -6,9 +6,6 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    POETRY_VERSION=1.6.1 \
-    POETRY_NO_INTERACTION=1 \
-    POETRY_VIRTUALENVS_CREATE=false \
     PATH="$PATH:/root/.local/bin" \
     PORT=10000 \
     OPERATION_MODE=render \
@@ -23,20 +20,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
-
-# Copia arquivos de dependências
-COPY pyproject.toml poetry.lock ./
+# Copia os arquivos de requisitos
+COPY requirements.txt .
 
 # Instala dependências
-RUN poetry install --no-dev --no-root
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia o código da aplicação
-COPY . /app/
+COPY . .
 
 # Expõe a porta
 EXPOSE $PORT
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:$PORT/health || exit 1
+
 # Comando para iniciar a aplicação
-CMD uvicorn backend_rag_ia.api.main:app --host 0.0.0.0 --port $PORT
+CMD ["sh", "-c", "uvicorn backend_rag_ia.main:app --host 0.0.0.0 --port $PORT"]
