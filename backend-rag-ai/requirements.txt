@@ -6,4 +6,4 @@ sqlalchemy
 google-generativeai
 numpy
 supabase
-sentence-transformers 
+sentence-transformers

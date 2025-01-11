@@ -7,7 +7,8 @@ services:
     dockerBuildContext: .
     healthCheckPath: /health
     autoDeploy: false
-    buildCommand: skip
+    buildCommand: docker build -t backend-rag-ai .
+    startCommand: docker run -p $PORT:10000 backend-rag-ai
     pullRequestPreviewsEnabled: false
     numInstances: 1
     scaling:
