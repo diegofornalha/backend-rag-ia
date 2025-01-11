@@ -1,15 +1,17 @@
-# Environment variables
+*.env*
 .env
 .env.local
-.env.*.local
-
-# Permitir
-!.env.example
+.env.development
+.env.dev
+.env.prod
+.env.production
+.env.test
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 .Python
 build/
 develop-eggs/
@@ -31,7 +33,7 @@ wheels/
 venv/
 ENV/
 env/
-.venv/
+.env/
 
 # IDE
 .idea/
@@ -41,5 +43,4 @@ env/
 
 # OS
 .DS_Store
-Thumbs.db 
-.codegpt
+Thumbs.db

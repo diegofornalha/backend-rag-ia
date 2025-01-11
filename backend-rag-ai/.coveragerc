@@ -1,0 +1,21 @@
+[run]
+source = backend_rag_ai_py
+omit =
+    */tests/*
+    */examples/*
+    */scripts/*
+    */__init__.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    raise ImportError
+    except ImportError:
+    def main():
+
+[html]
+directory = htmlcov 

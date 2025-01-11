@@ -1,0 +1,8 @@
+{
+  "categoria": "Estrutura",
+  "titulo": "Pasta regras_md duplicada",
+  "problema": "Criação indevida de pasta regras_md na raiz do projeto quando já existia em backend-rag-ai/regras_md",
+  "erro": "Duplicação de estrutura de diretórios causando confusão na organização do projeto",
+  "solucao": "1. Mover conteúdo para backend-rag-ai/regras_md\n2. Remover pasta duplicada da raiz\n3. Atualizar scripts para apontar para o caminho correto",
+  "prevencao": "Sempre verificar a estrutura existente do projeto antes de criar novos diretórios e consultar a documentação de estrutura do projeto"
+}

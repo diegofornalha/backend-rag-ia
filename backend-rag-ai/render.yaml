@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: backend-rag-ai
+    branch: render
+    env: docker
+    dockerfilePath: Dockerfile
+    dockerBuildContext: .
+    healthCheckPath: /health
+    autoDeploy: false
+    buildCommand: docker build -t backend-rag-ai .
+    startCommand: docker run -p $PORT:10000 backend-rag-ai
+    pullRequestPreviewsEnabled: false
+    numInstances: 1
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetMemoryPercent: 80
+      targetCPUPercent: 80
+    envVars:
+      - key: PYTHONPATH
+        value: /app
+      - key: ENVIRONMENT
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: cache-distribuido
+          property: connectionString
+      - key: PORT
+        value: 10000
+
+  - type: redis
+    name: cache-distribuido
+    ipAllowList: []
+    plan: starter
+    maxmemoryPolicy: noeviction

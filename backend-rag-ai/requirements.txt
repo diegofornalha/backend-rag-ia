@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-dotenv
+pydantic
+sqlalchemy
+google-generativeai
+numpy
+supabase
+sentence-transformers
+python-multipart
