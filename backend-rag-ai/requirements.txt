@@ -7,3 +7,4 @@ google-generativeai
 numpy
 supabase
 sentence-transformers
+python-multipart
