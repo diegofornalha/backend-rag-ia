@@ -239,7 +239,7 @@ Forneça uma resposta detalhada e útil, incluindo:
             success, repaired, message = self.attempt_json_repair(content)
             if success:
                 return True, repaired, "JSON corrigido e formatado automaticamente"
-            return False, None, message
+            return False, None, "Não é um JSON válido"
         except Exception as e:
             return False, None, f"Erro na validação: {str(e)}"
 
@@ -268,27 +268,77 @@ Forneça uma resposta detalhada e útil, incluindo:
     
     def process_upload(self, content: str, cliente: str) -> Tuple[bool, str, Optional[Dict]]:
         """Processa o upload completo do documento"""
-        # Validação do JSON
-        is_valid, formatted, message = self.validate_json(content)
-        if not is_valid:
-            return False, message, None
+        try:
+            # Primeiro tenta como JSON
+            success, data, message = self.validate_json(content)
             
-        # Gera sugestão de nome
-        suggested_name = self.suggest_filename(formatted)
-        
-        # Prepara metadados
-        metadata = {
-            'cliente': cliente,
-            'tipo': 'json',
-            'processado_por': 'document_upload_agent',
-            'data_processamento': datetime.now().isoformat()
-        }
-        
-        return True, suggested_name, {
-            'content': formatted,
-            'metadata': metadata,
-            'suggested_name': suggested_name
-        }
+            # Se não for JSON válido, tenta extrair informações do texto puro
+            if not success:
+                data = self.extract_from_text(content)
+                if data:
+                    success = True
+                    message = "Conteúdo extraído do texto com sucesso"
+            
+            if not success or not data:
+                return False, "Não foi possível processar o conteúdo", None
+
+            # Gera nome sugerido para o arquivo
+            suggested_name = self.suggest_filename(data)
+            
+            # Prepara resultado
+            result = {
+                'content': data,
+                'suggested_name': suggested_name,
+                'cliente': cliente,
+                'timestamp': datetime.now().isoformat(),
+                'processado_por': 'document_upload_agent',
+            }
+            
+            return True, message, result
+            
+        except Exception as e:
+            return False, f"Erro no processamento: {str(e)}", None
+
+    def extract_from_text(self, content: str) -> Optional[Dict]:
+        """Extrai título e conteúdo de texto puro"""
+        try:
+            # Remove espaços extras e quebras de linha
+            content = content.strip()
+            
+            # Se estiver vazio, retorna None
+            if not content:
+                return None
+
+            # Tenta identificar um título nas primeiras linhas
+            lines = content.split('\n')
+            titulo = None
+            conteudo = content
+
+            # Procura por um título nas primeiras linhas
+            for i, line in enumerate(lines[:3]):  # Olha apenas as 3 primeiras linhas
+                line = line.strip()
+                # Se a linha parece um título (curta e sem pontuação no final)
+                if line and len(line) < 100 and not line[-1] in '.!?':
+                    titulo = line
+                    # Remove o título do conteúdo
+                    conteudo = '\n'.join(lines[i+1:]).strip()
+                    break
+
+            # Se não encontrou título, usa timestamp
+            if not titulo:
+                timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+                # Usa as primeiras palavras do conteúdo como parte do título
+                first_words = ' '.join(content.split()[:5])
+                titulo = f"Documento {timestamp} - {first_words}..."
+
+            return {
+                'titulo': titulo,
+                'conteudo': conteudo
+            }
+
+        except Exception as e:
+            print(f"Erro ao extrair do texto: {e}")
+            return None
 
     def format_error_message(self, error: str) -> str:
         """Formata mensagem de erro com exemplo"""

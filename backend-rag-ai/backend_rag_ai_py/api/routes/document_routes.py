@@ -22,10 +22,11 @@ async def validate_document(
     question: str | None = Body(None)  # Opcional: pergunta sobre o conteúdo
 ) -> Dict:
     """
-    Valida e processa um documento JSON antes do upload.
+    Valida e processa um documento antes do upload.
+    Aceita tanto JSON quanto texto puro.
     
     Args:
-        content: Conteúdo do documento em formato JSON
+        content: Conteúdo do documento (JSON ou texto)
         cliente: Nome do cliente associado ao documento
         question: Opcional - pergunta sobre o conteúdo
         
@@ -52,7 +53,7 @@ async def validate_document(
             'message': result["response"]
         }
 
-    # Caso contrário, processa como upload normal
+    # Processa o documento
     success, message, result = document_agent.process_upload(content, cliente)
     
     if not success:
@@ -61,26 +62,18 @@ async def validate_document(
             'message': document_agent.format_error_message(message)
         }
     
-    # Verifica se o JSON foi corrigido
-    was_corrected = "corrigido" in message.lower()
-    
-    # Formata a mensagem incluindo sugestões de melhoria
-    sugestoes = result.get('content', {}).get('sugestoes_melhoria')
+    # Formata a mensagem de retorno
+    content_preview = json.dumps(result['content'], indent=2, ensure_ascii=False)
     
     return {
         'success': True,
         'data': result,
-        'message': f"""{'✅ JSON corrigido e formatado automaticamente:' if was_corrected else '✅ JSON validado e formatado corretamente:'}
+        'message': f"""✅ Documento processado com sucesso:
 
 ```json
-{json.dumps(result['content'], indent=2, ensure_ascii=False)}
+{content_preview}
 ```
 
-{f'''📝 Sugestões de melhoria:
-
-{sugestoes}
-
-''' if sugestoes else ''}
 Nome sugerido para o arquivo: "{result['suggested_name']}"
 
 Para confirmar este nome, digite "confirmar".
