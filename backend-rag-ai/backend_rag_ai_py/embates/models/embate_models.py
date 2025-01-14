@@ -103,9 +103,8 @@ class DefaultEmbateResult(EmbateResult):
             _data={},
             _metrics=metrics or {},
             _errors=[{
-                "type": error.__class__.__name__,
-                "message": str(error),
-                "timestamp": datetime.utcnow().isoformat()
+                "type": type(error).__name__,
+                "message": str(error)
             }]
         )
         

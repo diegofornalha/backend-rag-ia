@@ -6,30 +6,12 @@ import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
-import google.generativeai as genai
-
 from ...engine.llms.gemini_config import GENERATION_CONFIG, get_model_config
 from ...engine.llms.tracker import LlmTracker
+from .document_upload_agent import DocumentUploadAgent
+from .base_agent import GeminiAgent
 
 logger = logging.getLogger(__name__)
-
-
-class GeminiAgent:
-    """Agente base usando Gemini."""
-
-    def __init__(self, name: str, api_key: str):
-        self.name = name
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-pro")
-
-    async def run(self, task: str, **kwargs) -> dict[str, Any]:
-        """Executa uma tarefa usando Gemini."""
-        try:
-            response = self.model.generate_content(task)
-            return {"result": response.text}
-        except Exception as e:
-            logger.error(f"Erro ao executar tarefa: {e}")
-            return {"error": str(e)}
 
 
 class MultiAgentSystem:
@@ -52,6 +34,7 @@ class MultiAgentSystem:
             "analyst": GeminiAgent("analyst", self.api_key),
             "improver": GeminiAgent("improver", self.api_key),
             "synthesizer": GeminiAgent("synthesizer", self.api_key),
+            "document_upload": DocumentUploadAgent("document_upload", self.api_key),
         }
 
     async def process_task(
@@ -59,7 +42,16 @@ class MultiAgentSystem:
     ) -> dict[str, Any]:
         """Processa uma tarefa usando o sistema multiagente."""
         try:
-            # Pipeline de processamento
+            # Se for uma tarefa de upload, usa apenas o agente de upload
+            if context and context.get("is_upload"):
+                agent = self.agents["document_upload"]
+                return await agent.process({
+                    "content": task,
+                    "cliente": context.get("cliente"),
+                    **context
+                })
+
+            # Caso contrário, usa o pipeline normal
             pipeline = ["researcher", "analyst", "improver", "synthesizer"]
             results = {}
 

@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from ....core.refactoring_limits_checker import RefactoringLimitsChecker
+from backend_rag_ai_py.core.refactoring_limits_checker import RefactoringLimitsChecker
 
 from .models import Embate
 from .storage import SupabaseStorage
